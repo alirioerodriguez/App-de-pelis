@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0b12">
+<title>¿Dónde la veo? · Argentina</title>
+<meta name="description" content="Buscá una película o serie y mirá en qué plataforma de streaming está disponible en Argentina.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0b12;
+    --bg-2: #13131d;
+    --card: #181826;
+    --line: #2a2a3d;
+    --text: #f2f2f7;
+    --muted: #9a9ab0;
+    --accent: #75aadb;      /* celeste */
+    --accent-2: #f6b40e;    /* sol de mayo */
+    --ok: #3ddc84;
+    --rent: #f6b40e;
+    --buy: #ff7a59;
+    --radius: 14px;
+    --shadow: 0 10px 30px rgba(0,0,0,.45);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    background: radial-gradient(1200px 600px at 10% -10%, rgba(117,170,219,.18), transparent 60%),
+                radial-gradient(900px 500px at 110% 0%, rgba(246,180,14,.10), transparent 60%),
+                var(--bg);
+    background-attachment: fixed;
+    color: var(--text);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent); }
+  button { font: inherit; cursor: pointer; }
+  img { display: block; max-width: 100%; }
+
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 0 16px; }
+
+  /* ---------- Header ---------- */
+  header {
+    position: sticky; top: 0; z-index: 20;
+    backdrop-filter: blur(14px);
+    background: rgba(11,11,18,.78);
+    border-bottom: 1px solid var(--line);
+  }
+  .bar { display: flex; align-items: center; gap: 12px; padding: 12px 0; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.15rem; white-space: nowrap; }
+  .brand .flag {
+    width: 30px; height: 20px; border-radius: 4px; flex: none;
+    background: linear-gradient(var(--accent) 0 33.3%, #fff 33.3% 66.6%, var(--accent) 66.6%);
+    position: relative; box-shadow: 0 0 0 1px rgba(255,255,255,.15);
+  }
+  .brand .flag::after {
+    content: ""; position: absolute; inset: 0; margin: auto; width: 6px; height: 6px;
+    border-radius: 50%; background: var(--accent-2);
+  }
+  .brand small { color: var(--muted); font-weight: 500; font-size: .8rem; }
+  .icon-btn {
+    margin-left: auto; background: var(--bg-2); border: 1px solid var(--line); color: var(--text);
+    border-radius: 10px; padding: 8px 12px; font-size: .9rem;
+  }
+  .icon-btn:hover { border-color: var(--accent); }
+
+  /* ---------- Search ---------- */
+  .hero { padding: 28px 0 8px; }
+  .hero h1 { font-size: clamp(1.6rem, 4.5vw, 2.6rem); margin: 0 0 6px; letter-spacing: -.02em; }
+  .hero h1 span { color: var(--accent); }
+  .hero p { color: var(--muted); margin: 0 0 18px; }
+  .search {
+    display: flex; gap: 8px; align-items: center;
+    background: var(--bg-2); border: 1px solid var(--line); border-radius: 16px; padding: 6px 6px 6px 14px;
+    box-shadow: var(--shadow);
+  }
+  .search:focus-within { border-color: var(--accent); }
+  .search svg { flex: none; opacity: .6; }
+  .search input {
+    flex: 1; min-width: 0; background: transparent; border: 0; outline: 0; color: var(--text);
+    font-size: 1.05rem; padding: 10px 4px;
+  }
+  .seg { display: flex; background: var(--card); border-radius: 12px; padding: 3px; flex: none; }
+  .seg button {
+    background: transparent; border: 0; color: var(--muted); padding: 8px 12px; border-radius: 9px; font-weight: 600; font-size: .9rem;
+  }
+  .seg button.on { background: var(--accent); color: #08131f; }
+
+  /* ---------- Provider chips ---------- */
+  .section-title { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin: 26px 0 12px; }
+  .section-title h2 { font-size: 1.15rem; margin: 0; }
+  .section-title .hint { color: var(--muted); font-size: .85rem; }
+  .chips {
+    display: flex; gap: 10px; overflow-x: auto; padding: 4px 2px 10px; scroll-snap-type: x proximity;
+    scrollbar-width: thin;
+  }
+  .chip {
+    flex: none; scroll-snap-align: start; display: flex; align-items: center; gap: 8px;
+    background: var(--card); border: 1px solid var(--line); color: var(--text);
+    padding: 6px 12px 6px 6px; border-radius: 999px; font-size: .88rem; font-weight: 500;
+    transition: transform .15s, border-color .15s, background .15s;
+  }
+  .chip img { width: 28px; height: 28px; border-radius: 8px; }
+  .chip:hover { transform: translateY(-2px); border-color: var(--accent); }
+  .chip.on { background: rgba(117,170,219,.18); border-color: var(--accent); }
+
+  /* ---------- Grid ---------- */
+  .grid {
+    display: grid; gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    padding-bottom: 40px;
+  }
+  @media (max-width: 480px) { .grid { grid-template-columns: repeat(2, 1fr); gap: 12px; } }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden;
+    text-align: left; color: var(--text); padding: 0; position: relative;
+    transition: transform .2s, box-shadow .2s, border-color .2s;
+    animation: pop .35s ease both;
+  }
+  .card:hover, .card:focus-visible { transform: translateY(-4px); box-shadow: var(--shadow); border-color: var(--accent); outline: none; }
+  .poster { aspect-ratio: 2/3; background: linear-gradient(135deg, #222235, #15151f); width: 100%; object-fit: cover; }
+  .noposter { aspect-ratio: 2/3; display: grid; place-items: center; color: var(--muted); font-size: 2rem; background: linear-gradient(135deg, #222235, #15151f); }
+  .card .meta { padding: 10px 10px 12px; }
+  .card .t { font-weight: 600; font-size: .92rem; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .card .y { color: var(--muted); font-size: .8rem; margin-top: 4px; }
+  .badge {
+    position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,.72); color: var(--accent-2);
+    font-weight: 700; font-size: .75rem; padding: 3px 7px; border-radius: 8px; backdrop-filter: blur(4px);
+  }
+  .mini-prov { position: absolute; top: 8px; right: 8px; display: flex; gap: 4px; }
+  .mini-prov img { width: 24px; height: 24px; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,.5); }
+  @keyframes pop { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: none; } }
+
+  .skeleton { border-radius: var(--radius); aspect-ratio: 2/3.6; background: linear-gradient(90deg, #171724 25%, #222234 50%, #171724 75%); background-size: 200% 100%; animation: shimmer 1.2s infinite; }
+  @keyframes shimmer { to { background-position: -200% 0; } }
+
+  .empty { color: var(--muted); text-align: center; padding: 40px 10px; grid-column: 1/-1; }
+  .more { display: block; margin: 0 auto 40px; background: var(--bg-2); border: 1px solid var(--line); color: var(--text); padding: 12px 22px; border-radius: 12px; font-weight: 600; }
+  .more:hover { border-color: var(--accent); }
+
+  /* ---------- Modal ---------- */
+  .modal { position: fixed; inset: 0; z-index: 50; display: none; }
+  .modal.open { display: block; }
+  .backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.7); backdrop-filter: blur(4px); animation: fade .2s; }
+  .sheet {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: min(860px, calc(100% - 32px)); max-height: calc(100vh - 48px); overflow: auto;
+    background: var(--bg-2); border: 1px solid var(--line); border-radius: 20px; box-shadow: var(--shadow);
+    animation: rise .25s ease;
+  }
+  @media (max-width: 640px) {
+    .sheet { left: 0; right: 0; bottom: 0; top: auto; transform: none; width: 100%; max-height: 92vh; border-radius: 20px 20px 0 0; animation: up .28s ease; }
+  }
+  @keyframes fade { from { opacity: 0; } }
+  @keyframes rise { from { opacity: 0; transform: translate(-50%, -46%); } }
+  @keyframes up { from { transform: translateY(100%); } }
+  .sheet-hero { position: relative; min-height: 180px; background-size: cover; background-position: center top; }
+  .sheet-hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(19,19,29,.2), var(--bg-2)); }
+  .close {
+    position: absolute; top: 12px; right: 12px; z-index: 2; width: 38px; height: 38px; border-radius: 50%;
+    background: rgba(0,0,0,.6); color: #fff; border: 1px solid rgba(255,255,255,.2); font-size: 1.2rem;
+  }
+  .sheet-body { padding: 0 22px 24px; margin-top: -90px; position: relative; z-index: 1; display: grid; grid-template-columns: 160px 1fr; gap: 20px; }
+  @media (max-width: 640px) { .sheet-body { grid-template-columns: 100px 1fr; gap: 14px; padding: 0 16px 24px; margin-top: -60px; } }
+  .sheet-body .poster { border-radius: 12px; box-shadow: var(--shadow); }
+  .sheet-body h3 { margin: 50px 0 4px; font-size: clamp(1.2rem, 3.5vw, 1.7rem); line-height: 1.15; }
+  @media (max-width: 640px) { .sheet-body h3 { margin-top: 30px; } }
+  .facts { color: var(--muted); font-size: .88rem; display: flex; flex-wrap: wrap; gap: 6px 12px; }
+  .overview { grid-column: 1/-1; color: #cfcfe0; line-height: 1.55; margin: 0; }
+  .where { grid-column: 1/-1; }
+  .where h4 { margin: 16px 0 8px; font-size: .95rem; display: flex; align-items: center; gap: 8px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+  .provs { display: flex; flex-wrap: wrap; gap: 10px; }
+  .prov { display: flex; align-items: center; gap: 8px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 6px 12px 6px 6px; font-size: .88rem; }
+  .prov img { width: 36px; height: 36px; border-radius: 9px; }
+  .verdict { grid-column: 1/-1; border-radius: 14px; padding: 14px 16px; font-weight: 600; display: flex; gap: 10px; align-items: center; }
+  .verdict.yes { background: rgba(61,220,132,.12); border: 1px solid rgba(61,220,132,.4); color: #9ff0c1; }
+  .verdict.no { background: rgba(255,122,89,.10); border: 1px solid rgba(255,122,89,.4); color: #ffb9a6; }
+  .actions { grid-column: 1/-1; display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; background: var(--accent); color: #08131f; font-weight: 700; padding: 10px 16px; border-radius: 12px; border: 0; }
+  .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
+  .credit { grid-column: 1/-1; color: var(--muted); font-size: .78rem; margin-top: 8px; }
+
+  /* ---------- Setup ---------- */
+  .setup { max-width: 620px; margin: 30px auto; background: var(--bg-2); border: 1px solid var(--line); border-radius: 20px; padding: 24px; box-shadow: var(--shadow); }
+  .setup h2 { margin-top: 0; }
+  .setup ol { color: #cfcfe0; line-height: 1.7; padding-left: 20px; }
+  .setup input { width: 100%; background: var(--card); color: var(--text); border: 1px solid var(--line); border-radius: 12px; padding: 12px; font-size: .95rem; margin: 8px 0 12px; }
+  .setup input:focus { outline: 0; border-color: var(--accent); }
+  .err { color: #ff9b85; font-size: .9rem; min-height: 1.2em; }
+
+  footer { color: var(--muted); font-size: .8rem; text-align: center; padding: 20px 16px 40px; border-top: 1px solid var(--line); }
+  footer img { display: inline-block; height: 12px; vertical-align: middle; }
+
+  .toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: #2b1a1a; border: 1px solid #ff7a59; color: #ffd5ca; padding: 10px 16px; border-radius: 12px; z-index: 60; display: none; max-width: calc(100% - 32px); }
+  .toast.show { display: block; animation: fade .2s; }
+  .hidden { display: none !important; }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap bar">
+    <div class="brand"><span class="flag" aria-hidden="true"></span>¿Dónde la veo? <small>Argentina</small></div>
+    <button class="icon-btn" id="keyBtn" title="Cambiar API key">🔑 API key</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <!-- Pantalla de configuración (solo la primera vez) -->
+  <section id="setup" class="setup hidden">
+    <h2>Configuración inicial (una sola vez)</h2>
+    <p>La app usa la API gratuita de <strong>TMDB</strong>, cuyos datos de disponibilidad por país vienen de <strong>JustWatch</strong>. Necesitás tu propia clave:</p>
+    <ol>
+      <li>Creá una cuenta gratis en <a href="https://www.themoviedb.org/signup" target="_blank" rel="noopener">themoviedb.org</a>.</li>
+      <li>Andá a <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener">Configuración → API</a> y pedí una clave (uso personal).</li>
+      <li>Copiá la <em>API Key</em> o el <em>API Read Access Token</em> y pegala acá.</li>
+    </ol>
+    <input id="keyInput" type="password" placeholder="Pegá tu API key o token de TMDB" autocomplete="off">
+    <div class="err" id="keyErr"></div>
+    <button class="btn" id="saveKey">Guardar y empezar</button>
+    <p style="color:var(--muted);font-size:.82rem;margin-bottom:0">La clave queda guardada solo en este navegador.</p>
+  </section>
+
+  <section id="app" class="hidden">
+    <div class="hero">
+      <h1>¿En qué plataforma está <span>en Argentina</span>?</h1>
+      <p>Buscá una película o serie y te digo dónde verla acá, no en Estados Unidos.</p>
+      <div class="search">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="q" type="search" placeholder="Ej: Relatos salvajes, Dune, The Bear…" autocomplete="off" enterkeyhint="search">
+        <div class="seg" role="tablist" aria-label="Tipo">
+          <button class="on" data-type="movie" role="tab">Pelis</button>
+          <button data-type="tv" role="tab">Series</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title">
+      <h2>Plataformas en Argentina</h2>
+      <span class="hint">Tocá una para ver su catálogo</span>
+    </div>
+    <div class="chips" id="chips"></div>
+
+    <div class="section-title">
+      <h2 id="listTitle">Tendencias</h2>
+      <span class="hint" id="listHint"></span>
+    </div>
+    <div class="grid" id="grid"></div>
+    <button class="more hidden" id="more">Cargar más</button>
+  </section>
+</main>
+
+<div class="modal" id="modal" aria-modal="true" role="dialog">
+  <div class="backdrop" data-close></div>
+  <div class="sheet" id="sheet"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<footer>
+  Datos de disponibilidad: <strong>JustWatch</strong> vía
+  <a href="https://www.themoviedb.org" target="_blank" rel="noopener">TMDB</a>.
+  Este producto usa la API de TMDB pero no está respaldado ni certificado por TMDB.
+</footer>
+
+<script>
+(() => {
+  const REGION = 'AR';
+  const LANG = 'es-AR';
+  const API = 'https://api.themoviedb.org/3';
+  const IMG = 'https://image.tmdb.org/t/p/';
+  const KEY_STORE = 'tmdb_key';
+  // Plataformas que se muestran primero si están disponibles en AR
+  const PRIORITY = ['Netflix', 'Amazon Prime Video', 'Disney Plus', 'Max', 'HBO Max', 'Paramount Plus', 'Apple TV Plus', 'Apple TV+', 'Mubi', 'Crunchyroll', 'Flow', 'Star Plus', 'Universal+', 'Claro video', 'DGO', 'Cine.ar', 'Pluto TV'];
+
+  const $ = s => document.querySelector(s);
+  const els = {
+    setup: $('#setup'), app: $('#app'), keyInput: $('#keyInput'), keyErr: $('#keyErr'),
+    q: $('#q'), grid: $('#grid'), chips: $('#chips'), more: $('#more'),
+    listTitle: $('#listTitle'), listHint: $('#listHint'), modal: $('#modal'), sheet: $('#sheet'), toast: $('#toast')
+  };
+
+  const state = { type: 'movie', mode: 'trending', query: '', provider: null, page: 1, totalPages: 1, providers: { movie: [], tv: [] } };
+  const provCache = new Map();
+  let key = safeGet(KEY_STORE);
+
+  function safeGet(k) { try { return localStorage.getItem(k); } catch { return null; } }
+  function safeSet(k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch {} }
+
+  // ---------- API ----------
+  async function api(path, params = {}, k = key) {
+    const url = new URL(API + path);
+    const headers = { accept: 'application/json' };
+    // El token v4 (JWT) va como Bearer; la API key v3 va como parámetro
+    if (k.startsWith('eyJ')) headers.Authorization = 'Bearer ' + k;
+    else url.searchParams.set('api_key', k);
+    url.searchParams.set('language', LANG);
+    for (const [p, v] of Object.entries(params)) if (v != null && v !== '') url.searchParams.set(p, v);
+    const r = await fetch(url, { headers });
+    if (r.status === 401) throw Object.assign(new Error('API key inválida'), { auth: true });
+    if (!r.ok) throw new Error('Error ' + r.status + ' al consultar TMDB');
+    return r.json();
+  }
+
+  async function watchProviders(type, id) {
+    const ck = type + id;
+    if (provCache.has(ck)) return provCache.get(ck);
+    const p = api(`/${type}/${id}/watch/providers`).then(d => d.results?.[REGION] || null).catch(() => null);
+    provCache.set(ck, p);
+    return p;
+  }
+
+  // ---------- Init ----------
+  function showSetup(msg = '') {
+    els.app.classList.add('hidden');
+    els.setup.classList.remove('hidden');
+    els.keyErr.textContent = msg;
+    els.keyInput.value = '';
+    els.keyInput.focus();
+  }
+
+  async function start() {
+    els.setup.classList.add('hidden');
+    els.app.classList.remove('hidden');
+    await loadProviders();
+    load();
+  }
+
+  $('#saveKey').addEventListener('click', async () => {
+    const k = els.keyInput.value.trim();
+    if (!k) return (els.keyErr.textContent = 'Pegá tu clave.');
+    els.keyErr.textContent = 'Verificando…';
+    try {
+      await api('/configuration', {}, k);
+      key = k; safeSet(KEY_STORE, k);
+      els.keyErr.textContent = '';
+      start();
+    } catch (e) {
+      els.keyErr.textContent = e.auth ? 'La clave no es válida. Revisala.' : e.message;
+    }
+  });
+  els.keyInput.addEventListener('keydown', e => { if (e.key === 'Enter') $('#saveKey').click(); });
+  $('#keyBtn').addEventListener('click', () => showSetup());
+
+  // ---------- Plataformas ----------
+  async function loadProviders() {
+    if (!state.providers[state.type].length) {
+      try {
+        const d = await api(`/watch/providers/${state.type}`, { watch_region: REGION });
+        state.providers[state.type] = (d.results || [])
+          .sort((a, b) => rank(a) - rank(b) || (a.display_priorities?.[REGION] ?? a.display_priority) - (b.display_priorities?.[REGION] ?? b.display_priority));
+      } catch (e) { return handleErr(e); }
+    }
+    renderChips();
+  }
+  function rank(p) { const i = PRIORITY.findIndex(n => p.provider_name.toLowerCase() === n.toLowerCase()); return i < 0 ? 999 : i; }
+
+  function renderChips() {
+    const list = state.providers[state.type].slice(0, 30);
+    els.chips.innerHTML = list.map(p => `
+      <button class="chip ${state.provider?.provider_id === p.provider_id ? 'on' : ''}" data-id="${p.provider_id}">
+        <img src="${IMG}w92${p.logo_path}" alt="" loading="lazy">${esc(p.provider_name)}
+      </button>`).join('');
+  }
+  els.chips.addEventListener('click', e => {
+    const b = e.target.closest('.chip'); if (!b) return;
+    const id = +b.dataset.id;
+    if (state.provider?.provider_id === id) { state.provider = null; state.mode = state.query ? 'search' : 'trending'; }
+    else { state.provider = state.providers[state.type].find(p => p.provider_id === id); state.mode = 'provider'; els.q.value = ''; state.query = ''; }
+    renderChips(); load();
+  });
+
+  // ---------- Búsqueda ----------
+  let t;
+  els.q.addEventListener('input', () => {
+    clearTimeout(t);
+    t = setTimeout(() => {
+      state.query = els.q.value.trim();
+      state.provider = null; renderChips();
+      state.mode = state.query.length >= 2 ? 'search' : 'trending';
+      load();
+    }, 350);
+  });
+
+  document.querySelector('.seg').addEventListener('click', async e => {
+    const b = e.target.closest('button'); if (!b || b.dataset.type === state.type) return;
+    document.querySelectorAll('.seg button').forEach(x => x.classList.toggle('on', x === b));
+    state.type = b.dataset.type;
+    state.provider = null;
+    if (state.mode === 'provider') state.mode = 'trending';
+    await loadProviders();
+    load();
+  });
+
+  // ---------- Listado ----------
+  async function load(append = false) {
+    state.page = append ? state.page + 1 : 1;
+    const label = state.type === 'movie' ? 'películas' : 'series';
+    if (!append) { els.grid.innerHTML = Array(12).fill('<div class="skeleton"></div>').join(''); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+    let data;
+    try {
+      if (state.mode === 'search') {
+        els.listTitle.textContent = `Resultados para “${state.query}”`;
+        els.listHint.textContent = 'Tocá una para ver dónde está';
+        data = await api(`/search/${state.type}`, { query: state.query, page: state.page, region: REGION, include_adult: false });
+      } else if (state.mode === 'provider') {
+        els.listTitle.textContent = `En ${state.provider.provider_name} (Argentina)`;
+        els.listHint.textContent = `${label} incluidas en la suscripción, por popularidad`;
+        data = await api(`/discover/${state.type}`, {
+          watch_region: REGION, with_watch_providers: state.provider.provider_id,
+          with_watch_monetization_types: 'flatrate|free|ads', sort_by: 'popularity.desc', page: state.page
+        });
+      } else {
+        els.listTitle.textContent = `Tendencias de la semana`;
+        els.listHint.textContent = `${label} más buscadas`;
+        data = await api(`/trending/${state.type}/week`, { page: state.page });
+      }
+    } catch (e) { return handleErr(e); }
+
+    state.totalPages = Math.min(data.total_pages || 1, 500);
+    const items = data.results || [];
+    const html = items.map(card).join('');
+    if (append) els.grid.insertAdjacentHTML('beforeend', html);
+    else els.grid.innerHTML = html || `<div class="empty">No encontré nada. Probá con el título original o en inglés.</div>`;
+    els.more.classList.toggle('hidden', state.page >= state.totalPages);
+    items.forEach(decorate);
+  }
+
+  function card(it) {
+    const title = it.title || it.name;
+    const date = it.release_date || it.first_air_date || '';
+    const vote = it.vote_average ? it.vote_average.toFixed(1) : '';
+    return `
+      <button class="card" data-id="${it.id}" aria-label="${esc(title)}">
+        ${it.poster_path ? `<img class="poster" src="${IMG}w342${it.poster_path}" alt="" loading="lazy">` : `<div class="noposter">🎬</div>`}
+        ${vote ? `<span class="badge">★ ${vote}</span>` : ''}
+        <span class="mini-prov" id="mp-${it.id}"></span>
+        <div class="meta"><div class="t">${esc(title)}</div><div class="y">${date.slice(0, 4) || '—'}</div></div>
+      </button>`;
+  }
+
+  // Muestra logos de plataformas de suscripción directamente en la tarjeta
+  async function decorate(it) {
+    const type = state.type;
+    const p = await watchProviders(type, it.id);
+    const slot = document.getElementById('mp-' + it.id);
+    if (!slot || !p) return;
+    const subs = [...(p.flatrate || []), ...(p.free || []), ...(p.ads || [])];
+    slot.innerHTML = subs.slice(0, 3).map(s => `<img src="${IMG}w92${s.logo_path}" alt="${esc(s.provider_name)}" title="${esc(s.provider_name)}">`).join('');
+  }
+
+  els.more.addEventListener('click', () => load(true));
+  els.grid.addEventListener('click', e => { const c = e.target.closest('.card'); if (c) openDetail(+c.dataset.id); });
+
+  // ---------- Detalle ----------
+  async function openDetail(id) {
+    const type = state.type;
+    els.sheet.innerHTML = '<div style="padding:60px;text-align:center;color:var(--muted)">Cargando…</div>';
+    els.modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    let d, p;
+    try { [d, p] = await Promise.all([api(`/${type}/${id}`), watchProviders(type, id)]); }
+    catch (e) { closeModal(); return handleErr(e); }
+
+    const title = d.title || d.name;
+    const year = (d.release_date || d.first_air_date || '').slice(0, 4);
+    const runtime = d.runtime ? `${Math.floor(d.runtime / 60)}h ${d.runtime % 60}m` : d.number_of_seasons ? `${d.number_of_seasons} temporada${d.number_of_seasons > 1 ? 's' : ''}` : '';
+    const genres = (d.genres || []).map(g => g.name).join(', ');
+    const subs = p ? [...(p.flatrate || []), ...(p.free || []), ...(p.ads || [])] : [];
+
+    const group = (label, color, list) => list?.length ? `
+      <h4><span class="dot" style="background:${color}"></span>${label}</h4>
+      <div class="provs">${list.map(s => `<div class="prov"><img src="${IMG}w92${s.logo_path}" alt="">${esc(s.provider_name)}</div>`).join('')}</div>` : '';
+
+    els.sheet.innerHTML = `
+      <div class="sheet-hero" style="${d.backdrop_path ? `background-image:url(${IMG}w1280${d.backdrop_path})` : ''}">
+        <button class="close" data-close aria-label="Cerrar">✕</button>
+      </div>
+      <div class="sheet-body">
+        ${d.poster_path ? `<img class="poster" src="${IMG}w342${d.poster_path}" alt="">` : '<div class="noposter">🎬</div>'}
+        <div>
+          <h3>${esc(title)}</h3>
+          <div class="facts">${[year, runtime, genres, d.vote_average ? '★ ' + d.vote_average.toFixed(1) : ''].filter(Boolean).map(esc).map(x => `<span>${x}</span>`).join('')}</div>
+        </div>
+        <div class="verdict ${subs.length ? 'yes' : 'no'}">
+          ${subs.length
+            ? `✅ Disponible en Argentina con suscripción en: ${subs.map(s => esc(s.provider_name)).join(', ')}`
+            : p && (p.rent || p.buy) ? '💸 No está incluida en ninguna suscripción en Argentina, pero se puede alquilar o comprar.'
+            : '❌ No figura en ninguna plataforma en Argentina por ahora.'}
+        </div>
+        <div class="where">
+          ${group('Incluida en suscripción', 'var(--ok)', p?.flatrate)}
+          ${group('Gratis', 'var(--accent)', [...(p?.free || []), ...(p?.ads || [])])}
+          ${group('Alquiler', 'var(--rent)', p?.rent)}
+          ${group('Compra', 'var(--buy)', p?.buy)}
+        </div>
+        ${d.overview ? `<p class="overview">${esc(d.overview)}</p>` : ''}
+        <div class="actions">
+          ${p?.link ? `<a class="btn" href="${p.link}" target="_blank" rel="noopener">Ver opciones en Argentina ↗</a>` : ''}
+          <a class="btn ghost" href="https://www.justwatch.com/ar/buscar?q=${encodeURIComponent(title)}" target="_blank" rel="noopener">Buscar en JustWatch AR ↗</a>
+        </div>
+        <div class="credit">Disponibilidad para Argentina provista por JustWatch. Los catálogos cambian seguido: confirmá en la app antes de pagar.</div>
+      </div>`;
+  }
+
+  function closeModal() { els.modal.classList.remove('open'); document.body.style.overflow = ''; }
+  els.modal.addEventListener('click', e => { if (e.target.closest('[data-close]')) closeModal(); });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeModal();
+    if (e.key === '/' && document.activeElement !== els.q && !els.app.classList.contains('hidden')) { e.preventDefault(); els.q.focus(); }
+  });
+
+  // ---------- Utilidades ----------
+  function handleErr(e) {
+    if (e.auth) { safeSet(KEY_STORE, null); key = null; return showSetup('Tu clave dejó de funcionar. Cargá una nueva.'); }
+    els.toast.textContent = e.message || 'Algo falló. Probá de nuevo.';
+    els.toast.classList.add('show');
+    setTimeout(() => els.toast.classList.remove('show'), 3500);
+  }
+  function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]); }
+
+  key ? start() : showSetup();
+})();
+</script>
+</body>
+</html>
