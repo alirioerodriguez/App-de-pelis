@@ -199,6 +199,45 @@
   .toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: #2b1a1a; border: 1px solid #ff7a59; color: #ffd5ca; padding: 10px 16px; border-radius: 12px; z-index: 60; display: none; max-width: calc(100% - 32px); }
   .toast.show { display: block; animation: fade .2s; }
   .hidden { display: none !important; }
+
+  /* ---------- Sugerencias ---------- */
+  .search-box { position: relative; }
+  .suggest {
+    position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 30;
+    background: var(--bg-2); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow);
+    max-height: 60vh; overflow-y: auto;
+  }
+  .sug { display: flex; align-items: center; gap: 12px; width: 100%; background: transparent; border: 0; color: var(--text); padding: 8px 12px; text-align: left; }
+  .sug + .sug { border-top: 1px solid var(--line); }
+  .sug.active, .sug:hover { background: var(--card); }
+  .sug img, .sug .ph { width: 36px; height: 54px; border-radius: 6px; object-fit: cover; flex: none; background: var(--card); }
+  .sug .st { flex: 1; min-width: 0; }
+  .sug .st b { display: block; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sug .st span { color: var(--muted); font-size: .82rem; }
+  .sug-all { display: block; width: 100%; background: var(--card); border: 0; border-top: 1px solid var(--line); color: var(--accent); padding: 10px 12px; font-weight: 600; text-align: left; }
+
+  /* ---------- Etiqueta Película / Serie ---------- */
+  .card .kind { display: inline-block; font-size: .7rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: 2px 6px; border-radius: 6px; margin-right: 6px; }
+  .kind.movie { background: rgba(117,170,219,.18); color: var(--accent); }
+  .kind.tv { background: rgba(246,180,14,.16); color: var(--accent-2); }
+  .mini-prov img.mine { box-shadow: 0 0 0 2px var(--ok), 0 2px 6px rgba(0,0,0,.5); }
+
+  /* ---------- Mis plataformas ---------- */
+  .mine-head { padding: 22px 60px 12px 22px; }
+  .mine-head h3 { margin: 0 0 4px; }
+  .mine-head p { margin: 0; color: var(--muted); font-size: .9rem; }
+  .mine-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; padding: 0 22px 8px; }
+  @media (max-width: 640px) { .mine-head { padding: 18px 56px 12px 16px; } .mine-grid { padding: 0 16px 8px; grid-template-columns: repeat(2, 1fr); } }
+  .mine-opt { display: flex; align-items: center; gap: 10px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 8px; color: var(--text); text-align: left; font-size: .88rem; }
+  .mine-opt img { width: 36px; height: 36px; border-radius: 9px; flex: none; }
+  .mine-opt span { flex: 1; min-width: 0; }
+  .mine-opt.on { border-color: var(--ok); background: rgba(61,220,132,.10); }
+  .mine-opt.on::after { content: "✓"; color: var(--ok); font-weight: 800; }
+  .mine-foot { padding: 12px 22px 22px; display: flex; justify-content: flex-end; }
+  .prov.mine { border-color: var(--ok); }
+  .owned { grid-column: 1/-1; display: flex; flex-wrap: wrap; gap: 10px; }
+  .bar .icon-btn + .icon-btn { margin-left: 0; }
+  @media (max-width: 480px) { .bar .lbl { display: none; } .brand small { display: none; } }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 </style>
 </head>
@@ -207,7 +246,8 @@
 <header>
   <div class="wrap bar">
     <div class="brand"><span class="flag" aria-hidden="true"></span>¿Dónde la veo? <small>Argentina</small></div>
-    <button class="icon-btn" id="keyBtn" title="Cambiar API key">🔑 API key</button>
+    <button class="icon-btn" id="mineBtn" title="Elegí las plataformas que tenés">⭐<span class="lbl"> Mis plataformas</span></button>
+    <button class="icon-btn" id="keyBtn" title="Cambiar API key">🔑</button>
   </div>
 </header>
 
@@ -230,14 +270,18 @@
   <section id="app" class="hidden">
     <div class="hero">
       <h1>¿En qué plataforma está <span>en Argentina</span>?</h1>
-      <p>Buscá una película o serie y te digo dónde verla acá, no en Estados Unidos.</p>
+      <p>Buscá una película o serie y te digo dónde verla acá, no en Estados Unidos. Marcá en ⭐ las plataformas que pagás y te aviso cuando la tenés.</p>
+      <div class="search-box">
       <div class="search">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <input id="q" type="search" placeholder="Ej: Relatos salvajes, Dune, The Bear…" autocomplete="off" enterkeyhint="search">
+        <input id="q" type="search" placeholder="Ej: El cuento de la criada, Dune…" autocomplete="off" enterkeyhint="search" aria-autocomplete="list" aria-controls="suggest">
         <div class="seg" role="tablist" aria-label="Tipo">
-          <button class="on" data-type="movie" role="tab">Pelis</button>
+          <button class="on" data-type="all" role="tab">Todo</button>
+          <button data-type="movie" role="tab">Pelis</button>
           <button data-type="tv" role="tab">Series</button>
         </div>
+      </div>
+      <div class="suggest hidden" id="suggest" role="listbox"></div>
       </div>
     </div>
 
@@ -276,24 +320,43 @@
   const API = 'https://api.themoviedb.org/3';
   const IMG = 'https://image.tmdb.org/t/p/';
   const KEY_STORE = 'tmdb_key';
+  const MINE_STORE = 'mis_plataformas';
   // Clave de TMDB fija: si está cargada, la app entra directo sin pedir nada
   const EMBEDDED_KEY = 'b4175200ea6e5ff156a2a7106d0120d3';
   // Plataformas que se muestran primero si están disponibles en AR
   const PRIORITY = ['Netflix', 'Amazon Prime Video', 'Disney Plus', 'Max', 'HBO Max', 'Paramount Plus', 'Apple TV Plus', 'Apple TV+', 'Mubi', 'Crunchyroll', 'Flow', 'Star Plus', 'Universal+', 'Claro video', 'DGO', 'Cine.ar', 'Pluto TV'];
+  // A dónde lleva el botón "Abrir en…". La API no da el enlace exacto al título:
+  // donde la plataforma tiene búsqueda pública por URL, abre la búsqueda; si no, su inicio.
+  const OPEN = [
+    [/netflix/i, t => `https://www.netflix.com/search?q=${t}`],
+    [/prime video/i, t => `https://www.primevideo.com/search?phrase=${t}`],
+    [/apple tv/i, t => `https://tv.apple.com/search?term=${t}`],
+    [/crunchyroll/i, t => `https://www.crunchyroll.com/search?q=${t}`],
+    [/disney/i, () => 'https://www.disneyplus.com/'],
+    [/max/i, () => 'https://www.hbomax.com/'],
+    [/paramount/i, () => 'https://www.paramountplus.com/'],
+    [/mubi/i, () => 'https://mubi.com/'],
+    [/youtube/i, t => `https://www.youtube.com/results?search_query=${t}`],
+    [/google play/i, t => `https://play.google.com/store/search?q=${t}&c=movies`],
+  ];
+  const TYPE_LABEL = { movie: 'Película', tv: 'Serie' };
 
   const $ = s => document.querySelector(s);
   const els = {
     setup: $('#setup'), app: $('#app'), keyInput: $('#keyInput'), keyErr: $('#keyErr'),
-    q: $('#q'), grid: $('#grid'), chips: $('#chips'), more: $('#more'),
+    q: $('#q'), grid: $('#grid'), chips: $('#chips'), more: $('#more'), suggest: $('#suggest'),
     listTitle: $('#listTitle'), listHint: $('#listHint'), modal: $('#modal'), sheet: $('#sheet'), toast: $('#toast')
   };
 
-  const state = { type: 'movie', mode: 'trending', query: '', provider: null, page: 1, totalPages: 1, providers: { movie: [], tv: [] } };
+  const state = { type: 'all', mode: 'trending', query: '', provider: null, page: 1, totalPages: 1, providers: {} };
   const provCache = new Map();
+  const items = new Map(); // id visible → tipo (movie/tv)
   let key = EMBEDDED_KEY || safeGet(KEY_STORE);
+  let mine = new Set(safeJSON(safeGet(MINE_STORE)) || []);
 
   function safeGet(k) { try { return localStorage.getItem(k); } catch { return null; } }
   function safeSet(k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch {} }
+  function safeJSON(v) { try { return JSON.parse(v); } catch { return null; } }
 
   // ---------- API ----------
   async function api(path, params = {}, k = key) {
@@ -316,6 +379,18 @@
     const p = api(`/${type}/${id}/watch/providers`).then(d => d.results?.[REGION] || null).catch(() => null);
     provCache.set(ck, p);
     return p;
+  }
+
+  // Búsqueda en pelis, series o ambas; devuelve resultados con media_type
+  async function searchTitles(query, page = 1) {
+    if (state.type === 'all') {
+      const d = await api('/search/multi', { query, page, region: REGION, include_adult: false });
+      d.results = (d.results || []).filter(r => r.media_type === 'movie' || r.media_type === 'tv');
+      return d;
+    }
+    const d = await api(`/search/${state.type}`, { query, page, region: REGION, include_adult: false });
+    d.results = (d.results || []).map(r => ({ ...r, media_type: state.type }));
+    return d;
   }
 
   // ---------- Init ----------
@@ -351,23 +426,35 @@
   $('#keyBtn').addEventListener('click', () => showSetup());
 
   // ---------- Plataformas ----------
-  async function loadProviders() {
-    if (!state.providers[state.type].length) {
-      try {
-        const d = await api(`/watch/providers/${state.type}`, { watch_region: REGION });
-        state.providers[state.type] = (d.results || [])
-          .sort((a, b) => rank(a) - rank(b) || (a.display_priorities?.[REGION] ?? a.display_priority) - (b.display_priorities?.[REGION] ?? b.display_priority));
-      } catch (e) { return handleErr(e); }
+  async function providersFor(type) {
+    if (state.providers[type]) return state.providers[type];
+    let list;
+    if (type === 'all') {
+      const [m, t] = await Promise.all([providersFor('movie'), providersFor('tv')]);
+      const byId = new Map();
+      [...m, ...t].forEach(p => byId.has(p.provider_id) || byId.set(p.provider_id, p));
+      list = [...byId.values()];
+    } else {
+      const d = await api(`/watch/providers/${type}`, { watch_region: REGION });
+      list = d.results || [];
     }
-    renderChips();
+    list.sort((a, b) => rank(a) - rank(b) || prio(a) - prio(b));
+    return (state.providers[type] = list);
   }
+  function prio(p) { return p.display_priorities?.[REGION] ?? p.display_priority ?? 999; }
   function rank(p) { const i = PRIORITY.findIndex(n => p.provider_name.toLowerCase() === n.toLowerCase()); return i < 0 ? 999 : i; }
 
+  async function loadProviders() {
+    try { await providersFor(state.type); } catch (e) { return handleErr(e); }
+    renderChips();
+  }
+
   function renderChips() {
-    const list = state.providers[state.type].slice(0, 30);
+    const list = (state.providers[state.type] || []).slice(0, 30)
+      .sort((a, b) => (mine.has(b.provider_id) - mine.has(a.provider_id)));
     els.chips.innerHTML = list.map(p => `
       <button class="chip ${state.provider?.provider_id === p.provider_id ? 'on' : ''}" data-id="${p.provider_id}">
-        <img src="${IMG}w92${p.logo_path}" alt="" loading="lazy">${esc(p.provider_name)}
+        <img src="${IMG}w92${p.logo_path}" alt="" loading="lazy">${mine.has(p.provider_id) ? '⭐ ' : ''}${esc(p.provider_name)}
       </button>`).join('');
   }
   els.chips.addEventListener('click', e => {
@@ -378,17 +465,69 @@
     renderChips(); load();
   });
 
-  // ---------- Búsqueda ----------
-  let t;
+  // ---------- Búsqueda y sugerencias ----------
+  let t, sugSeq = 0, sugActive = -1, sugItems = [];
   els.q.addEventListener('input', () => {
     clearTimeout(t);
-    t = setTimeout(() => {
-      state.query = els.q.value.trim();
-      state.provider = null; renderChips();
-      state.mode = state.query.length >= 2 ? 'search' : 'trending';
-      load();
-    }, 350);
+    const q = els.q.value.trim();
+    if (q.length < 2) { hideSuggest(); if (state.mode === 'search') { state.query = ''; state.mode = 'trending'; load(); } return; }
+    t = setTimeout(() => suggest(q), 250);
   });
+  els.q.addEventListener('keydown', e => {
+    const open = !els.suggest.classList.contains('hidden');
+    if (e.key === 'ArrowDown' && open) { e.preventDefault(); moveSug(1); }
+    else if (e.key === 'ArrowUp' && open) { e.preventDefault(); moveSug(-1); }
+    else if (e.key === 'Escape') hideSuggest();
+    else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (open && sugActive >= 0) { const it = sugItems[sugActive]; hideSuggest(); openDetail(it.id, it.media_type); }
+      else runSearch();
+    }
+  });
+  els.q.addEventListener('focus', () => { if (sugItems.length && els.q.value.trim().length >= 2) els.suggest.classList.remove('hidden'); });
+  document.addEventListener('click', e => { if (!e.target.closest('.search-box')) hideSuggest(); });
+
+  async function suggest(q) {
+    const seq = ++sugSeq;
+    let d;
+    try { d = await searchTitles(q); } catch (e) { return handleErr(e); }
+    if (seq !== sugSeq || els.q.value.trim() !== q) return; // llegó una respuesta vieja
+    sugItems = d.results.slice(0, 6);
+    sugActive = -1;
+    if (!sugItems.length) {
+      els.suggest.innerHTML = `<div class="sug" style="cursor:default"><div class="st"><span>Sin resultados para “${esc(q)}”${state.type !== 'all' ? '. Probá con “Todo”.' : ''}</span></div></div>`;
+    } else {
+      els.suggest.innerHTML = sugItems.map((it, i) => {
+        const date = it.release_date || it.first_air_date || '';
+        return `<button class="sug" role="option" data-i="${i}">
+          ${it.poster_path ? `<img src="${IMG}w92${it.poster_path}" alt="">` : '<span class="ph"></span>'}
+          <span class="st"><b>${esc(it.title || it.name)}</b><span>${TYPE_LABEL[it.media_type]}${date ? ' · ' + date.slice(0, 4) : ''}</span></span>
+        </button>`;
+      }).join('') + `<button class="sug-all" data-all>Ver todos los resultados de “${esc(q)}” →</button>`;
+    }
+    els.suggest.classList.remove('hidden');
+  }
+  function moveSug(d) {
+    if (!sugItems.length) return;
+    sugActive = (sugActive + d + sugItems.length) % sugItems.length;
+    els.suggest.querySelectorAll('.sug').forEach((b, i) => b.classList.toggle('active', i === sugActive));
+  }
+  function hideSuggest() { els.suggest.classList.add('hidden'); sugActive = -1; }
+  els.suggest.addEventListener('click', e => {
+    if (e.target.closest('[data-all]')) return runSearch();
+    const b = e.target.closest('.sug[data-i]'); if (!b) return;
+    const it = sugItems[+b.dataset.i];
+    hideSuggest();
+    openDetail(it.id, it.media_type);
+  });
+  function runSearch() {
+    const q = els.q.value.trim();
+    hideSuggest();
+    if (q.length < 2) return;
+    state.query = q; state.provider = null; state.mode = 'search';
+    renderChips(); load();
+    els.q.blur();
+  }
 
   document.querySelector('.seg').addEventListener('click', async e => {
     const b = e.target.closest('button'); if (!b || b.dataset.type === state.type) return;
@@ -396,73 +535,104 @@
     state.type = b.dataset.type;
     state.provider = null;
     if (state.mode === 'provider') state.mode = 'trending';
+    sugItems = []; hideSuggest();
     await loadProviders();
     load();
+    if (els.q.value.trim().length >= 2 && document.activeElement === els.q) suggest(els.q.value.trim());
   });
 
   // ---------- Listado ----------
+  async function discoverAll(params) {
+    // "Todo" en el catálogo de una plataforma: mezcla pelis y series por popularidad
+    const [m, t] = await Promise.all([
+      api('/discover/movie', params).catch(() => ({ results: [], total_pages: 0 })),
+      api('/discover/tv', params).catch(() => ({ results: [], total_pages: 0 }))
+    ]);
+    const results = [
+      ...m.results.map(r => ({ ...r, media_type: 'movie' })),
+      ...t.results.map(r => ({ ...r, media_type: 'tv' }))
+    ].sort((a, b) => b.popularity - a.popularity);
+    return { results, total_pages: Math.max(m.total_pages, t.total_pages) };
+  }
+
   async function load(append = false) {
     state.page = append ? state.page + 1 : 1;
-    const label = state.type === 'movie' ? 'películas' : 'series';
-    if (!append) { els.grid.innerHTML = Array(12).fill('<div class="skeleton"></div>').join(''); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+    const label = { all: 'películas y series', movie: 'películas', tv: 'series' }[state.type];
+    if (!append) { els.grid.innerHTML = Array(12).fill('<div class="skeleton"></div>').join(''); }
     let data;
     try {
       if (state.mode === 'search') {
         els.listTitle.textContent = `Resultados para “${state.query}”`;
-        els.listHint.textContent = 'Tocá una para ver dónde está';
-        data = await api(`/search/${state.type}`, { query: state.query, page: state.page, region: REGION, include_adult: false });
+        els.listHint.textContent = `${label} · tocá una para ver dónde está`;
+        data = await searchTitles(state.query, state.page);
       } else if (state.mode === 'provider') {
         els.listTitle.textContent = `En ${state.provider.provider_name} (Argentina)`;
         els.listHint.textContent = `${label} incluidas en la suscripción, por popularidad`;
-        data = await api(`/discover/${state.type}`, {
+        const params = {
           watch_region: REGION, with_watch_providers: state.provider.provider_id,
           with_watch_monetization_types: 'flatrate|free|ads', sort_by: 'popularity.desc', page: state.page
-        });
+        };
+        if (state.type === 'all') data = await discoverAll(params);
+        else {
+          data = await api(`/discover/${state.type}`, params);
+          data.results = data.results.map(r => ({ ...r, media_type: state.type }));
+        }
       } else {
         els.listTitle.textContent = `Tendencias de la semana`;
         els.listHint.textContent = `${label} más buscadas`;
         data = await api(`/trending/${state.type}/week`, { page: state.page });
+        data.results = (data.results || []).filter(r => r.media_type === 'movie' || r.media_type === 'tv' || state.type !== 'all')
+          .map(r => ({ ...r, media_type: r.media_type || state.type }));
       }
     } catch (e) { return handleErr(e); }
 
     state.totalPages = Math.min(data.total_pages || 1, 500);
-    const items = data.results || [];
-    const html = items.map(card).join('');
+    const list = data.results || [];
+    list.forEach(it => items.set(it.media_type + it.id, it.media_type));
+    const html = list.map(card).join('');
     if (append) els.grid.insertAdjacentHTML('beforeend', html);
-    else els.grid.innerHTML = html || `<div class="empty">No encontré nada. Probá con el título original o en inglés.</div>`;
+    else els.grid.innerHTML = html || `<div class="empty">No encontré nada.${state.type !== 'all' ? ' Probá con “Todo”: puede que sea ' + (state.type === 'movie' ? 'una serie' : 'una película') + '.' : ' Probá con el título original o en inglés.'}</div>`;
     els.more.classList.toggle('hidden', state.page >= state.totalPages);
-    items.forEach(decorate);
+    list.forEach(decorate);
   }
 
   function card(it) {
     const title = it.title || it.name;
     const date = it.release_date || it.first_air_date || '';
     const vote = it.vote_average ? it.vote_average.toFixed(1) : '';
+    const uid = it.media_type + it.id;
     return `
-      <button class="card" data-id="${it.id}" aria-label="${esc(title)}">
+      <button class="card" data-id="${it.id}" data-type="${it.media_type}" aria-label="${esc(title)}, ${TYPE_LABEL[it.media_type]}">
         ${it.poster_path ? `<img class="poster" src="${IMG}w342${it.poster_path}" alt="" loading="lazy">` : `<div class="noposter">🎬</div>`}
         ${vote ? `<span class="badge">★ ${vote}</span>` : ''}
-        <span class="mini-prov" id="mp-${it.id}"></span>
-        <div class="meta"><div class="t">${esc(title)}</div><div class="y">${date.slice(0, 4) || '—'}</div></div>
+        <span class="mini-prov" id="mp-${uid}"></span>
+        <div class="meta"><div class="t">${esc(title)}</div><div class="y"><span class="kind ${it.media_type}">${TYPE_LABEL[it.media_type]}</span>${date.slice(0, 4) || '—'}</div></div>
       </button>`;
   }
 
-  // Muestra logos de plataformas de suscripción directamente en la tarjeta
+  function subsOf(p) { return p ? [...(p.flatrate || []), ...(p.free || []), ...(p.ads || [])] : []; }
+  function dedupe(list) { const seen = new Set(); return list.filter(s => !seen.has(s.provider_id) && seen.add(s.provider_id)); }
+
+  // Muestra logos de plataformas en la tarjeta; las que tenés van primero y resaltadas
   async function decorate(it) {
-    const type = state.type;
-    const p = await watchProviders(type, it.id);
-    const slot = document.getElementById('mp-' + it.id);
+    const p = await watchProviders(it.media_type, it.id);
+    const slot = document.getElementById('mp-' + it.media_type + it.id);
     if (!slot || !p) return;
-    const subs = [...(p.flatrate || []), ...(p.free || []), ...(p.ads || [])];
-    slot.innerHTML = subs.slice(0, 3).map(s => `<img src="${IMG}w92${s.logo_path}" alt="${esc(s.provider_name)}" title="${esc(s.provider_name)}">`).join('');
+    const subs = dedupe(subsOf(p)).sort((a, b) => mine.has(b.provider_id) - mine.has(a.provider_id));
+    slot.innerHTML = subs.slice(0, 3).map(s => `<img class="${mine.has(s.provider_id) ? 'mine' : ''}" src="${IMG}w92${s.logo_path}" alt="${esc(s.provider_name)}" title="${esc(s.provider_name)}${mine.has(s.provider_id) ? ' (la tenés)' : ''}">`).join('');
   }
 
   els.more.addEventListener('click', () => load(true));
-  els.grid.addEventListener('click', e => { const c = e.target.closest('.card'); if (c) openDetail(+c.dataset.id); });
+  els.grid.addEventListener('click', e => { const c = e.target.closest('.card'); if (c) openDetail(+c.dataset.id, c.dataset.type); });
 
   // ---------- Detalle ----------
-  async function openDetail(id) {
-    const type = state.type;
+  function openUrl(name, title) {
+    const t = encodeURIComponent(title);
+    const hit = OPEN.find(([re]) => re.test(name));
+    return hit ? hit[1](t) : null;
+  }
+
+  async function openDetail(id, type) {
     els.sheet.innerHTML = '<div style="padding:60px;text-align:center;color:var(--muted)">Cargando…</div>';
     els.modal.classList.add('open');
     document.body.style.overflow = 'hidden';
@@ -474,11 +644,23 @@
     const year = (d.release_date || d.first_air_date || '').slice(0, 4);
     const runtime = d.runtime ? `${Math.floor(d.runtime / 60)}h ${d.runtime % 60}m` : d.number_of_seasons ? `${d.number_of_seasons} temporada${d.number_of_seasons > 1 ? 's' : ''}` : '';
     const genres = (d.genres || []).map(g => g.name).join(', ');
-    const subs = p ? [...(p.flatrate || []), ...(p.free || []), ...(p.ads || [])] : [];
+    const subs = dedupe(subsOf(p));
+    const owned = subs.filter(s => mine.has(s.provider_id));
 
     const group = (label, color, list) => list?.length ? `
       <h4><span class="dot" style="background:${color}"></span>${label}</h4>
-      <div class="provs">${list.map(s => `<div class="prov"><img src="${IMG}w92${s.logo_path}" alt="">${esc(s.provider_name)}</div>`).join('')}</div>` : '';
+      <div class="provs">${list.map(s => `<div class="prov ${mine.has(s.provider_id) ? 'mine' : ''}"><img src="${IMG}w92${s.logo_path}" alt="">${esc(s.provider_name)}${mine.has(s.provider_id) ? ' ⭐' : ''}</div>`).join('')}</div>` : '';
+
+    let verdict;
+    if (owned.length) verdict = `<div class="verdict yes">⭐ ¡La tenés! Está en ${owned.map(s => esc(s.provider_name)).join(', ')}, que ya pagás.</div>`;
+    else if (subs.length) verdict = `<div class="verdict yes">✅ Disponible en Argentina con suscripción en: ${subs.map(s => esc(s.provider_name)).join(', ')}${mine.size ? ' (ninguna de las tuyas)' : ''}</div>`;
+    else if (p && (p.rent || p.buy)) verdict = '<div class="verdict no">💸 No está incluida en ninguna suscripción en Argentina, pero se puede alquilar o comprar.</div>';
+    else verdict = '<div class="verdict no">❌ No figura en ninguna plataforma en Argentina por ahora.</div>';
+
+    const openBtns = (owned.length ? owned : subs).map(s => {
+      const url = openUrl(s.provider_name, title);
+      return url ? `<a class="btn" href="${url}" target="_blank" rel="noopener" data-copy="${esc(title)}">Abrir en ${esc(s.provider_name)} ↗</a>` : '';
+    }).join('');
 
     els.sheet.innerHTML = `
       <div class="sheet-hero" style="${d.backdrop_path ? `background-image:url(${IMG}w1280${d.backdrop_path})` : ''}">
@@ -488,14 +670,10 @@
         ${d.poster_path ? `<img class="poster" src="${IMG}w342${d.poster_path}" alt="">` : '<div class="noposter">🎬</div>'}
         <div>
           <h3>${esc(title)}</h3>
-          <div class="facts">${[year, runtime, genres, d.vote_average ? '★ ' + d.vote_average.toFixed(1) : ''].filter(Boolean).map(esc).map(x => `<span>${x}</span>`).join('')}</div>
+          <div class="facts"><span class="kind ${type}" style="padding:2px 6px;border-radius:6px;font-weight:700;font-size:.72rem;text-transform:uppercase">${TYPE_LABEL[type]}</span>${[year, runtime, genres, d.vote_average ? '★ ' + d.vote_average.toFixed(1) : ''].filter(Boolean).map(esc).map(x => `<span>${x}</span>`).join('')}</div>
         </div>
-        <div class="verdict ${subs.length ? 'yes' : 'no'}">
-          ${subs.length
-            ? `✅ Disponible en Argentina con suscripción en: ${subs.map(s => esc(s.provider_name)).join(', ')}`
-            : p && (p.rent || p.buy) ? '💸 No está incluida en ninguna suscripción en Argentina, pero se puede alquilar o comprar.'
-            : '❌ No figura en ninguna plataforma en Argentina por ahora.'}
-        </div>
+        ${verdict}
+        ${openBtns ? `<div class="owned">${openBtns}</div>` : ''}
         <div class="where">
           ${group('Incluida en suscripción', 'var(--ok)', p?.flatrate)}
           ${group('Gratis', 'var(--accent)', [...(p?.free || []), ...(p?.ads || [])])}
@@ -504,12 +682,18 @@
         </div>
         ${d.overview ? `<p class="overview">${esc(d.overview)}</p>` : ''}
         <div class="actions">
-          ${p?.link ? `<a class="btn" href="${p.link}" target="_blank" rel="noopener">Ver opciones en Argentina ↗</a>` : ''}
+          ${p?.link ? `<a class="btn ghost" href="${p.link}" target="_blank" rel="noopener">Ver todas las opciones ↗</a>` : ''}
           <a class="btn ghost" href="https://www.justwatch.com/ar/buscar?q=${encodeURIComponent(title)}" target="_blank" rel="noopener">Buscar en JustWatch AR ↗</a>
         </div>
-        <div class="credit">Disponibilidad para Argentina provista por JustWatch. Los catálogos cambian seguido: confirmá en la app antes de pagar.</div>
+        <div class="credit">Disponibilidad para Argentina provista por JustWatch. “Abrir en…” te lleva a la plataforma (a su búsqueda cuando la tiene) y copia el título por si tenés que pegarlo. Si ya iniciaste sesión ahí, entra con tu cuenta.</div>
       </div>`;
   }
+
+  // Al abrir una plataforma, copiamos el título para pegarlo en su buscador
+  els.sheet.addEventListener('click', e => {
+    const a = e.target.closest('a[data-copy]'); if (!a) return;
+    navigator.clipboard?.writeText(a.dataset.copy).then(() => toast('Título copiado: pegalo en el buscador si hace falta', true)).catch(() => {});
+  });
 
   function closeModal() { els.modal.classList.remove('open'); document.body.style.overflow = ''; }
   els.modal.addEventListener('click', e => { if (e.target.closest('[data-close]')) closeModal(); });
@@ -518,13 +702,55 @@
     if (e.key === '/' && document.activeElement !== els.q && !els.app.classList.contains('hidden')) { e.preventDefault(); els.q.focus(); }
   });
 
+  // ---------- Mis plataformas ----------
+  async function openMine() {
+    els.sheet.innerHTML = '<div style="padding:60px;text-align:center;color:var(--muted)">Cargando…</div>';
+    els.modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    let list;
+    try { list = await providersFor('all'); } catch (e) { closeModal(); return handleErr(e); }
+    list = list.filter(p => rank(p) < 999 || prio(p) < 60);
+    els.sheet.innerHTML = `
+      <button class="close" data-close aria-label="Cerrar">✕</button>
+      <div class="mine-head">
+        <h3>Mis plataformas</h3>
+        <p>Marcá las que pagás. Te aviso cuando algo está en una de ellas y te doy el botón para abrirla. Se guarda en este dispositivo.</p>
+      </div>
+      <div class="mine-grid">${list.map(p => `
+        <button class="mine-opt ${mine.has(p.provider_id) ? 'on' : ''}" data-id="${p.provider_id}" aria-pressed="${mine.has(p.provider_id)}">
+          <img src="${IMG}w92${p.logo_path}" alt=""><span>${esc(p.provider_name)}</span>
+        </button>`).join('')}</div>
+      <div class="mine-foot"><button class="btn" data-close>Listo</button></div>`;
+  }
+  els.sheet.addEventListener('click', e => {
+    const b = e.target.closest('.mine-opt'); if (!b) return;
+    const id = +b.dataset.id;
+    mine.has(id) ? mine.delete(id) : mine.add(id);
+    b.classList.toggle('on', mine.has(id));
+    b.setAttribute('aria-pressed', mine.has(id));
+    safeSet(MINE_STORE, JSON.stringify([...mine]));
+  });
+  $('#mineBtn').addEventListener('click', openMine);
+  // Al cerrar "Mis plataformas", refrescar chips y tarjetas
+  els.modal.addEventListener('click', e => {
+    if (e.target.closest('[data-close]') && els.sheet.querySelector('.mine-grid')) {
+      renderChips();
+      els.grid.querySelectorAll('.card').forEach(c => decorate({ id: +c.dataset.id, media_type: c.dataset.type }));
+    }
+  }, true);
+
   // ---------- Utilidades ----------
-  function handleErr(e) {
-    if (e.auth && EMBEDDED_KEY) { els.toast.textContent = 'La clave de TMDB integrada dejó de funcionar.'; els.toast.classList.add('show'); return; }
-    if (e.auth) { safeSet(KEY_STORE, null); key = null; return showSetup('Tu clave dejó de funcionar. Cargá una nueva.'); }
-    els.toast.textContent = e.message || 'Algo falló. Probá de nuevo.';
+  function toast(msg, ok) {
+    els.toast.textContent = msg;
+    els.toast.style.borderColor = ok ? 'var(--ok)' : '';
     els.toast.classList.add('show');
-    setTimeout(() => els.toast.classList.remove('show'), 3500);
+    clearTimeout(toast.t);
+    toast.t = setTimeout(() => els.toast.classList.remove('show'), 3500);
+  }
+  function handleErr(e) {
+    if (e.auth && EMBEDDED_KEY) return toast('La clave de TMDB integrada dejó de funcionar.');
+    if (e.auth) { safeSet(KEY_STORE, null); key = null; return showSetup('Tu clave dejó de funcionar. Cargá una nueva.'); }
+    toast(e.message || 'Algo falló. Probá de nuevo.');
   }
   function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]); }
 
