@@ -269,6 +269,12 @@
   .clear { background: transparent; border: 0; color: var(--accent); font-size: .85rem; font-weight: 600; padding: 4px; }
   .sug.cat-sug .ph { display: grid; place-items: center; font-size: 1.3rem; }
   .retry { margin-top: 12px; }
+  .new-row { display: flex; gap: 12px; overflow-x: auto; padding: 4px 2px 12px; scroll-snap-type: x proximity; }
+  .new-row .card { flex: none; width: 150px; scroll-snap-align: start; }
+  @media (max-width: 480px) { .new-row .card { width: 130px; } }
+  .new-row .skeleton { flex: none; width: 150px; }
+  .new-tag { color: var(--ok); font-weight: 600; }
+  .see-all { background: transparent; border: 0; color: var(--accent); font-weight: 600; font-size: .9rem; padding: 4px; white-space: nowrap; }
   .similar { grid-column: 1/-1; }
   .similar h4 { margin: 8px 0 10px; font-size: .95rem; }
   .sim-row { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; }
@@ -339,6 +345,14 @@
       <div class="suggest hidden" id="suggest" role="listbox"></div>
       </div>
     </div>
+
+    <section id="newSec">
+      <div class="section-title">
+        <h2 id="newTitle">🆕 Estrenos recientes</h2>
+        <button class="see-all" id="newAll">Ver todos →</button>
+      </div>
+      <div class="new-row" id="newRow"></div>
+    </section>
 
     <div class="section-title">
       <h2>Categorías</h2>
@@ -463,7 +477,7 @@
     listTitle: $('#listTitle'), listHint: $('#listHint'), modal: $('#modal'), sheet: $('#sheet'), toast: $('#toast')
   };
 
-  const state = { type: 'all', mode: 'trending', query: '', provider: null, cat: null, sub: null, onlyAvail: false, onlyMine: false, page: 1, totalPages: 1, providers: {} };
+  const state = { type: 'all', mode: 'trending', query: '', provider: null, cat: null, sub: null, onlyAvail: false, onlyMine: false, showNew: false, page: 1, totalPages: 1, providers: {} };
   const provCache = new Map();
   let key = EMBEDDED_KEY || safeGet(KEY_STORE);
   let mine = new Set(safeJSON(safeGet(MINE_STORE)) || []);
@@ -527,6 +541,7 @@
     els.app.classList.remove('hidden');
     renderCats();
     renderListCount();
+    renderNew();
     const m = location.hash.match(/^#(movie|tv)-(\d+)$/);
     if (m) {
       // llegó por un enlace compartido: abrir esa ficha; al cerrarla queda en la portada
@@ -628,7 +643,55 @@
     state.cat = state.sub = state.provider = null; state.onlyAvail = state.onlyMine = false; $('#onlyAvail').checked = $('#onlyMine').checked = false;
     setMode(); renderCats(); renderChips(); load();
   });
-  function setMode() { state.mode = state.query ? 'search' : (state.cat || state.provider || (state.onlyMine && mine.size)) ? 'discover' : 'trending'; }
+  // keepNew: al cambiar Todo/Pelis/Series se sigue viendo "Estrenos"; cualquier otro filtro sale de ese modo
+  function setMode(keepNew) {
+    if (!keepNew) state.showNew = false;
+    state.mode = state.query ? 'search' : state.showNew ? 'new' : (state.cat || state.provider || (state.onlyMine && mine.size)) ? 'discover' : 'trending';
+    $('#newSec').classList.toggle('hidden', state.mode !== 'trending');
+  }
+
+  // ---------- Estrenos recientes ----------
+  // La API no dice cuándo algo se sumó a cada plataforma: tomamos lo estrenado hace poco
+  // que ya está disponible en Argentina (en tus plataformas si las marcaste).
+  const isoDaysAgo = d => new Date(Date.now() - d * 864e5).toISOString().slice(0, 10);
+  function newParams(type, page) {
+    const params = {
+      watch_region: REGION, with_watch_monetization_types: 'flatrate|free|ads',
+      sort_by: 'popularity.desc', page, include_adult: false, 'vote_count.gte': 5
+    };
+    if (mine.size) params.with_watch_providers = [...mine].join('|');
+    const today = isoDaysAgo(0);
+    // pelis: estrenadas en los últimos 6 meses; series: con episodios emitidos en los últimos 2 meses
+    if (type === 'movie') Object.assign(params, { 'primary_release_date.gte': isoDaysAgo(180), 'primary_release_date.lte': today });
+    else Object.assign(params, { 'air_date.gte': isoDaysAgo(60), 'air_date.lte': today });
+    return params;
+  }
+  async function fetchNew(page = 1) {
+    const types = state.type === 'all' ? ['movie', 'tv'] : [state.type];
+    const res = await Promise.all(types.map(type => api(`/discover/${type}`, newParams(type, page))
+      .then(d => ({ results: (d.results || []).map(r => ({ ...r, media_type: type })), total_pages: d.total_pages || 0 }))));
+    return { results: res.flatMap(r => r.results).sort((a, b) => b.popularity - a.popularity), total_pages: Math.max(...res.map(r => r.total_pages)) };
+  }
+  let newSeq = 0;
+  async function renderNew() {
+    const seq = ++newSeq;
+    $('#newTitle').textContent = mine.size ? '🆕 Estrenos recientes en tus plataformas' : '🆕 Estrenos recientes en Argentina';
+    const row = $('#newRow');
+    row.innerHTML = Array(6).fill('<div class="skeleton"></div>').join('');
+    let d;
+    try { d = await fetchNew(1); } catch { if (seq === newSeq) { row.innerHTML = ''; $('#newSec').classList.add('hidden'); } return; }
+    if (seq !== newSeq) return;
+    const list = d.results.slice(0, 12); // cada tarjeta consulta su disponibilidad: 12 alcanza para la fila
+    row.innerHTML = list.length ? list.map(card).join('')
+      : `<div class="empty" style="padding:16px 4px;text-align:left">No encontré estrenos recientes${mine.size ? ' en tus plataformas' : ''}.</div>`;
+    list.forEach(decorate);
+  }
+  $('#newRow').addEventListener('click', e => { const c = e.target.closest('.card'); if (c) openDetail(+c.dataset.id, c.dataset.type); });
+  $('#newAll').addEventListener('click', () => {
+    state.showNew = true; state.cat = state.sub = state.provider = null; els.q.value = ''; state.query = '';
+    setMode(true); renderCats(); renderChips(); load();
+    $('#listTitle').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
   $('#onlyMine').addEventListener('change', e => { state.onlyMine = e.target.checked; els.q.value = ''; state.query = ''; setMode(); renderCats(); load(); });
 
   // Interpreta "acción", "thriller", "películas de guerra", "series de zombies"…
@@ -763,9 +826,10 @@
     state.type = b.dataset.type;
     state.provider = null;
     if (state.cat && !catAvail(state.cat)) state.cat = state.sub = null;
-    setMode();
+    setMode(true);
     sugItems = []; hideSuggest();
     renderCats();
+    renderNew();
     await loadProviders();
     load();
     if (els.q.value.trim().length >= 2 && document.activeElement === els.q) suggest(els.q.value.trim());
@@ -812,14 +876,18 @@
     const label = { all: 'películas y series', movie: 'películas', tv: 'series' }[state.type];
     if (!append) { els.grid.innerHTML = Array(12).fill('<div class="skeleton"></div>').join(''); }
     $('#onlyAvail').parentElement.classList.toggle('hidden', state.mode !== 'discover' || !!state.provider || state.onlyMine);
-    $('#clearFilters').classList.toggle('hidden', !state.cat && !state.provider && !state.onlyAvail && !state.onlyMine);
-    $('#onlyMineWrap').classList.toggle('hidden', !mine.size || !!state.provider || state.mode === 'search');
+    $('#clearFilters').classList.toggle('hidden', !state.cat && !state.provider && !state.onlyAvail && !state.onlyMine && !state.showNew);
+    $('#onlyMineWrap').classList.toggle('hidden', !mine.size || !!state.provider || state.mode === 'search' || state.mode === 'new');
     let data;
     try {
       if (state.mode === 'search') {
         els.listTitle.textContent = `Resultados para “${state.query}”`;
         els.listHint.textContent = `${label} · tocá una para ver dónde está`;
         data = await searchTitles(state.query, state.page);
+      } else if (state.mode === 'new') {
+        els.listTitle.textContent = `🆕 Estrenos recientes${mine.size ? ' en tus plataformas' : ' en Argentina'}`;
+        els.listHint.textContent = 'pelis de los últimos 6 meses y series con episodios nuevos, ya disponibles';
+        data = await fetchNew(state.page);
       } else if (state.mode === 'discover') {
         const what = state.cat ? `${TYPE_PLURAL[state.type]} · ${state.cat.name}${state.sub ? ' › ' + state.sub[0] : ''}` : TYPE_PLURAL[state.type];
         els.listTitle.textContent = state.provider ? `${what} en ${state.provider.provider_name}` : state.onlyMine && mine.size ? `${what} en tus plataformas` : what;
@@ -1016,7 +1084,7 @@
       else history.replaceState(null, '', location.pathname + location.search);
     }
     if (wasMine) {
-      renderChips(); renderCats(); if (state.onlyMine) { setMode(); load(); }
+      renderChips(); renderCats(); renderNew(); if (state.onlyMine || state.showNew) { setMode(state.showNew); load(); }
       els.grid.querySelectorAll('.card').forEach(c => decorate({ id: +c.dataset.id, media_type: c.dataset.type }));
     }
     if (els.sheet.querySelector('.wl-grid')) load();
