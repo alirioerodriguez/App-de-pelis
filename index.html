@@ -1083,12 +1083,13 @@
 
     // El enlace de TMDB lleva a su página "Dónde ver", con un botón por plataforma
     // que abre el título exacto (vía JustWatch). Es lo más directo que permiten los datos.
-    const direct = p?.link && (subs.length || p.rent || p.buy)
-      ? `<a class="btn" href="${p.link}" target="_blank" rel="noopener">▶ Ir directo al título ↗</a>` : '';
-    const openBtns = direct + (owned.length ? owned : subs).map(s => {
+    // Un botón por plataforma. Arranca apuntando a la búsqueda de la plataforma y, cuando llega
+    // el enlace exacto del título (Wikidata), se reemplaza por "▶ Ver en …".
+    const openBtns = (owned.length ? owned : subs).map(s => {
       const url = openUrl(s.provider_name, title);
-      return url ? `<a class="btn ghost" href="${url}" target="_blank" rel="noopener" data-copy="${esc(title)}">Abrir ${esc(s.provider_name)} ↗</a>` : '';
-    }).join('');
+      return `<a class="btn ghost ${url ? '' : 'hidden'}" data-prov="${esc(provKey(s.provider_name) || '')}" data-name="${esc(s.provider_name)}" href="${url || '#'}" target="_blank" rel="noopener" data-copy="${esc(title)}">Abrir ${esc(s.provider_name)} ↗</a>`;
+    }).join('') + (p?.link && (subs.length || p.rent || p.buy)
+      ? `<a class="btn ghost" href="${p.link}" target="_blank" rel="noopener">Ver todas las opciones ↗</a>` : '');
 
     els.sheet.innerHTML = `
       <div class="sheet-hero" style="${d.backdrop_path ? `background-image:url(${IMG}w1280${d.backdrop_path})` : ''}">
@@ -1121,10 +1122,83 @@
             ${r.poster_path ? `<img src="${IMG}w185${r.poster_path}" alt="" loading="lazy">` : '<div class="noposter">🎬</div>'}
             <span>${esc(r.title || r.name)}</span>
           </button>`).join('')}</div></div>` : ''}
-        <div class="credit">Disponibilidad para Argentina provista por JustWatch. “Ir directo al título” abre la página de TMDB con un botón por plataforma que te lleva al título exacto; en el celular, si tenés la app instalada, el teléfono la abre ahí. “Abrir…” va a la plataforma (a su búsqueda cuando la tiene) y copia el título. Si ya iniciaste sesión, entra con tu cuenta.</div>
+        <div class="credit">Disponibilidad para Argentina provista por JustWatch. “▶ Ver en…” abre el título exacto: en el celular, en la app de la plataforma si la tenés instalada; en la compu, en su web. Si para un título no tenemos el enlace exacto, “Abrir…” va a la búsqueda de la plataforma y copia el título. Si ya iniciaste sesión, entra con tu cuenta.</div>
       </div>`;
     focusSheet();
     loadAwards(type, id, seq);
+    loadDeepLinks(type, id, seq);
+  }
+
+  // ---------- Enlace directo al título en cada plataforma ----------
+  // TMDB no da el enlace exacto. Wikidata guarda, para muchas pelis y series, el ID de cada
+  // plataforma (Netflix, Disney+, Prime Video, Max, Apple TV…) junto con el formato de su URL.
+  function provKey(name) {
+    const n = name.toLowerCase();
+    if (n.includes('netflix')) return 'netflix';
+    if (n.includes('disney')) return 'disney';
+    if (n.includes('prime video') || n.includes('amazon')) return 'prime';
+    if (n.includes('hbo') || /(^|\s)max(\s|$)/.test(n)) return 'max';
+    if (n.includes('apple tv')) return 'apple';
+    if (n.includes('paramount')) return 'paramount';
+    if (n.includes('mubi')) return 'mubi';
+    if (n.includes('crunchyroll')) return 'crunchyroll';
+    return null;
+  }
+  // En Android, un "intent" abre la app instalada y, si no está, cae a la web de la plataforma.
+  // En iPhone los enlaces https de estas plataformas los abre su app si está instalada.
+  const ANDROID_APP = { netflix: 'com.netflix.mediaclient', disney: 'com.disney.disneyplus', prime: 'com.amazon.avod.thirdpartyclient' };
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  function appLink(key, url) {
+    if (!isAndroid || !ANDROID_APP[key] || !url.startsWith('https://')) return url;
+    return `intent://${url.slice(8)}#Intent;scheme=https;package=${ANDROID_APP[key]};S.browser_fallback_url=${encodeURIComponent(url)};end`;
+  }
+
+  const deepCache = new Map();
+  function fetchDeepLinks(type, id) {
+    const k = type + id;
+    if (deepCache.has(k)) return deepCache.get(k);
+    const prop = type === 'movie' ? 'P4947' : 'P4983';
+    const q = `SELECT ?l ?val ?fmt WHERE {
+      ?item wdt:${prop} "${id}" .
+      ?item ?dc ?val .
+      ?prop wikibase:directClaim ?dc ; wikibase:propertyType wikibase:ExternalId ; wdt:P1630 ?fmt ; rdfs:label ?l .
+      FILTER(LANG(?l) = "en")
+      FILTER(REGEX(?l, "netflix|disney|prime video|hbo max|^max |apple tv|paramount|mubi|crunchyroll", "i"))
+      FILTER(!REGEX(?l, "person|episode|season|character|genre", "i"))
+    } LIMIT 50`;
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 8000);
+    const pr = fetch('https://query.wikidata.org/sparql?format=json&query=' + encodeURIComponent(q), { signal: ctrl.signal, headers: { accept: 'application/sparql-results+json' } })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (!d) return null;
+        const links = {};
+        for (const b of d.results.bindings) {
+          const key = provKey(b.l.value), fmt = b.fmt.value;
+          if (!key || links[key] || !fmt.includes('$1') || !/^https:\/\//.test(fmt)) continue;
+          links[key] = fmt.replace('$1', encodeURIComponent(b.val.value));
+        }
+        return links;
+      })
+      .catch(() => null)
+      .finally(() => clearTimeout(timer));
+    deepCache.set(k, pr);
+    pr.then(v => { if (!v) deepCache.delete(k); });
+    return pr;
+  }
+  async function loadDeepLinks(type, id, seq) {
+    const links = await fetchDeepLinks(type, id);
+    if (!links || seq !== detailSeq) return;
+    els.sheet.querySelectorAll('a[data-prov]').forEach(a => {
+      const url = links[a.dataset.prov];
+      if (!url) return;
+      a.href = appLink(a.dataset.prov, url);
+      if (a.href.startsWith('intent:')) a.removeAttribute('target');
+      a.textContent = `▶ Ver en ${a.dataset.name}`;
+      a.classList.remove('ghost', 'hidden');
+      a.removeAttribute('data-copy');
+      a.parentElement.prepend(a); // el enlace directo va primero
+    });
   }
 
   // Premios y nominaciones: TMDB no los tiene; se buscan en Wikidata por el ID de TMDB
