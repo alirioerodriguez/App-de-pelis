@@ -237,6 +237,41 @@
   .prov.mine { border-color: var(--ok); }
   .owned { grid-column: 1/-1; display: flex; flex-wrap: wrap; gap: 10px; }
   .bar .icon-btn + .icon-btn { margin-left: 0; }
+
+  /* ---------- Bloqueadas ---------- */
+  .card.locked .poster, .card.locked .noposter { filter: grayscale(1) brightness(.4); }
+  .card.locked .t { color: var(--muted); }
+  .lock {
+    position: absolute; left: 0; right: 0; top: 0; aspect-ratio: 2/3; display: none;
+    flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    color: #fff; font-weight: 700; font-size: .8rem; text-align: center; padding: 10px; pointer-events: none;
+  }
+  .lock b { font-size: 1.8rem; }
+  .card.locked .lock { display: flex; }
+  .card.locked .mini-prov { display: none; }
+  .rent-tag { background: rgba(0,0,0,.72); color: var(--rent); font-size: .72rem; font-weight: 700; padding: 3px 7px; border-radius: 8px; }
+  .verdict.lockd { background: rgba(154,154,176,.10); border: 1px solid var(--line); color: var(--muted); }
+
+  /* ---------- Categorías ---------- */
+  .cats { display: flex; flex-wrap: wrap; gap: 8px; }
+  .cat {
+    background: var(--card); border: 1px solid var(--line); color: var(--text); border-radius: 999px;
+    padding: 8px 14px; font-size: .88rem; font-weight: 500; transition: border-color .15s, background .15s;
+  }
+  .cat:hover { border-color: var(--accent); }
+  .cat.on { background: var(--accent); border-color: var(--accent); color: #08131f; font-weight: 700; }
+  .subcats { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; padding-left: 12px; border-left: 2px solid var(--accent); }
+  .subcats .cat { padding: 6px 12px; font-size: .82rem; }
+  .subcats .cat.on { background: rgba(117,170,219,.2); color: var(--text); }
+  .filters { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+  .toggle { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: .85rem; cursor: pointer; }
+  .toggle input { accent-color: var(--ok); width: 16px; height: 16px; }
+  .clear { background: transparent; border: 0; color: var(--accent); font-size: .85rem; font-weight: 600; padding: 4px; }
+  .sug.cat-sug .ph { display: grid; place-items: center; font-size: 1.3rem; }
+  @media (max-width: 640px) {
+    .cats, .subcats { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 6px; scrollbar-width: none; }
+    .cats .cat, .subcats .cat { flex: none; }
+  }
   @media (max-width: 480px) { .bar .lbl { display: none; } .brand small { display: none; } }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 </style>
@@ -274,7 +309,7 @@
       <div class="search-box">
       <div class="search">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <input id="q" type="search" placeholder="Ej: El cuento de la criada, Dune…" autocomplete="off" enterkeyhint="search" aria-autocomplete="list" aria-controls="suggest">
+        <input id="q" type="search" placeholder="Título o género: “acción”…" autocomplete="off" enterkeyhint="search" aria-autocomplete="list" aria-controls="suggest">
         <div class="seg" role="tablist" aria-label="Tipo">
           <button class="on" data-type="all" role="tab">Todo</button>
           <button data-type="movie" role="tab">Pelis</button>
@@ -286,6 +321,13 @@
     </div>
 
     <div class="section-title">
+      <h2>Categorías</h2>
+      <span class="hint">También podés escribir “acción”, “thriller” o “películas de guerra”</span>
+    </div>
+    <div class="cats" id="cats"></div>
+    <div class="subcats hidden" id="subcats"></div>
+
+    <div class="section-title">
       <h2>Plataformas en Argentina</h2>
       <span class="hint">Tocá una para ver su catálogo</span>
     </div>
@@ -293,7 +335,11 @@
 
     <div class="section-title">
       <h2 id="listTitle">Tendencias</h2>
-      <span class="hint" id="listHint"></span>
+      <div class="filters">
+        <span class="hint" id="listHint"></span>
+        <label class="toggle"><input type="checkbox" id="onlyAvail"> Solo lo que se puede ver en Argentina</label>
+        <button class="clear hidden" id="clearFilters">Limpiar filtros ✕</button>
+      </div>
     </div>
     <div class="grid" id="grid"></div>
     <button class="more hidden" id="more">Cargar más</button>
@@ -340,6 +386,53 @@
     [/google play/i, t => `https://play.google.com/store/search?q=${t}&c=movies`],
   ];
   const TYPE_LABEL = { movie: 'Película', tv: 'Serie' };
+  const TYPE_PLURAL = { all: 'Películas y series', movie: 'Películas', tv: 'Series' };
+
+  // Categorías → géneros de TMDB (pelis y series usan IDs distintos; "|" = cualquiera de ellos).
+  // kw: palabra clave en inglés para cuando ese tipo no tiene el género (ej. no hay "Terror" para series).
+  // subs: [nombre, palabra clave de TMDB en inglés, sinónimos para el buscador]
+  const CATS = [
+    { id: 'accion', name: 'Acción', words: ['accion'], movie: '28', tv: '10759', subs: [
+      ['Superhéroes', 'superhero', ['superheroes', 'superheroe']], ['Artes marciales', 'martial arts', []],
+      ['Espías', 'spy', ['espias', 'espionaje']], ['Robos y atracos', 'heist', ['robos', 'atracos', 'robo']]] },
+    { id: 'aventura', name: 'Aventura', words: ['aventura', 'aventuras'], movie: '12', tv: '10759', subs: [
+      ['Supervivencia', 'survival', []], ['Piratas', 'pirate', []], ['Búsqueda del tesoro', 'treasure hunt', ['tesoro']]] },
+    { id: 'animacion', name: 'Animación', words: ['animacion', 'animada', 'animadas', 'animado', 'animados', 'dibujos'], movie: '16', tv: '16', subs: [
+      ['Anime', 'anime', []], ['Stop motion', 'stop motion', []]] },
+    { id: 'comedia', name: 'Comedia', words: ['comedia', 'comedias', 'graciosa', 'graciosas', 'humor'], movie: '35', tv: '35', subs: [
+      ['Comedia romántica', 'romantic comedy', ['romcom', 'comedias romanticas']], ['Parodia', 'parody', ['parodias']], ['Humor negro', 'dark comedy', []], ['Sitcom', 'sitcom', []]] },
+    { id: 'crimen', name: 'Crimen y policial', words: ['crimen', 'policial', 'policiales', 'policiaca', 'policiacas'], movie: '80', tv: '80', subs: [
+      ['Asesinos seriales', 'serial killer', ['asesino serial', 'asesinos']], ['Mafia', 'mafia', []], ['Narcotráfico', 'drug cartel', ['narcos', 'narco']], ['Detectives', 'detective', ['detective']]] },
+    { id: 'documental', name: 'Documental', words: ['documental', 'documentales'], movie: '99', tv: '99', subs: [
+      ['Deportes', 'sports', ['deporte', 'futbol']], ['Naturaleza', 'nature', ['animales']], ['True crime', 'true crime', []], ['Música', 'music', ['musica']]] },
+    { id: 'drama', name: 'Drama', words: ['drama', 'dramas', 'dramatica', 'dramaticas'], movie: '18', tv: '18', subs: [
+      ['Basadas en hechos reales', 'based on true story', ['hechos reales', 'historia real', 'historias reales']], ['Biográficas', 'biography', ['biografica', 'biograficas', 'biopic']], ['Adolescentes', 'coming of age', ['adolescentes', 'adolescencia']]] },
+    { id: 'familiar', name: 'Familiar e infantil', words: ['familiar', 'familiares', 'infantil', 'infantiles', 'ninos', 'chicos'], movie: '10751', tv: '10751|10762', subs: [] },
+    { id: 'fantasia', name: 'Fantasía', words: ['fantasia', 'fantasticas'], movie: '14', tv: '10765', subs: [
+      ['Magia', 'magic', ['magos', 'brujas']], ['Dragones', 'dragon', []], ['Cuentos de hadas', 'fairy tale', []]] },
+    { id: 'scifi', name: 'Ciencia ficción', words: ['ciencia ficcion', 'scifi', 'sci-fi', 'futuristas'], movie: '878', tv: '10765', subs: [
+      ['Viajes en el tiempo', 'time travel', []], ['Distopías', 'dystopia', ['distopia', 'distopicas']], ['Espacio', 'space', ['espacial', 'espaciales']],
+      ['Inteligencia artificial', 'artificial intelligence', ['robots']], ['Extraterrestres', 'alien', ['aliens', 'extraterrestre']]] },
+    { id: 'terror', name: 'Terror', words: ['terror', 'miedo', 'horror'], movie: '27', tv: null, kw: 'horror', subs: [
+      ['Zombies', 'zombie', ['zombi', 'zombis']], ['Slasher', 'slasher', []], ['Posesiones', 'demonic possession', ['exorcismo', 'demonios']],
+      ['Casas embrujadas', 'haunted house', ['fantasmas', 'embrujada']], ['Vampiros', 'vampire', ['vampiro']]] },
+    { id: 'thriller', name: 'Thriller y suspenso', words: ['thriller', 'thrillers', 'suspenso', 'suspense'], movie: '53', tv: '9648|80', subs: [
+      ['Psicológico', 'psychological thriller', ['psicologico', 'psicologicos']], ['Conspiraciones', 'conspiracy', ['conspiracion']], ['Secuestros', 'kidnapping', ['secuestro']]] },
+    { id: 'misterio', name: 'Misterio', words: ['misterio', 'misterios'], movie: '9648', tv: '9648', subs: [
+      ['¿Quién lo hizo?', 'whodunit', ['whodunit']]] },
+    { id: 'romance', name: 'Romance', words: ['romance', 'romantica', 'romanticas', 'romantico', 'amor'], movie: '10749', tv: null, kw: 'romance', subs: [
+      ['Comedia romántica', 'romantic comedy', []], ['Amor de época', 'period drama', []]] },
+    { id: 'guerra', name: 'Bélicas', words: ['guerra', 'guerras', 'belica', 'belicas', 'belico', 'belicos'], movie: '10752', tv: '10768', subs: [
+      ['Segunda Guerra Mundial', 'world war ii', ['segunda guerra', 'nazis']], ['Primera Guerra Mundial', 'world war i', ['primera guerra']],
+      ['Vietnam', 'vietnam war', []], ['Malvinas', 'falklands war', ['malvinas']]] },
+    { id: 'historia', name: 'Históricas', words: ['historica', 'historicas', 'historico', 'historicos', 'epoca'], movie: '36', tv: null, kw: 'historical drama', subs: [
+      ['Antigua Roma', 'ancient rome', ['roma', 'romanos']], ['Edad Media', 'middle ages', ['medieval', 'medievales']]] },
+    { id: 'western', name: 'Western', words: ['western', 'westerns', 'vaqueros', 'oeste'], movie: '37', tv: '37', subs: [] },
+    { id: 'musical', name: 'Musicales', words: ['musical', 'musicales'], movie: '10402', tv: null, kw: 'musical', subs: [] },
+    { id: 'reality', name: 'Reality', words: ['reality', 'realities'], movie: null, tv: '10764', subs: [] },
+  ];
+  const TYPE_WORDS = { pelicula: 'movie', peliculas: 'movie', peli: 'movie', pelis: 'movie', film: 'movie', films: 'movie', movie: 'movie', movies: 'movie', serie: 'tv', series: 'tv' };
+  const STOP = new Set(['de', 'del', 'la', 'las', 'el', 'los', 'un', 'una', 'unos', 'unas', 'con', 'sobre', 'que', 'en', 'y', 'o', 'para', 'ver', 'quiero', 'busco', 'buscar', 'buena', 'buenas', 'bueno', 'buenos', 'mejores', 'top', 'algo', 'tipo', 'genero', 'categoria', 'recomendame', 'recomendaciones', 'mira', 'mirar', 'a']);
 
   const $ = s => document.querySelector(s);
   const els = {
@@ -348,7 +441,7 @@
     listTitle: $('#listTitle'), listHint: $('#listHint'), modal: $('#modal'), sheet: $('#sheet'), toast: $('#toast')
   };
 
-  const state = { type: 'all', mode: 'trending', query: '', provider: null, page: 1, totalPages: 1, providers: {} };
+  const state = { type: 'all', mode: 'trending', query: '', provider: null, cat: null, sub: null, onlyAvail: false, page: 1, totalPages: 1, providers: {} };
   const provCache = new Map();
   const items = new Map(); // id visible → tipo (movie/tv)
   let key = EMBEDDED_KEY || safeGet(KEY_STORE);
@@ -376,7 +469,8 @@
   async function watchProviders(type, id) {
     const ck = type + id;
     if (provCache.has(ck)) return provCache.get(ck);
-    const p = api(`/${type}/${id}/watch/providers`).then(d => d.results?.[REGION] || null).catch(() => null);
+    // {} = no está en ninguna plataforma de AR; null = no se pudo consultar
+    const p = api(`/${type}/${id}/watch/providers`).then(d => d.results?.[REGION] || {}).catch(() => null);
     provCache.set(ck, p);
     return p;
   }
@@ -405,6 +499,7 @@
   async function start() {
     els.setup.classList.add('hidden');
     els.app.classList.remove('hidden');
+    renderCats();
     await loadProviders();
     load();
   }
@@ -460,10 +555,99 @@
   els.chips.addEventListener('click', e => {
     const b = e.target.closest('.chip'); if (!b) return;
     const id = +b.dataset.id;
-    if (state.provider?.provider_id === id) { state.provider = null; state.mode = state.query ? 'search' : 'trending'; }
-    else { state.provider = state.providers[state.type].find(p => p.provider_id === id); state.mode = 'provider'; els.q.value = ''; state.query = ''; }
-    renderChips(); load();
+    if (state.provider?.provider_id === id) state.provider = null;
+    else { state.provider = state.providers[state.type].find(p => p.provider_id === id); els.q.value = ''; state.query = ''; }
+    setMode(); renderChips(); load();
   });
+
+  // ---------- Categorías ----------
+  const norm = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[¿?¡!.,]/g, ' ').replace(/\s+/g, ' ').trim();
+  const catAvail = c => state.type === 'all' ? true : !!(c[state.type] || c.kw);
+
+  function renderCats() {
+    $('#cats').innerHTML = CATS.filter(catAvail).map(c =>
+      `<button class="cat ${state.cat?.id === c.id ? 'on' : ''}" data-cat="${c.id}">${c.name}</button>`).join('');
+    const sc = $('#subcats');
+    if (state.cat && state.cat.subs.length) {
+      sc.innerHTML = `<button class="cat ${!state.sub ? 'on' : ''}" data-sub="">Todas</button>` +
+        state.cat.subs.map((s, i) => `<button class="cat ${state.sub?.[0] === s[0] ? 'on' : ''}" data-sub="${i}">${s[0]}</button>`).join('');
+      sc.classList.remove('hidden');
+    } else sc.classList.add('hidden');
+    $('#clearFilters').classList.toggle('hidden', !state.cat && !state.provider && !state.onlyAvail);
+  }
+  $('#cats').addEventListener('click', e => {
+    const b = e.target.closest('[data-cat]'); if (!b) return;
+    const c = CATS.find(x => x.id === b.dataset.cat);
+    state.cat = state.cat?.id === c.id ? null : c;
+    state.sub = null;
+    els.q.value = ''; state.query = '';
+    setMode(); renderCats(); load();
+  });
+  $('#subcats').addEventListener('click', e => {
+    const b = e.target.closest('[data-sub]'); if (!b) return;
+    state.sub = b.dataset.sub === '' ? null : state.cat.subs[+b.dataset.sub];
+    renderCats(); load();
+  });
+  $('#onlyAvail').addEventListener('change', e => { state.onlyAvail = e.target.checked; renderCats(); load(); });
+  $('#clearFilters').addEventListener('click', () => {
+    state.cat = state.sub = state.provider = null; state.onlyAvail = false; $('#onlyAvail').checked = false;
+    setMode(); renderCats(); renderChips(); load();
+  });
+  function setMode() { state.mode = state.query ? 'search' : (state.cat || state.provider) ? 'discover' : 'trending'; }
+
+  // Interpreta "acción", "thriller", "películas de guerra", "series de zombies"…
+  // Devuelve null si la búsqueda tiene palabras que no son de categoría (entonces es un título).
+  function parseIntent(q) {
+    let text = ' ' + norm(q) + ' ';
+    let cat = null, sub = null, type = null;
+    const take = phrase => {
+      const re = new RegExp(' ' + phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ' ');
+      if (!re.test(text)) return false;
+      text = text.replace(re, ' ');
+      return true;
+    };
+    // primero subcategorías (más específicas), después categorías; frases largas antes que cortas
+    const subCands = [];
+    CATS.forEach(c => c.subs.forEach(s => [s[0], ...s[2]].forEach(w => subCands.push([norm(w), c, s]))));
+    subCands.sort((a, b) => b[0].length - a[0].length);
+    for (const [w, c, s] of subCands) if (!sub && take(w)) { cat = c; sub = s; }
+    const catCands = [];
+    CATS.forEach(c => [norm(c.name), ...c.words].forEach(w => catCands.push([w, c])));
+    catCands.sort((a, b) => b[0].length - a[0].length);
+    for (const [w, c] of catCands) if (take(w)) { if (!cat) cat = c; }
+    if (!cat) return null;
+    const rest = text.trim().split(' ').filter(Boolean).filter(w => {
+      if (TYPE_WORDS[w]) { type = TYPE_WORDS[w]; return false; }
+      return !STOP.has(w);
+    });
+    if (rest.length) return null;
+    return { cat, sub, type };
+  }
+  function intentLabel(i) {
+    return `${TYPE_PLURAL[i.type || state.type]} · ${i.cat.name}${i.sub ? ' › ' + i.sub[0] : ''}`;
+  }
+  async function applyIntent(i) {
+    hideSuggest();
+    els.q.value = ''; state.query = '';
+    state.cat = i.cat; state.sub = i.sub;
+    if (i.type && i.type !== state.type) {
+      state.type = i.type; state.provider = null;
+      document.querySelectorAll('.seg button').forEach(x => x.classList.toggle('on', x.dataset.type === i.type));
+      await loadProviders();
+    }
+    setMode(); renderCats(); load();
+    els.q.blur();
+    document.getElementById('listTitle').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // Palabras clave de TMDB (subcategorías): se buscan por nombre una sola vez
+  const kwCache = new Map();
+  function kwId(name) {
+    if (!kwCache.has(name)) kwCache.set(name, api('/search/keyword', { query: name })
+      .then(d => (d.results || []).find(k => k.name.toLowerCase() === name) || d.results?.[0])
+      .then(k => k?.id || null).catch(() => null));
+    return kwCache.get(name);
+  }
 
   // ---------- Búsqueda y sugerencias ----------
   let t, sugSeq = 0, sugActive = -1, sugItems = [];
@@ -480,7 +664,7 @@
     else if (e.key === 'Escape') hideSuggest();
     else if (e.key === 'Enter') {
       e.preventDefault();
-      if (open && sugActive >= 0) { const it = sugItems[sugActive]; hideSuggest(); openDetail(it.id, it.media_type); }
+      if (open && sugActive >= 0) { const it = sugItems[sugActive]; if (it.intent) return applyIntent(it.intent); hideSuggest(); openDetail(it.id, it.media_type); }
       else runSearch();
     }
   });
@@ -489,15 +673,20 @@
 
   async function suggest(q) {
     const seq = ++sugSeq;
+    const intent = parseIntent(q);
     let d;
     try { d = await searchTitles(q); } catch (e) { return handleErr(e); }
     if (seq !== sugSeq || els.q.value.trim() !== q) return; // llegó una respuesta vieja
-    sugItems = d.results.slice(0, 6);
+    sugItems = d.results.slice(0, intent ? 5 : 6);
+    if (intent) sugItems.unshift({ intent });
     sugActive = -1;
     if (!sugItems.length) {
       els.suggest.innerHTML = `<div class="sug" style="cursor:default"><div class="st"><span>Sin resultados para “${esc(q)}”${state.type !== 'all' ? '. Probá con “Todo”.' : ''}</span></div></div>`;
     } else {
       els.suggest.innerHTML = sugItems.map((it, i) => {
+        if (it.intent) return `<button class="sug cat-sug" role="option" data-i="${i}">
+          <span class="ph">🎭</span><span class="st"><b>${esc(intentLabel(it.intent))}</b><span>Ver la categoría completa</span></span>
+        </button>`;
         const date = it.release_date || it.first_air_date || '';
         return `<button class="sug" role="option" data-i="${i}">
           ${it.poster_path ? `<img src="${IMG}w92${it.poster_path}" alt="">` : '<span class="ph"></span>'}
@@ -517,6 +706,7 @@
     if (e.target.closest('[data-all]')) return runSearch();
     const b = e.target.closest('.sug[data-i]'); if (!b) return;
     const it = sugItems[+b.dataset.i];
+    if (it.intent) return applyIntent(it.intent);
     hideSuggest();
     openDetail(it.id, it.media_type);
   });
@@ -524,8 +714,10 @@
     const q = els.q.value.trim();
     hideSuggest();
     if (q.length < 2) return;
-    state.query = q; state.provider = null; state.mode = 'search';
-    renderChips(); load();
+    const intent = parseIntent(q);
+    if (intent) return applyIntent(intent);
+    state.query = q; state.provider = null; state.cat = state.sub = null; setMode();
+    renderChips(); renderCats(); load();
     els.q.blur();
   }
 
@@ -534,49 +726,66 @@
     document.querySelectorAll('.seg button').forEach(x => x.classList.toggle('on', x === b));
     state.type = b.dataset.type;
     state.provider = null;
-    if (state.mode === 'provider') state.mode = 'trending';
+    if (state.cat && !catAvail(state.cat)) state.cat = state.sub = null;
+    setMode();
     sugItems = []; hideSuggest();
+    renderCats();
     await loadProviders();
     load();
     if (els.q.value.trim().length >= 2 && document.activeElement === els.q) suggest(els.q.value.trim());
   });
 
   // ---------- Listado ----------
-  async function discoverAll(params) {
-    // "Todo" en el catálogo de una plataforma: mezcla pelis y series por popularidad
-    const [m, t] = await Promise.all([
-      api('/discover/movie', params).catch(() => ({ results: [], total_pages: 0 })),
-      api('/discover/tv', params).catch(() => ({ results: [], total_pages: 0 }))
-    ]);
-    const results = [
-      ...m.results.map(r => ({ ...r, media_type: 'movie' })),
-      ...t.results.map(r => ({ ...r, media_type: 'tv' }))
-    ].sort((a, b) => b.popularity - a.popularity);
-    return { results, total_pages: Math.max(m.total_pages, t.total_pages) };
+  // Arma los filtros de /discover para un tipo; null si la categoría no existe para ese tipo
+  async function discoverParams(type) {
+    const params = { sort_by: 'popularity.desc', page: state.page, include_adult: false };
+    if (state.provider) Object.assign(params, { watch_region: REGION, with_watch_providers: state.provider.provider_id, with_watch_monetization_types: 'flatrate|free|ads' });
+    else if (state.onlyAvail) Object.assign(params, { watch_region: REGION, with_watch_monetization_types: 'flatrate|free|ads|rent|buy' });
+    else params['vote_count.gte'] = 30; // sin filtro de plataforma, evitar títulos desconocidos
+    const kws = [];
+    if (state.cat) {
+      const g = state.cat[type];
+      if (g) params.with_genres = g;
+      else if (state.cat.kw && !state.sub) kws.push(state.cat.kw); // con subcategoría alcanza su palabra clave
+      else if (!state.cat.kw) return null;
+    }
+    if (state.sub) kws.push(state.sub[1]);
+    if (kws.length) {
+      const ids = (await Promise.all(kws.map(kwId))).filter(Boolean);
+      if (ids.length) params.with_keywords = ids.join(',');
+      else if (!params.with_genres) return null; // sin género ni palabra clave no hay filtro: mejor no mostrar cualquier cosa
+    }
+    return params;
+  }
+  async function discover() {
+    const types = state.type === 'all' ? ['movie', 'tv'] : [state.type];
+    const res = await Promise.all(types.map(async type => {
+      const params = await discoverParams(type);
+      if (!params) return { results: [], total_pages: 0 };
+      const d = await api(`/discover/${type}`, params);
+      return { results: (d.results || []).map(r => ({ ...r, media_type: type })), total_pages: d.total_pages || 0 };
+    }));
+    const results = res.flatMap(r => r.results).sort((a, b) => b.popularity - a.popularity);
+    return { results, total_pages: Math.max(...res.map(r => r.total_pages)) };
   }
 
   async function load(append = false) {
     state.page = append ? state.page + 1 : 1;
     const label = { all: 'películas y series', movie: 'películas', tv: 'series' }[state.type];
     if (!append) { els.grid.innerHTML = Array(12).fill('<div class="skeleton"></div>').join(''); }
+    $('#onlyAvail').parentElement.classList.toggle('hidden', state.mode !== 'discover' || !!state.provider);
+    $('#clearFilters').classList.toggle('hidden', !state.cat && !state.provider && !state.onlyAvail);
     let data;
     try {
       if (state.mode === 'search') {
         els.listTitle.textContent = `Resultados para “${state.query}”`;
         els.listHint.textContent = `${label} · tocá una para ver dónde está`;
         data = await searchTitles(state.query, state.page);
-      } else if (state.mode === 'provider') {
-        els.listTitle.textContent = `En ${state.provider.provider_name} (Argentina)`;
-        els.listHint.textContent = `${label} incluidas en la suscripción, por popularidad`;
-        const params = {
-          watch_region: REGION, with_watch_providers: state.provider.provider_id,
-          with_watch_monetization_types: 'flatrate|free|ads', sort_by: 'popularity.desc', page: state.page
-        };
-        if (state.type === 'all') data = await discoverAll(params);
-        else {
-          data = await api(`/discover/${state.type}`, params);
-          data.results = data.results.map(r => ({ ...r, media_type: state.type }));
-        }
+      } else if (state.mode === 'discover') {
+        const what = state.cat ? `${TYPE_PLURAL[state.type]} · ${state.cat.name}${state.sub ? ' › ' + state.sub[0] : ''}` : TYPE_PLURAL[state.type];
+        els.listTitle.textContent = state.provider ? `${what} en ${state.provider.provider_name}` : what;
+        els.listHint.textContent = state.provider ? 'incluidas en la suscripción, por popularidad' : 'por popularidad';
+        data = await discover();
       } else {
         els.listTitle.textContent = `Tendencias de la semana`;
         els.listHint.textContent = `${label} más buscadas`;
@@ -591,7 +800,7 @@
     list.forEach(it => items.set(it.media_type + it.id, it.media_type));
     const html = list.map(card).join('');
     if (append) els.grid.insertAdjacentHTML('beforeend', html);
-    else els.grid.innerHTML = html || `<div class="empty">No encontré nada.${state.type !== 'all' ? ' Probá con “Todo”: puede que sea ' + (state.type === 'movie' ? 'una serie' : 'una película') + '.' : ' Probá con el título original o en inglés.'}</div>`;
+    else els.grid.innerHTML = html || `<div class="empty">No encontré nada.${state.mode === 'discover' ? ' Probá con otra subcategoría o sacá algún filtro.' : state.type !== 'all' ? ' Probá con “Todo”: puede que sea ' + (state.type === 'movie' ? 'una serie' : 'una película') + '.' : ' Probá con el título original o en inglés.'}</div>`;
     els.more.classList.toggle('hidden', state.page >= state.totalPages);
     list.forEach(decorate);
   }
@@ -606,6 +815,7 @@
         ${it.poster_path ? `<img class="poster" src="${IMG}w342${it.poster_path}" alt="" loading="lazy">` : `<div class="noposter">🎬</div>`}
         ${vote ? `<span class="badge">★ ${vote}</span>` : ''}
         <span class="mini-prov" id="mp-${uid}"></span>
+        <span class="lock"><b>🔒</b>No disponible en Argentina</span>
         <div class="meta"><div class="t">${esc(title)}</div><div class="y"><span class="kind ${it.media_type}">${TYPE_LABEL[it.media_type]}</span>${date.slice(0, 4) || '—'}</div></div>
       </button>`;
   }
@@ -619,6 +829,10 @@
     const slot = document.getElementById('mp-' + it.media_type + it.id);
     if (!slot || !p) return;
     const subs = dedupe(subsOf(p)).sort((a, b) => mine.has(b.provider_id) - mine.has(a.provider_id));
+    const cardEl = slot.closest('.card');
+    const rentOnly = !subs.length && (p.rent || p.buy);
+    cardEl.classList.toggle('locked', !subs.length && !rentOnly);
+    if (rentOnly) { slot.innerHTML = '<span class="rent-tag">💸 Alquiler</span>'; return; }
     slot.innerHTML = subs.slice(0, 3).map(s => `<img class="${mine.has(s.provider_id) ? 'mine' : ''}" src="${IMG}w92${s.logo_path}" alt="${esc(s.provider_name)}" title="${esc(s.provider_name)}${mine.has(s.provider_id) ? ' (la tenés)' : ''}">`).join('');
   }
 
@@ -655,11 +869,16 @@
     if (owned.length) verdict = `<div class="verdict yes">⭐ ¡La tenés! Está en ${owned.map(s => esc(s.provider_name)).join(', ')}, que ya pagás.</div>`;
     else if (subs.length) verdict = `<div class="verdict yes">✅ Disponible en Argentina con suscripción en: ${subs.map(s => esc(s.provider_name)).join(', ')}${mine.size ? ' (ninguna de las tuyas)' : ''}</div>`;
     else if (p && (p.rent || p.buy)) verdict = '<div class="verdict no">💸 No está incluida en ninguna suscripción en Argentina, pero se puede alquilar o comprar.</div>';
-    else verdict = '<div class="verdict no">❌ No figura en ninguna plataforma en Argentina por ahora.</div>';
+    else if (p) verdict = '<div class="verdict lockd">🔒 Bloqueada: no está en ninguna plataforma de Argentina por ahora.</div>';
+    else verdict = '<div class="verdict no">No pude consultar la disponibilidad. Probá de nuevo en un rato.</div>';
 
-    const openBtns = (owned.length ? owned : subs).map(s => {
+    // El enlace de TMDB lleva a su página "Dónde ver", con un botón por plataforma
+    // que abre el título exacto (vía JustWatch). Es lo más directo que permiten los datos.
+    const direct = p?.link && (subs.length || p.rent || p.buy)
+      ? `<a class="btn" href="${p.link}" target="_blank" rel="noopener">▶ Ir directo al título ↗</a>` : '';
+    const openBtns = direct + (owned.length ? owned : subs).map(s => {
       const url = openUrl(s.provider_name, title);
-      return url ? `<a class="btn" href="${url}" target="_blank" rel="noopener" data-copy="${esc(title)}">Abrir en ${esc(s.provider_name)} ↗</a>` : '';
+      return url ? `<a class="btn ghost" href="${url}" target="_blank" rel="noopener" data-copy="${esc(title)}">Abrir ${esc(s.provider_name)} ↗</a>` : '';
     }).join('');
 
     els.sheet.innerHTML = `
@@ -682,10 +901,9 @@
         </div>
         ${d.overview ? `<p class="overview">${esc(d.overview)}</p>` : ''}
         <div class="actions">
-          ${p?.link ? `<a class="btn ghost" href="${p.link}" target="_blank" rel="noopener">Ver todas las opciones ↗</a>` : ''}
           <a class="btn ghost" href="https://www.justwatch.com/ar/buscar?q=${encodeURIComponent(title)}" target="_blank" rel="noopener">Buscar en JustWatch AR ↗</a>
         </div>
-        <div class="credit">Disponibilidad para Argentina provista por JustWatch. “Abrir en…” te lleva a la plataforma (a su búsqueda cuando la tiene) y copia el título por si tenés que pegarlo. Si ya iniciaste sesión ahí, entra con tu cuenta.</div>
+        <div class="credit">Disponibilidad para Argentina provista por JustWatch. “Ir directo al título” abre la página de TMDB con un botón por plataforma que te lleva al título exacto; en el celular, si tenés la app instalada, el teléfono la abre ahí. “Abrir…” va a la plataforma (a su búsqueda cuando la tiene) y copia el título. Si ya iniciaste sesión, entra con tu cuenta.</div>
       </div>`;
   }
 
