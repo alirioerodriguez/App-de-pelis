@@ -194,6 +194,17 @@
   .err { color: #ff9b85; font-size: .9rem; min-height: 1.2em; }
 
   footer { color: var(--muted); font-size: .8rem; text-align: center; padding: 20px 16px 40px; border-top: 1px solid var(--line); }
+  .more-apps { max-width: 1200px; margin: 0 auto 28px; padding: 0 16px; text-align: left; }
+  .more-apps h2 { font-size: 1rem; margin: 8px 0 4px; color: var(--text); }
+  .more-apps > p { margin: 0 0 14px; }
+  .apps { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+  .app { display: flex; flex-direction: column; gap: 4px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; color: var(--text); text-decoration: none; transition: border-color .15s, transform .15s; }
+  a.app:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .app b { font-size: .98rem; }
+  .app span { color: var(--muted); font-size: .84rem; line-height: 1.4; }
+  .app em { font-style: normal; color: var(--accent); font-size: .8rem; font-weight: 600; margin-top: 4px; }
+  .app.soon em { color: var(--accent-2); }
+  .legal { padding-top: 18px; border-top: 1px solid var(--line); }
   footer img { display: inline-block; height: 12px; vertical-align: middle; }
 
   .toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: #2b1a1a; border: 1px solid #ff7a59; color: #ffd5ca; padding: 10px 16px; border-radius: 12px; z-index: 60; display: none; max-width: calc(100% - 32px); }
@@ -269,6 +280,21 @@
   .clear { background: transparent; border: 0; color: var(--accent); font-size: .85rem; font-weight: 600; padding: 4px; }
   .sug.cat-sug .ph { display: grid; place-items: center; font-size: 1.3rem; }
   .retry { margin-top: 12px; }
+  .feeds { display: flex; gap: 6px; overflow-x: auto; margin: 26px 0 -8px; padding-bottom: 4px; scrollbar-width: none; }
+  .feeds button { flex: none; background: transparent; border: 0; border-bottom: 2px solid transparent; color: var(--muted); padding: 8px 10px; font-weight: 600; font-size: .92rem; }
+  .feeds button.on { color: var(--text); border-bottom-color: var(--accent); }
+  .card.cinema.locked .poster, .card.cinema.locked .noposter { filter: none; }
+  .card.cinema.locked .lock { display: none; }
+  .card.cinema.locked .t { color: var(--text); }
+  .cine-tag { position: absolute; left: 8px; top: 36px; background: rgba(0,0,0,.78); color: var(--accent-2); font-size: .72rem; font-weight: 700; padding: 3px 7px; border-radius: 8px; }
+  .awards { grid-column: 1/-1; }
+  .awards h4 { margin: 4px 0 8px; font-size: .95rem; }
+  .award-list { display: flex; flex-wrap: wrap; gap: 8px; }
+  .award { background: rgba(246,180,14,.12); border: 1px solid rgba(246,180,14,.4); color: #f8d26b; border-radius: 10px; padding: 5px 10px; font-size: .82rem; }
+  .awards details { margin-top: 8px; color: var(--muted); font-size: .85rem; }
+  .awards summary { cursor: pointer; }
+  .awards details ul { margin: 8px 0 0; padding-left: 18px; line-height: 1.6; }
+  .oscar { background: rgba(246,180,14,.18); color: #f8d26b; padding: 2px 6px; border-radius: 6px; font-weight: 700; font-size: .72rem; }
   .new-row { display: flex; gap: 12px; overflow-x: auto; padding: 4px 2px 12px; scroll-snap-type: x proximity; }
   .new-row .card { flex: none; width: 150px; scroll-snap-align: start; }
   @media (max-width: 480px) { .new-row .card { width: 130px; } }
@@ -367,6 +393,12 @@
     </div>
     <div class="chips" id="chips"></div>
 
+    <div class="feeds" id="feeds" role="tablist" aria-label="Qué mostrar">
+      <button class="on" data-feed="trending" role="tab" aria-selected="true">🔥 Tendencias</button>
+      <button data-feed="popular" role="tab" aria-selected="false">⭐ Populares</button>
+      <button data-feed="now" role="tab" aria-selected="false">🎬 En cartelera</button>
+      <button data-feed="upcoming" role="tab" aria-selected="false">📅 Próximamente</button>
+    </div>
     <div class="section-title">
       <h2 id="listTitle">Tendencias</h2>
       <div class="filters">
@@ -389,9 +421,29 @@
 <div class="toast" id="toast"></div>
 
 <footer>
-  Datos de disponibilidad: <strong>JustWatch</strong> vía
-  <a href="https://www.themoviedb.org" target="_blank" rel="noopener">TMDB</a>.
-  Este producto usa la API de TMDB pero no está respaldado ni certificado por TMDB.
+  <section class="more-apps" aria-labelledby="moreAppsTitle">
+    <h2 id="moreAppsTitle">Otras apps del creador</h2>
+    <p>Hechas por la misma persona que hizo esta.</p>
+    <div class="apps">
+      <a class="app" href="https://control-de-facturacion-eight.vercel.app" target="_blank" rel="noopener">
+        <b>HonorApp</b><span>Control de cobros para profesionales con pacientes: sesiones, pagos, saldos y reportes.</span><em>Abrir ↗</em>
+      </a>
+      <a class="app" href="https://control-de-gastos-lyart-theta.vercel.app" target="_blank" rel="noopener">
+        <b>Mis Cuentas</b><span>Control de gastos personales, simple y gratis.</span><em>Abrir ↗</em>
+      </a>
+      <a class="app" href="https://cicloapp.vercel.app" target="_blank" rel="noopener">
+        <b>Savia</b><span>Seguimiento del ciclo menstrual, con tus datos guardados en tu teléfono.</span><em>Abrir ↗</em>
+      </a>
+      <div class="app soon">
+        <b>RoomPlanner</b><span>Diseñá y amueblá tus ambientes en 3D.</span><em>Próximamente</em>
+      </div>
+    </div>
+  </section>
+  <div class="legal">
+    Datos de disponibilidad: <strong>JustWatch</strong> vía
+    <a href="https://www.themoviedb.org" target="_blank" rel="noopener">TMDB</a>. Premios: <a href="https://www.wikidata.org" target="_blank" rel="noopener">Wikidata</a>.
+    Este producto usa la API de TMDB pero no está respaldado ni certificado por TMDB.
+  </div>
 </footer>
 
 <script>
@@ -477,7 +529,7 @@
     listTitle: $('#listTitle'), listHint: $('#listHint'), modal: $('#modal'), sheet: $('#sheet'), toast: $('#toast')
   };
 
-  const state = { type: 'all', mode: 'trending', query: '', provider: null, cat: null, sub: null, onlyAvail: false, onlyMine: false, showNew: false, page: 1, totalPages: 1, providers: {} };
+  const state = { type: 'all', mode: 'trending', query: '', provider: null, cat: null, sub: null, onlyAvail: false, onlyMine: false, showNew: false, feed: 'trending', page: 1, totalPages: 1, providers: {} };
   const provCache = new Map();
   let key = EMBEDDED_KEY || safeGet(KEY_STORE);
   let mine = new Set(safeJSON(safeGet(MINE_STORE)) || []);
@@ -648,7 +700,14 @@
     if (!keepNew) state.showNew = false;
     state.mode = state.query ? 'search' : state.showNew ? 'new' : (state.cat || state.provider || (state.onlyMine && mine.size)) ? 'discover' : 'trending';
     $('#newSec').classList.toggle('hidden', state.mode !== 'trending');
+    $('#feeds').classList.toggle('hidden', state.mode !== 'trending');
   }
+  $('#feeds').addEventListener('click', e => {
+    const b = e.target.closest('[data-feed]'); if (!b || b.dataset.feed === state.feed) return;
+    state.feed = b.dataset.feed;
+    $('#feeds').querySelectorAll('button').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-selected', x === b); });
+    load();
+  });
 
   // ---------- Estrenos recientes ----------
   // La API no dice cuándo algo se sumó a cada plataforma: tomamos lo estrenado hace poco
@@ -893,6 +952,8 @@
         els.listTitle.textContent = state.provider ? `${what} en ${state.provider.provider_name}` : state.onlyMine && mine.size ? `${what} en tus plataformas` : what;
         els.listHint.textContent = state.provider ? 'incluidas en la suscripción, por popularidad' : 'por popularidad';
         data = await discover();
+      } else if (state.feed !== 'trending') {
+        data = await loadFeed(state.feed, state.page);
       } else {
         els.listTitle.textContent = `Tendencias de la semana`;
         els.listHint.textContent = `${label} más buscadas`;
@@ -916,18 +977,47 @@
     list.forEach(decorate);
   }
 
+  // Populares, En cartelera y Próximamente. Pelis y series usan endpoints distintos; con "Todo" se mezclan.
+  const FEEDS = {
+    popular: { title: 'Populares', hint: 'lo más visto ahora', movie: ['/movie/popular', { region: REGION }], tv: ['/tv/popular', {}] },
+    now: { title: 'En cartelera', hint: 'pelis en cines de Argentina y series con episodios esta semana', movie: ['/movie/now_playing', { region: REGION }], tv: ['/tv/on_the_air', {}], cinema: true },
+    upcoming: { title: 'Próximamente', hint: 'próximos estrenos en Argentina', movie: ['/movie/upcoming', { region: REGION }],
+      tv: ['/discover/tv', () => ({ 'first_air_date.gte': isoDaysAgo(-1), sort_by: 'popularity.desc' })], cinema: true, soon: true },
+  };
+  async function loadFeed(feed, page) {
+    const f = FEEDS[feed];
+    els.listTitle.textContent = `${f.title} · ${TYPE_PLURAL[state.type]}`;
+    els.listHint.textContent = f.hint;
+    const types = state.type === 'all' ? ['movie', 'tv'] : [state.type];
+    const today = isoDaysAgo(0);
+    const res = await Promise.all(types.map(async type => {
+      const [path, extra] = f[type];
+      const d = await api(path, { page, ...(typeof extra === 'function' ? extra() : extra) });
+      let results = (d.results || []).map(r => ({ ...r, media_type: type, _cinema: f.cinema && type === 'movie' }));
+      // "Próximamente" de TMDB incluye algunas ya estrenadas: se dejan solo las que vienen
+      if (f.soon) results = results.filter(r => (r.release_date || r.first_air_date || '9999') >= today).map(r => ({ ...r, _soon: true }));
+      return { results, total_pages: d.total_pages || 0 };
+    }));
+    let results = res.flatMap(r => r.results);
+    results = f.soon ? results.sort((a, b) => (a.release_date || a.first_air_date).localeCompare(b.release_date || b.first_air_date))
+      : results.sort((a, b) => b.popularity - a.popularity);
+    return { results, total_pages: Math.max(...res.map(r => r.total_pages)) };
+  }
+  const fmtDay = iso => new Date(iso + 'T12:00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'short' });
+
   function card(it) {
     const title = it.title || it.name;
     const date = it.release_date || it.first_air_date || '';
     const vote = it.vote_average ? it.vote_average.toFixed(1) : '';
     const uid = it.media_type + it.id;
     return `
-      <button class="card" data-id="${it.id}" data-type="${it.media_type}" aria-label="${esc(title)}, ${TYPE_LABEL[it.media_type]}">
+      <button class="card ${it._cinema || it._soon ? 'cinema' : ''}" data-id="${it.id}" data-type="${it.media_type}" aria-label="${esc(title)}, ${TYPE_LABEL[it.media_type]}">
         ${it.poster_path ? `<img class="poster" src="${IMG}w342${it.poster_path}" alt="" loading="lazy">` : `<div class="noposter">🎬</div>`}
         ${vote ? `<span class="badge">★ ${vote}</span>` : ''}
         <span class="mini-prov" data-mp="${uid}"></span>
         <span class="lock"><b>🔒</b>No disponible en Argentina</span>
-        ${inList(it.media_type, it.id) ? '<span class="wl-tag">🔖 En tu lista</span>' : ''}
+        ${it._soon && date ? `<span class="cine-tag">📅 Estrena ${fmtDay(date)}</span>` : it._cinema ? '<span class="cine-tag">🎬 En cines</span>' : ''}
+        ${inList(it.media_type, it.id) && !it._cinema && !it._soon ? '<span class="wl-tag">🔖 En tu lista</span>' : ''}
         <div class="meta"><div class="t">${esc(title)}</div><div class="y"><span class="kind ${it.media_type}">${TYPE_LABEL[it.media_type]}</span>${date.slice(0, 4) || '—'}</div></div>
       </button>`;
   }
@@ -1011,6 +1101,7 @@
           <div class="facts"><span class="kind ${type}" style="padding:2px 6px;border-radius:6px;font-weight:700;font-size:.72rem;text-transform:uppercase">${TYPE_LABEL[type]}</span>${[year, runtime, genres, d.vote_average ? '★ ' + d.vote_average.toFixed(1) : ''].filter(Boolean).map(esc).map(x => `<span>${x}</span>`).join('')}</div>
         </div>
         ${verdict}
+        <div class="awards hidden" id="awards"></div>
         ${openBtns ? `<div class="owned">${openBtns}</div>` : ''}
         <div class="where">
           ${group('Incluida en suscripción', 'var(--ok)', p?.flatrate)}
@@ -1033,6 +1124,62 @@
         <div class="credit">Disponibilidad para Argentina provista por JustWatch. “Ir directo al título” abre la página de TMDB con un botón por plataforma que te lleva al título exacto; en el celular, si tenés la app instalada, el teléfono la abre ahí. “Abrir…” va a la plataforma (a su búsqueda cuando la tiene) y copia el título. Si ya iniciaste sesión, entra con tu cuenta.</div>
       </div>`;
     focusSheet();
+    loadAwards(type, id, seq);
+  }
+
+  // Premios y nominaciones: TMDB no los tiene; se buscan en Wikidata por el ID de TMDB
+  // (P4947 = película, P4983 = serie). Si Wikidata no responde, la sección no aparece.
+  const awardsCache = new Map();
+  function fetchAwards(type, id) {
+    const k = type + id;
+    if (awardsCache.has(k)) return awardsCache.get(k);
+    const prop = type === 'movie' ? 'P4947' : 'P4983';
+    const q = `SELECT ?kind ?awardLabel ?year WHERE {
+      ?item wdt:${prop} "${id}" .
+      { ?item p:P166 ?st . ?st ps:P166 ?award . BIND("win" AS ?kind) }
+      UNION { ?item p:P1411 ?st . ?st ps:P1411 ?award . BIND("nom" AS ?kind) }
+      OPTIONAL { ?st pq:P585 ?d } BIND(YEAR(?d) AS ?year)
+      SERVICE wikibase:label { bd:serviceParam wikibase:language "es,en". }
+    } LIMIT 200`;
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 8000);
+    const pr = fetch('https://query.wikidata.org/sparql?format=json&query=' + encodeURIComponent(q), { signal: ctrl.signal, headers: { accept: 'application/sparql-results+json' } })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (!d) return null;
+        const seen = new Set(), wins = [], noms = [];
+        for (const b of d.results.bindings) {
+          const label = b.awardLabel?.value; if (!label || /^Q\d+$/.test(label)) continue;
+          const year = b.year?.value || '';
+          const key = b.kind.value + label + year;
+          if (seen.has(key)) continue; seen.add(key);
+          (b.kind.value === 'win' ? wins : noms).push({ label, year });
+        }
+        return { wins, noms };
+      })
+      .catch(() => null)
+      .finally(() => clearTimeout(timer));
+    awardsCache.set(k, pr);
+    pr.then(v => { if (!v) awardsCache.delete(k); }); // si falló, reintentar la próxima vez
+    return pr;
+  }
+  async function loadAwards(type, id, seq) {
+    const a = await fetchAwards(type, id);
+    const box = document.getElementById('awards');
+    if (!box || seq !== detailSeq || !a || (!a.wins.length && !a.noms.length)) return;
+    const big = /óscar|oscar|academy award|globo de oro|golden globe|emmy|palma de oro|palme d'or|bafta|goya|león de oro|oso de oro/i;
+    const wins = [...a.wins].sort((x, y) => big.test(y.label) - big.test(x.label));
+    const fmt = w => `${esc(w.label)}${w.year ? ' (' + w.year + ')' : ''}`;
+    box.innerHTML = `
+      <h4>🏆 Premios${a.wins.length ? ` · ${a.wins.length} ganado${a.wins.length > 1 ? 's' : ''}` : ''}${a.noms.length ? ` · ${a.noms.length} nominaci${a.noms.length > 1 ? 'ones' : 'ón'}` : ''}</h4>
+      ${wins.length ? `<div class="award-list">${wins.slice(0, 8).map(w => `<span class="award">🏆 ${fmt(w)}</span>`).join('')}</div>` : ''}
+      ${wins.length > 8 || a.noms.length ? `<details><summary>Ver ${wins.length > 8 ? 'todos los premios y ' : ''}nominaciones</summary><ul>
+        ${wins.slice(8).map(w => `<li>🏆 ${fmt(w)}</li>`).join('')}${a.noms.map(n => `<li>Nominada: ${fmt(n)}</li>`).join('')}
+      </ul></details>` : ''}`;
+    box.classList.remove('hidden');
+    if (a.wins.some(w => /óscar|oscar|academy award/i.test(w.label))) {
+      document.querySelector('.sheet-body .facts')?.insertAdjacentHTML('afterbegin', '<span class="oscar">🏆 Ganadora del Óscar</span>');
+    }
   }
 
   // Botones de la ficha: lista, compartir, similares
