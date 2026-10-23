@@ -276,6 +276,8 @@
   const API = 'https://api.themoviedb.org/3';
   const IMG = 'https://image.tmdb.org/t/p/';
   const KEY_STORE = 'tmdb_key';
+  // Clave de TMDB fija: si está cargada, la app entra directo sin pedir nada
+  const EMBEDDED_KEY = '';
   // Plataformas que se muestran primero si están disponibles en AR
   const PRIORITY = ['Netflix', 'Amazon Prime Video', 'Disney Plus', 'Max', 'HBO Max', 'Paramount Plus', 'Apple TV Plus', 'Apple TV+', 'Mubi', 'Crunchyroll', 'Flow', 'Star Plus', 'Universal+', 'Claro video', 'DGO', 'Cine.ar', 'Pluto TV'];
 
@@ -288,7 +290,7 @@
 
   const state = { type: 'movie', mode: 'trending', query: '', provider: null, page: 1, totalPages: 1, providers: { movie: [], tv: [] } };
   const provCache = new Map();
-  let key = safeGet(KEY_STORE);
+  let key = EMBEDDED_KEY || safeGet(KEY_STORE);
 
   function safeGet(k) { try { return localStorage.getItem(k); } catch { return null; } }
   function safeSet(k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch {} }
@@ -518,6 +520,7 @@
 
   // ---------- Utilidades ----------
   function handleErr(e) {
+    if (e.auth && EMBEDDED_KEY) { els.toast.textContent = 'La clave de TMDB integrada dejó de funcionar.'; els.toast.classList.add('show'); return; }
     if (e.auth) { safeSet(KEY_STORE, null); key = null; return showSetup('Tu clave dejó de funcionar. Cargá una nueva.'); }
     els.toast.textContent = e.message || 'Algo falló. Probá de nuevo.';
     els.toast.classList.add('show');
@@ -525,6 +528,7 @@
   }
   function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]); }
 
+  if (EMBEDDED_KEY) $('#keyBtn').classList.add('hidden');
   key ? start() : showSetup();
 })();
 </script>
