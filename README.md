@@ -1,6 +1,6 @@
-# ¿Dónde la veo? · Argentina
+# ¿Dónde la veo?
 
-Buscador de películas y series que muestra en qué plataforma de streaming están disponibles **en Argentina** (suscripción, gratis, alquiler o compra).
+Buscador de películas y series que muestra en qué plataforma de streaming están disponibles en tu país de Latinoamérica (suscripción, gratis, alquiler o compra). Arranca siempre en Argentina; el país se cambia desde la bandera del encabezado.
 
 ## Uso
 1. Abrí `index.html` en el navegador (o publicalo en GitHub Pages / Vercel / Netlify).
@@ -15,4 +15,4 @@ Buscador de películas y series que muestra en qué plataforma de streaming est�
 - Responsive: grilla de 2 columnas y ficha tipo hoja inferior en celular.
 
 ## Fuente de datos
-TMDB `/watch/providers` (región `AR`), datos de **JustWatch**. Es el mismo dato que ves en justwatch.com/ar. Los catálogos cambian seguido; puede haber unos días de desfase.
+TMDB `/watch/providers` (por país), datos de **JustWatch**. Premios y enlaces directos a cada plataforma: **Wikidata**. Los catálogos cambian seguido; puede haber unos días de desfase.

@@ -1,38 +1,38 @@
 <!doctype html>
-<html lang="es-AR">
+<html lang="es-419">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0b0b12">
-<title>¿Dónde la veo? · Argentina</title>
-<meta name="description" content="Buscá una película o serie y mirá en qué plataforma de streaming está disponible en Argentina.">
+<meta name="theme-color" content="#000000">
+<title>¿Dónde la veo?</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%2364d2ff'/%3E%3Cstop offset='1' stop-color='%235e5ce6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='9' fill='url(%23g)'/%3E%3Cpath d='M16 6.5c-4.4 0-8 3.4-8 7.7 0 5.6 6.7 10.9 7.3 11.3.4.3 1 .3 1.4 0 .6-.4 7.3-5.7 7.3-11.3 0-4.3-3.6-7.7-8-7.7z' fill='%23fff'/%3E%3Cpath d='M14.3 11.2v6l5-3z' fill='%235e5ce6'/%3E%3C/svg%3E">
+<meta name="description" content="Buscá una película o serie y mirá en qué plataforma de streaming está disponible en tu país de Latinoamérica.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
+  /* Estilo inspirado en las apps de Apple: negro puro, superficies elevadas grises, vidrio esmerilado */
   :root {
-    --bg: #0b0b12;
-    --bg-2: #13131d;
-    --card: #181826;
-    --line: #2a2a3d;
-    --text: #f2f2f7;
-    --muted: #9a9ab0;
-    --accent: #75aadb;      /* celeste */
-    --accent-2: #f6b40e;    /* sol de mayo */
-    --ok: #3ddc84;
-    --rent: #f6b40e;
-    --buy: #ff7a59;
-    --radius: 14px;
-    --shadow: 0 10px 30px rgba(0,0,0,.45);
+    --bg: #000000;
+    --bg-2: #161618;
+    --card: #1c1c1e;
+    --line: rgba(255,255,255,.09);
+    --text: #f5f5f7;
+    --muted: #98989d;
+    --accent: #0a84ff;
+    --accent-2: #ffd60a;
+    --ok: #30d158;
+    --rent: #ffd60a;
+    --buy: #ff9f0a;
+    --radius: 18px;
+    --shadow: 0 20px 40px rgba(0,0,0,.5);
+    color-scheme: dark;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; }
   body {
-    font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-    background: radial-gradient(1200px 600px at 10% -10%, rgba(117,170,219,.18), transparent 60%),
-                radial-gradient(900px 500px at 110% 0%, rgba(246,180,14,.10), transparent 60%),
-                var(--bg);
-    background-attachment: fixed;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
     color: var(--text);
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
@@ -324,6 +324,96 @@
     .cats .cat, .subcats .cat { flex: none; }
   }
   @media (max-width: 480px) { .bar .lbl { display: none; } .brand small { display: none; } }
+
+  /* ===== Rediseño: encabezado, navegación, carrusel ===== */
+  header { background: rgba(0,0,0,.72); backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px); border-bottom: 1px solid var(--line); }
+  .bar { padding: 10px 0; }
+  .brand { display: flex; align-items: center; gap: 10px; color: var(--text); text-decoration: none; font-weight: 700; font-size: 1.05rem; letter-spacing: -.02em; }
+  .hdr-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+  .hdr-actions .icon-btn { margin-left: 0; background: rgba(255,255,255,.08); border: 0; border-radius: 980px; padding: 8px 14px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }
+  .hdr-actions .icon-btn:hover { background: rgba(255,255,255,.15); }
+  .country-btn img { width: 20px; height: 14px; border-radius: 3px; object-fit: cover; }
+  .country-btn svg { opacity: .6; }
+  @media (max-width: 480px) { .hdr-actions { gap: 6px; } .hdr-actions .icon-btn { padding: 8px 10px; } .brand span { font-size: .98rem; } #countryCode { display: none; } .section-title > .hint { display: none; } }
+
+  .topnav { display: flex; align-items: center; gap: 14px; padding: 14px 0 6px; overflow-x: auto; scrollbar-width: none; }
+  .topnav::-webkit-scrollbar { display: none; }
+  .topnav .seg { flex: none; width: auto; }
+  .topnav .seg button { flex: none; }
+  .topnav .cats { flex-wrap: nowrap; gap: 2px; }
+  .topnav .cat { flex: none; }
+  .seg { background: rgba(255,255,255,.08); border-radius: 10px; padding: 2px; }
+  .seg button { color: var(--text); opacity: .75; border-radius: 8px; padding: 6px 14px; font-weight: 500; }
+  .seg button.on { background: rgba(255,255,255,.22); color: var(--text); opacity: 1; box-shadow: 0 1px 4px rgba(0,0,0,.35); }
+  .cat { background: transparent; border: 0; color: var(--muted); padding: 7px 12px; font-weight: 500; }
+  .cat:hover { color: var(--text); border-color: transparent; }
+  .cat.on { background: var(--text); color: #000; font-weight: 600; }
+  .subcats { border-left: 0; padding-left: 0; margin-top: 4px; }
+  .subcats .cat { background: rgba(255,255,255,.06); }
+  .subcats .cat.on { background: rgba(255,255,255,.2); color: var(--text); }
+
+  .hero { padding: 34px 0 10px; text-align: center; }
+  .hero h1 { font-size: clamp(1.9rem, 5.2vw, 3.1rem); font-weight: 700; letter-spacing: -.035em; line-height: 1.05; margin: 0 0 10px; }
+  .hero p { color: var(--muted); font-size: 1.05rem; margin: 0 auto 22px; max-width: 560px; }
+  .search-box { max-width: 720px; margin: 0 auto; text-align: left; }
+  .search { background: rgba(255,255,255,.08); border: 1px solid transparent; border-radius: 14px; box-shadow: none; padding: 4px 14px; }
+  .search:focus-within { border-color: var(--accent); background: rgba(255,255,255,.11); }
+  .search input { padding: 12px 4px; }
+  .suggest { background: #1c1c1e; border-radius: 16px; }
+
+  .section-title h2 { font-size: 1.3rem; font-weight: 700; letter-spacing: -.02em; }
+  .chip { background: rgba(255,255,255,.07); border: 1px solid transparent; }
+  .chip:hover { transform: none; background: rgba(255,255,255,.13); border-color: transparent; }
+  .chip.on { background: rgba(10,132,255,.22); border-color: var(--accent); }
+  .card { border: 0; border-radius: 16px; }
+  .card:hover, .card:focus-visible { transform: scale(1.03); border-color: transparent; }
+  .feeds { margin-top: 30px; }
+  .feeds button { font-weight: 600; }
+  .feeds button.on { border-bottom-color: var(--text); }
+  .btn { background: var(--accent); color: #fff; border-radius: 980px; }
+  .btn.ghost { background: rgba(255,255,255,.1); border: 0; color: var(--text); }
+  .more { border-radius: 980px; background: rgba(255,255,255,.1); border: 0; }
+  .sheet { background: #1c1c1e; border-radius: 22px; }
+  .sug.active, .sug:hover { background: rgba(255,255,255,.08); }
+
+  /* Carrusel de estrenos: se mueve solo, sin barra de desplazamiento */
+  .billboard { position: relative; border-radius: 22px; overflow: hidden; background: var(--card); }
+  .bb-track { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; }
+  .bb-track::-webkit-scrollbar { display: none; }
+  .slide { position: relative; flex: 0 0 100%; scroll-snap-align: start; aspect-ratio: 21/9; min-height: 260px; cursor: pointer; overflow: hidden; }
+  .slide.ghost-slide { cursor: default; background: linear-gradient(90deg, #161618 25%, #222224 50%, #161618 75%); background-size: 200% 100%; animation: shimmer 1.2s infinite; }
+  @media (max-width: 640px) { .slide { aspect-ratio: 4/5; max-height: 72vh; } }
+  .bb-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scale(1.02); transition: transform 6s ease; }
+  .slide.current .bb-img { transform: scale(1.08); }
+  .bb-shade { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.92) 0%, rgba(0,0,0,.45) 42%, transparent 72%), linear-gradient(to right, rgba(0,0,0,.55), transparent 65%); }
+  .bb-info { position: absolute; left: 0; bottom: 0; padding: 30px; max-width: 640px; display: flex; flex-direction: column; gap: 8px; }
+  .bb-kicker { color: rgba(255,255,255,.75); font-size: .76rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+  .bb-info h3 { margin: 0; font-size: clamp(1.6rem, 4.2vw, 2.8rem); letter-spacing: -.035em; line-height: 1.04; text-wrap: balance; }
+  .bb-over { margin: 0; color: rgba(255,255,255,.82); font-size: .95rem; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .bb-row { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 6px; }
+  .bb-cta { background: #fff; color: #000; }
+  .mini-prov.bb-prov { position: static; }
+  .bb-prov img { width: 30px; height: 30px; border-radius: 8px; }
+  .bb-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 50%; border: 0; background: rgba(0,0,0,.45); color: #fff; font-size: 1.5rem; line-height: 1; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); opacity: 0; transition: opacity .2s; }
+  .billboard:hover .bb-nav, .bb-nav:focus-visible { opacity: 1; }
+  .bb-nav.prev { left: 14px; } .bb-nav.next { right: 14px; }
+  @media (hover: none) { .bb-nav { display: none; } }
+  .bb-dots { position: absolute; right: 22px; bottom: 24px; display: flex; gap: 6px; }
+  .bb-dots button { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 4px; background: rgba(255,255,255,.4); transition: width .3s, background .3s; }
+  .bb-dots button.on { width: 24px; background: #fff; }
+  @media (max-width: 640px) { .bb-info { padding: 20px; } .bb-dots { top: 16px; bottom: auto; right: 16px; } }
+
+  /* Selector de país */
+  .country-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; padding: 0 22px 22px; }
+  @media (max-width: 640px) { .country-grid { grid-template-columns: 1fr 1fr; padding: 0 16px 22px; } }
+  .country-opt { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,.06); border: 1px solid transparent; border-radius: 12px; padding: 10px 12px; color: var(--text); text-align: left; font-size: .9rem; }
+  .country-opt img { width: 28px; height: 20px; border-radius: 4px; object-fit: cover; flex: none; }
+  .country-opt span { flex: 1; min-width: 0; }
+  .country-opt small { color: var(--muted); font-size: .72rem; }
+  .country-opt:hover { background: rgba(255,255,255,.11); }
+  .country-opt.on { border-color: var(--accent); background: rgba(10,132,255,.16); }
+  .country-opt:disabled { opacity: .45; cursor: not-allowed; }
+
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 </style>
 </head>
@@ -331,10 +421,13 @@
 
 <header>
   <div class="wrap bar">
-    <div class="brand"><span class="flag" aria-hidden="true"></span>¿Dónde la veo? <small>Argentina</small></div>
-    <button class="icon-btn" id="listBtn" title="Lo que guardaste para ver">🔖<span class="lbl"> Mi lista</span><span class="count" id="listCount"></span></button>
-    <button class="icon-btn" id="mineBtn" title="Elegí las plataformas que tenés">⭐<span class="lbl"> Mis plataformas</span></button>
-    <button class="icon-btn" id="keyBtn" title="Cambiar API key">🔑</button>
+    <a class="brand" href="./" aria-label="¿Dónde la veo? Inicio"><svg class="logo" viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#64d2ff"/><stop offset="1" stop-color="#5e5ce6"/></linearGradient></defs><rect width="32" height="32" rx="9" fill="url(#lg)"/><path d="M16 6.5c-4.4 0-8 3.4-8 7.7 0 5.6 6.7 10.9 7.3 11.3.4.3 1 .3 1.4 0 .6-.4 7.3-5.7 7.3-11.3 0-4.3-3.6-7.7-8-7.7z" fill="#fff"/><path d="M14.3 11.2v6l5-3z" fill="#5e5ce6"/></svg><span>¿Dónde la veo?</span></a>
+    <div class="hdr-actions">
+      <button class="icon-btn" id="listBtn" title="Lo que guardaste para ver">🔖<span class="lbl"> Mi lista</span><span class="count" id="listCount"></span></button>
+      <button class="icon-btn" id="mineBtn" title="Elegí las plataformas que tenés">⭐<span class="lbl"> Mis plataformas</span></button>
+      <button class="icon-btn country-btn" id="countryBtn" title="Cambiar país" aria-label="País: Argentina. Cambiar país"><img id="countryFlag" src="https://flagcdn.com/w40/ar.png" alt=""><span id="countryCode">AR</span><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5l3 3 3-3" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg></button>
+      <button class="icon-btn" id="keyBtn" title="Cambiar API key">🔑</button>
+    </div>
   </div>
 </header>
 
@@ -355,56 +448,59 @@
   </section>
 
   <section id="app" class="hidden">
+    <nav class="topnav" aria-label="Categorías">
+      <div class="seg" role="tablist" aria-label="Tipo">
+        <button class="on" data-type="all" role="tab" aria-selected="true">Todo</button>
+        <button data-type="movie" role="tab" aria-selected="false">Películas</button>
+        <button data-type="tv" role="tab" aria-selected="false">Series</button>
+      </div>
+      <div class="cats" id="cats"></div>
+    </nav>
+    <div class="subcats hidden" id="subcats"></div>
+
     <div class="hero">
-      <h1>¿En qué plataforma está <span>en Argentina</span>?</h1>
-      <p>Buscá una película o serie y te digo dónde verla acá, no en Estados Unidos. Marcá en ⭐ las plataformas que pagás y te aviso cuando la tenés.</p>
+      <h1>Encontrá dónde verla.</h1>
+      <p>Cualquier película o serie, en las plataformas de <span class="cname">Argentina</span>. Buscá por título o por género, como “thriller” o “películas de guerra”.</p>
       <div class="search-box">
       <div class="search">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <input id="q" type="search" aria-label="Buscar película, serie o género" placeholder="Título o género: “acción”…" autocomplete="off" enterkeyhint="search" aria-autocomplete="list" aria-controls="suggest">
-        <div class="seg" role="tablist" aria-label="Tipo">
-          <button class="on" data-type="all" role="tab" aria-selected="true">Todo</button>
-          <button data-type="movie" role="tab" aria-selected="false">Pelis</button>
-          <button data-type="tv" role="tab" aria-selected="false">Series</button>
-        </div>
+        <input id="q" type="search" aria-label="Buscar película, serie o género" placeholder="Buscar películas, series o géneros" autocomplete="off" enterkeyhint="search" aria-autocomplete="list" aria-controls="suggest">
       </div>
       <div class="suggest hidden" id="suggest" role="listbox"></div>
       </div>
     </div>
 
-    <section id="newSec">
-      <div class="section-title">
-        <h2 id="newTitle">🆕 Estrenos recientes</h2>
-        <button class="see-all" id="newAll">Ver todos →</button>
-      </div>
-      <div class="new-row" id="newRow"></div>
-    </section>
-
     <div class="section-title">
-      <h2>Categorías</h2>
-      <span class="hint">También podés escribir “acción”, “thriller” o “películas de guerra”</span>
-    </div>
-    <div class="cats" id="cats"></div>
-    <div class="subcats hidden" id="subcats"></div>
-
-    <div class="section-title">
-      <h2>Plataformas en Argentina</h2>
+      <h2>Plataformas en <span class="cname">Argentina</span></h2>
       <span class="hint">Tocá una para ver su catálogo</span>
     </div>
     <div class="chips" id="chips"></div>
 
+    <section id="newSec">
+      <div class="section-title">
+        <h2 id="newTitle">Estrenos recientes</h2>
+        <button class="see-all" id="newAll">Ver todos</button>
+      </div>
+      <div class="billboard" id="billboard" aria-roledescription="carrusel" aria-label="Estrenos recientes">
+        <div class="bb-track" id="newRow"></div>
+        <button class="bb-nav prev" id="bbPrev" aria-label="Anterior">‹</button>
+        <button class="bb-nav next" id="bbNext" aria-label="Siguiente">›</button>
+        <div class="bb-dots" id="bbDots"></div>
+      </div>
+    </section>
+
     <div class="feeds" id="feeds" role="tablist" aria-label="Qué mostrar">
-      <button class="on" data-feed="trending" role="tab" aria-selected="true">🔥 Tendencias</button>
-      <button data-feed="popular" role="tab" aria-selected="false">⭐ Populares</button>
-      <button data-feed="now" role="tab" aria-selected="false">🎬 En cartelera</button>
-      <button data-feed="upcoming" role="tab" aria-selected="false">📅 Próximamente</button>
+      <button class="on" data-feed="trending" role="tab" aria-selected="true">Tendencias</button>
+      <button data-feed="popular" role="tab" aria-selected="false">Populares</button>
+      <button data-feed="now" role="tab" aria-selected="false">En cartelera</button>
+      <button data-feed="upcoming" role="tab" aria-selected="false">Próximamente</button>
     </div>
     <div class="section-title">
       <h2 id="listTitle">Tendencias</h2>
       <div class="filters">
         <span class="hint" id="listHint"></span>
         <label class="toggle hidden" id="onlyMineWrap"><input type="checkbox" id="onlyMine"> ⭐ Solo mis plataformas</label>
-        <label class="toggle"><input type="checkbox" id="onlyAvail"> Solo lo que se puede ver en Argentina</label>
+        <label class="toggle"><input type="checkbox" id="onlyAvail"> Solo lo que se puede ver en <span class="cname">Argentina</span></label>
         <button class="clear hidden" id="clearFilters">Limpiar filtros ✕</button>
       </div>
     </div>
@@ -448,7 +544,14 @@
 
 <script>
 (() => {
-  const REGION = 'AR';
+  // País: siempre arranca en Argentina; se puede cambiar desde la bandera del encabezado.
+  const COUNTRIES = [['AR', 'Argentina'], ['BO', 'Bolivia'], ['CL', 'Chile'], ['CO', 'Colombia'], ['CR', 'Costa Rica'],
+    ['CU', 'Cuba'], ['EC', 'Ecuador'], ['SV', 'El Salvador'], ['GT', 'Guatemala'], ['HN', 'Honduras'], ['MX', 'México'],
+    ['NI', 'Nicaragua'], ['PA', 'Panamá'], ['PY', 'Paraguay'], ['PE', 'Perú'], ['PR', 'Puerto Rico'],
+    ['DO', 'República Dominicana'], ['UY', 'Uruguay'], ['VE', 'Venezuela']];
+  let REGION = 'AR';
+  const CN = () => (COUNTRIES.find(c => c[0] === REGION) || [, REGION])[1];
+  const flagUrl = cc => `https://flagcdn.com/w40/${cc.toLowerCase()}.png`;
   const LANG = 'es-AR';
   const API = 'https://api.themoviedb.org/3';
   const IMG = 'https://image.tmdb.org/t/p/';
@@ -711,7 +814,7 @@
 
   // ---------- Estrenos recientes ----------
   // La API no dice cuándo algo se sumó a cada plataforma: tomamos lo estrenado hace poco
-  // que ya está disponible en Argentina (en tus plataformas si las marcaste).
+  // que ya está disponible en el país elegido (en tus plataformas si las marcaste).
   const isoDaysAgo = d => new Date(Date.now() - d * 864e5).toISOString().slice(0, 10);
   function newParams(type, page) {
     const params = {
@@ -732,20 +835,144 @@
     return { results: res.flatMap(r => r.results).sort((a, b) => b.popularity - a.popularity), total_pages: Math.max(...res.map(r => r.total_pages)) };
   }
   let newSeq = 0;
+  function slide(it, i, n) {
+    const title = it.title || it.name;
+    const date = it.release_date || it.first_air_date || '';
+    const img = it.backdrop_path ? `${IMG}w1280${it.backdrop_path}` : it.poster_path ? `${IMG}w780${it.poster_path}` : '';
+    const over = (it.overview || '').trim();
+    return `
+      <article class="slide" tabindex="0" data-id="${it.id}" data-type="${it.media_type}" role="group" aria-roledescription="diapositiva" aria-label="${i + 1} de ${n}: ${esc(title)}">
+        ${img ? `<img class="bb-img" src="${img}" alt="" ${i ? 'loading="lazy"' : ''}>` : ''}
+        <div class="bb-shade"></div>
+        <div class="bb-info">
+          <span class="bb-kicker">${TYPE_LABEL[it.media_type]}${date ? ' · ' + date.slice(0, 4) : ''}</span>
+          <h3>${esc(title)}</h3>
+          ${over ? `<p class="bb-over">${esc(over)}</p>` : ''}
+          <div class="bb-row"><button class="btn bb-cta" tabindex="-1">Ver dónde verla</button><span class="mini-prov bb-prov" data-mp="${it.media_type}${it.id}"></span></div>
+        </div>
+      </article>`;
+  }
   async function renderNew() {
     const seq = ++newSeq;
-    $('#newTitle').textContent = mine.size ? '🆕 Estrenos recientes en tus plataformas' : '🆕 Estrenos recientes en Argentina';
+    $('#newTitle').textContent = mine.size ? 'Estrenos recientes en tus plataformas' : `Estrenos recientes en ${CN()}`;
     const row = $('#newRow');
-    row.innerHTML = Array(6).fill('<div class="skeleton"></div>').join('');
+    $('#newSec').classList.toggle('hidden', state.mode !== 'trending');
+    row.innerHTML = '<div class="slide ghost-slide"></div>';
+    $('#bbDots').innerHTML = '';
     let d;
     try { d = await fetchNew(1); } catch { if (seq === newSeq) { row.innerHTML = ''; $('#newSec').classList.add('hidden'); } return; }
     if (seq !== newSeq) return;
-    const list = d.results.slice(0, 12); // cada tarjeta consulta su disponibilidad: 12 alcanza para la fila
-    row.innerHTML = list.length ? list.map(card).join('')
-      : `<div class="empty" style="padding:16px 4px;text-align:left">No encontré estrenos recientes${mine.size ? ' en tus plataformas' : ''}.</div>`;
+    // con imagen de fondo se ve mejor: primero las que la tienen
+    const list = d.results.filter(r => r.backdrop_path).concat(d.results.filter(r => !r.backdrop_path)).slice(0, 8);
+    if (!list.length) { row.innerHTML = ''; $('#newSec').classList.add('hidden'); return; }
+    row.innerHTML = list.map((it, i) => slide(it, i, list.length)).join('');
+    $('#bbDots').innerHTML = list.map((it, i) => `<button aria-label="Ir a ${i + 1}" data-i="${i}"></button>`).join('');
+    row.scrollLeft = 0;
+    bbSet(0);
     list.forEach(decorate);
+    bbStart();
   }
-  $('#newRow').addEventListener('click', e => { const c = e.target.closest('.card'); if (c) openDetail(+c.dataset.id, c.dataset.type); });
+  $('#newRow').addEventListener('click', e => { const c = e.target.closest('.slide[data-id]'); if (c) openDetail(+c.dataset.id, c.dataset.type); });
+  $('#newRow').addEventListener('keydown', e => { const c = e.target.closest('.slide[data-id]'); if (c && e.key === 'Enter') openDetail(+c.dataset.id, c.dataset.type); });
+
+  // Avance automático cada 6 s. Se pausa con el mouse encima, con el foco adentro, mientras se desliza
+  // con el dedo, con la pestaña oculta o si la persona pidió reducir el movimiento.
+  const bb = { i: 0, timer: null, hold: false, resumeAt: 0 };
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function bbCount() { return $('#newRow').querySelectorAll('.slide[data-id]').length; }
+  function bbSet(i) {
+    bb.i = i;
+    $('#newRow').querySelectorAll('.slide').forEach((s, k) => s.classList.toggle('current', k === i));
+    $('#bbDots').querySelectorAll('button').forEach((b, k) => { b.classList.toggle('on', k === i); b.setAttribute('aria-current', k === i); });
+  }
+  function bbGo(i) {
+    const n = bbCount(); if (!n) return;
+    i = (i + n) % n;
+    const row = $('#newRow');
+    row.scrollTo({ left: i * row.clientWidth, behavior: reduceMotion ? 'auto' : 'smooth' });
+    bbSet(i);
+  }
+  function bbStart() {
+    clearInterval(bb.timer);
+    if (reduceMotion) return;
+    bb.timer = setInterval(() => {
+      if (bb.hold || Date.now() < bb.resumeAt || document.hidden || els.modal.classList.contains('open')) return;
+      if ($('#newSec').classList.contains('hidden')) return;
+      bbGo(bb.i + 1);
+    }, 6000);
+  }
+  const bbEl = $('#billboard');
+  bbEl.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') bb.hold = true; });
+  bbEl.addEventListener('pointerleave', () => { bb.hold = false; });
+  bbEl.addEventListener('focusin', () => { bb.hold = true; });
+  bbEl.addEventListener('focusout', () => { bb.hold = false; });
+  bbEl.addEventListener('touchstart', () => { bb.resumeAt = Date.now() + 8000; }, { passive: true });
+  $('#newRow').addEventListener('scroll', () => {
+    // al deslizar con el dedo, actualizar el punto activo
+    const row = $('#newRow');
+    const i = Math.round(row.scrollLeft / Math.max(1, row.clientWidth));
+    if (i !== bb.i) bbSet(i);
+  }, { passive: true });
+  $('#bbPrev').addEventListener('click', e => { e.stopPropagation(); bb.resumeAt = Date.now() + 8000; bbGo(bb.i - 1); });
+  $('#bbNext').addEventListener('click', e => { e.stopPropagation(); bb.resumeAt = Date.now() + 8000; bbGo(bb.i + 1); });
+  $('#bbDots').addEventListener('click', e => { const b = e.target.closest('[data-i]'); if (!b) return; e.stopPropagation(); bb.resumeAt = Date.now() + 8000; bbGo(+b.dataset.i); });
+  bbEl.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight') { bb.resumeAt = Date.now() + 8000; bbGo(bb.i + 1); }
+    if (e.key === 'ArrowLeft') { bb.resumeAt = Date.now() + 8000; bbGo(bb.i - 1); }
+  });
+  addEventListener('resize', () => { const row = $('#newRow'); row.scrollLeft = bb.i * row.clientWidth; });
+
+  // ---------- País ----------
+  let supportedRegions = null;
+  async function openCountry() {
+    openModal();
+    els.sheet.innerHTML = `
+      <button class="close" data-close aria-label="Cerrar">✕</button>
+      <div class="mine-head">
+        <h3>Elegí tu país</h3>
+        <p>Te muestro qué hay en las plataformas de ese país. Cada vez que abrís la página arranca en Argentina.</p>
+      </div>
+      <div class="country-grid" id="countryGrid"></div>`;
+    const draw = () => {
+      $('#countryGrid').innerHTML = COUNTRIES.map(([cc, name]) => {
+        const off = supportedRegions && !supportedRegions.has(cc);
+        return `<button class="country-opt ${cc === REGION ? 'on' : ''}" data-cc="${cc}" ${off ? 'disabled' : ''} aria-pressed="${cc === REGION}">
+          <img src="${flagUrl(cc)}" alt=""><span>${name}${off ? '<br><small>Sin datos todavía</small>' : ''}</span></button>`;
+      }).join('');
+    };
+    draw();
+    focusSheet();
+    if (!supportedRegions) {
+      // TMDB/JustWatch no cubren todos los países: los que no tienen datos se muestran deshabilitados
+      try {
+        const d = await api('/watch/providers/regions');
+        supportedRegions = new Set((d.results || []).map(r => r.iso_3166_1));
+        if ($('#countryGrid')) draw();
+      } catch {}
+    }
+  }
+  els.sheet.addEventListener('click', e => {
+    const b = e.target.closest('.country-opt'); if (!b || b.disabled) return;
+    closeModal();
+    setCountry(b.dataset.cc);
+  });
+  $('#countryBtn').addEventListener('click', openCountry);
+  async function setCountry(cc) {
+    if (cc === REGION) return;
+    REGION = cc;
+    provCache.clear();
+    state.providers = {};
+    state.provider = null;
+    $('#countryFlag').src = flagUrl(cc);
+    $('#countryCode').textContent = cc;
+    $('#countryBtn').setAttribute('aria-label', `País: ${CN()}. Cambiar país`);
+    document.querySelectorAll('.cname').forEach(x => { x.textContent = CN(); });
+    toast(`Mostrando disponibilidad en ${CN()}`, true);
+    setMode(state.showNew);
+    renderNew();
+    await loadProviders();
+    load();
+  }
   $('#newAll').addEventListener('click', () => {
     state.showNew = true; state.cat = state.sub = state.provider = null; els.q.value = ''; state.query = '';
     setMode(true); renderCats(); renderChips(); load();
@@ -944,7 +1171,7 @@
         els.listHint.textContent = `${label} · tocá una para ver dónde está`;
         data = await searchTitles(state.query, state.page);
       } else if (state.mode === 'new') {
-        els.listTitle.textContent = `🆕 Estrenos recientes${mine.size ? ' en tus plataformas' : ' en Argentina'}`;
+        els.listTitle.textContent = `Estrenos recientes${mine.size ? ' en tus plataformas' : ' en ' + CN()}`;
         els.listHint.textContent = 'pelis de los últimos 6 meses y series con episodios nuevos, ya disponibles';
         data = await fetchNew(state.page);
       } else if (state.mode === 'discover') {
@@ -979,15 +1206,15 @@
 
   // Populares, En cartelera y Próximamente. Pelis y series usan endpoints distintos; con "Todo" se mezclan.
   const FEEDS = {
-    popular: { title: 'Populares', hint: 'lo más visto ahora', movie: ['/movie/popular', { region: REGION }], tv: ['/tv/popular', {}] },
-    now: { title: 'En cartelera', hint: 'pelis en cines de Argentina y series con episodios esta semana', movie: ['/movie/now_playing', { region: REGION }], tv: ['/tv/on_the_air', {}], cinema: true },
-    upcoming: { title: 'Próximamente', hint: 'próximos estrenos en Argentina', movie: ['/movie/upcoming', { region: REGION }],
+    popular: { title: 'Populares', hint: 'lo más visto ahora', movie: ['/movie/popular', () => ({ region: REGION })], tv: ['/tv/popular', {}] },
+    now: { title: 'En cartelera', hint: 'pelis en cines de {país} y series con episodios esta semana', movie: ['/movie/now_playing', () => ({ region: REGION })], tv: ['/tv/on_the_air', {}], cinema: true },
+    upcoming: { title: 'Próximamente', hint: 'próximos estrenos en {país}', movie: ['/movie/upcoming', () => ({ region: REGION })],
       tv: ['/discover/tv', () => ({ 'first_air_date.gte': isoDaysAgo(-1), sort_by: 'popularity.desc' })], cinema: true, soon: true },
   };
   async function loadFeed(feed, page) {
     const f = FEEDS[feed];
     els.listTitle.textContent = `${f.title} · ${TYPE_PLURAL[state.type]}`;
-    els.listHint.textContent = f.hint;
+    els.listHint.textContent = f.hint.replace('{país}', CN());
     const types = state.type === 'all' ? ['movie', 'tv'] : [state.type];
     const today = isoDaysAgo(0);
     const res = await Promise.all(types.map(async type => {
@@ -1015,7 +1242,7 @@
         ${it.poster_path ? `<img class="poster" src="${IMG}w342${it.poster_path}" alt="" loading="lazy">` : `<div class="noposter">🎬</div>`}
         ${vote ? `<span class="badge">★ ${vote}</span>` : ''}
         <span class="mini-prov" data-mp="${uid}"></span>
-        <span class="lock"><b>🔒</b>No disponible en Argentina</span>
+        <span class="lock"><b>🔒</b>No disponible en ${esc(CN())}</span>
         ${it._soon && date ? `<span class="cine-tag">📅 Estrena ${fmtDay(date)}</span>` : it._cinema ? '<span class="cine-tag">🎬 En cines</span>' : ''}
         ${inList(it.media_type, it.id) && !it._cinema && !it._soon ? '<span class="wl-tag">🔖 En tu lista</span>' : ''}
         <div class="meta"><div class="t">${esc(title)}</div><div class="y"><span class="kind ${it.media_type}">${TYPE_LABEL[it.media_type]}</span>${date.slice(0, 4) || '—'}</div></div>
@@ -1033,7 +1260,7 @@
     const rentOnly = !subs.length && (p.rent || p.buy);
     const html = rentOnly ? '<span class="rent-tag">💸 Alquiler</span>' : subs.slice(0, 3).map(s => `<img class="${mine.has(s.provider_id) ? 'mine' : ''}" src="${IMG}w92${s.logo_path}" alt="${esc(s.provider_name)}" title="${esc(s.provider_name)}${mine.has(s.provider_id) ? ' (la tenés)' : ''}">`).join('');
     document.querySelectorAll(`[data-mp="${it.media_type}${it.id}"]`).forEach(slot => {
-      slot.closest('.card').classList.toggle('locked', !subs.length && !rentOnly);
+      slot.closest('.card')?.classList.toggle('locked', !subs.length && !rentOnly);
       slot.innerHTML = html;
     });
   }
@@ -1076,9 +1303,9 @@
 
     let verdict;
     if (owned.length) verdict = `<div class="verdict yes">⭐ ¡La tenés! Está en ${owned.map(s => esc(s.provider_name)).join(', ')}, que ya pagás.</div>`;
-    else if (subs.length) verdict = `<div class="verdict yes">✅ Disponible en Argentina con suscripción en: ${subs.map(s => esc(s.provider_name)).join(', ')}${mine.size ? ' (ninguna de las tuyas)' : ''}</div>`;
-    else if (p && (p.rent || p.buy)) verdict = '<div class="verdict no">💸 No está incluida en ninguna suscripción en Argentina, pero se puede alquilar o comprar.</div>';
-    else if (p) verdict = '<div class="verdict lockd">🔒 Bloqueada: no está en ninguna plataforma de Argentina por ahora.</div>';
+    else if (subs.length) verdict = `<div class="verdict yes">✅ Disponible en ${esc(CN())} con suscripción en: ${subs.map(s => esc(s.provider_name)).join(', ')}${mine.size ? ' (ninguna de las tuyas)' : ''}</div>`;
+    else if (p && (p.rent || p.buy)) verdict = `<div class="verdict no">💸 No está incluida en ninguna suscripción en ${esc(CN())}, pero se puede alquilar o comprar.</div>`;
+    else if (p) verdict = `<div class="verdict lockd">🔒 Bloqueada: no está en ninguna plataforma de ${esc(CN())} por ahora.</div>`;
     else verdict = '<div class="verdict no">No pude consultar la disponibilidad. Probá de nuevo en un rato.</div>';
 
     // El enlace de TMDB lleva a su página "Dónde ver", con un botón por plataforma
@@ -1115,14 +1342,14 @@
           <button class="btn ${inList(type, id) ? 'saved' : 'ghost'}" data-wl>${inList(type, id) ? '✓ En mi lista' : '🔖 Guardar en mi lista'}</button>
           ${trailer ? `<a class="btn ghost" href="https://www.youtube.com/watch?v=${encodeURIComponent(trailer.key)}" target="_blank" rel="noopener">▶ Tráiler</a>` : ''}
           <button class="btn ghost" data-share>↗ Compartir</button>
-          <a class="btn ghost" href="https://www.justwatch.com/ar/buscar?q=${encodeURIComponent(title)}" target="_blank" rel="noopener">JustWatch AR ↗</a>
+          <a class="btn ghost" href="https://www.justwatch.com/${REGION.toLowerCase()}/buscar?q=${encodeURIComponent(title)}" target="_blank" rel="noopener">JustWatch ↗</a>
         </div>
         ${sims.length ? `<div class="similar"><h4>Si te gustó, mirá también</h4><div class="sim-row">${sims.map(r => `
           <button class="sim" data-id="${r.id}" data-type="${r.media_type || type}">
             ${r.poster_path ? `<img src="${IMG}w185${r.poster_path}" alt="" loading="lazy">` : '<div class="noposter">🎬</div>'}
             <span>${esc(r.title || r.name)}</span>
           </button>`).join('')}</div></div>` : ''}
-        <div class="credit">Disponibilidad para Argentina provista por JustWatch. “▶ Ver en…” abre el título exacto: en el celular, en la app de la plataforma si la tenés instalada; en la compu, en su web. Si para un título no tenemos el enlace exacto, “Abrir…” va a la búsqueda de la plataforma y copia el título. Si ya iniciaste sesión, entra con tu cuenta.</div>
+        <div class="credit">Disponibilidad para ${esc(CN())} provista por JustWatch. “▶ Ver en…” abre el título exacto: en el celular, en la app de la plataforma si la tenés instalada; en la compu, en su web. Si para un título no tenemos el enlace exacto, “Abrir…” va a la búsqueda de la plataforma y copia el título. Si ya iniciaste sesión, entra con tu cuenta.</div>
       </div>`;
     focusSheet();
     loadAwards(type, id, seq);
@@ -1269,7 +1496,7 @@
     if (e.target.closest('[data-share]')) {
       const it = JSON.parse(els.sheet.dataset.item);
       const url = location.origin + location.pathname + `#${it.media_type}-${it.id}`;
-      const text = `Mirá dónde ver “${it.title}” en Argentina`;
+      const text = `Mirá dónde ver “${it.title}” en ${CN()}`;
       if (navigator.share) { try { await navigator.share({ title: it.title, text, url }); } catch {} }
       else navigator.clipboard?.writeText(url).then(() => toast('Enlace copiado', true)).catch(() => toast(url, true));
     }
@@ -1365,7 +1592,8 @@
     // marcar o desmarcar las tarjetas ya visibles
     const on = inList(it.media_type, it.id);
     document.querySelectorAll(`[data-mp="${it.media_type}${it.id}"]`).forEach(slot => {
-      const c = slot.closest('.card'), tag = c.querySelector('.wl-tag');
+      const c = slot.closest('.card'); if (!c) return;
+      const tag = c.querySelector('.wl-tag');
       if (on && !tag) slot.insertAdjacentHTML('afterend', '<span class="wl-tag">🔖 En tu lista</span>');
       if (!on && tag) tag.remove();
     });
@@ -1377,7 +1605,7 @@
       <button class="close" data-close aria-label="Cerrar">✕</button>
       <div class="mine-head">
         <h3>Mi lista</h3>
-        <p>Lo que guardaste para ver. Te muestro dónde está hoy en Argentina. Se guarda en este dispositivo.</p>
+        <p>Lo que guardaste para ver. Te muestro dónde está hoy en ${esc(CN())}. Se guarda en este dispositivo.</p>
       </div>
       <div class="grid wl-grid" style="padding:0 22px 22px">${watchlist.length ? watchlist.map(card).join('') :
         '<div class="empty">Todavía no guardaste nada. Abrí una peli o serie y tocá “🔖 Guardar en mi lista”.</div>'}</div>`;
