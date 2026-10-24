@@ -641,8 +641,8 @@
         <label class="toggle"><input type="checkbox" id="onlyAvail"> Solo lo que se puede ver en <span class="cname">Argentina</span></label>
         <div class="dur" id="durSeg" role="group" aria-label="Duración de las películas">
           <button type="button" data-dur="" class="on" aria-pressed="true">Cualquier duración</button>
-          <button type="button" data-dur="90" aria-pressed="false">Pelis de menos de 90 min</button>
-          <button type="button" data-dur="120" aria-pressed="false">Menos de 2 h</button>
+          <button type="button" data-dur="90" aria-pressed="false">Pelis de ≈ 1 h 30</button>
+          <button type="button" data-dur="120" aria-pressed="false">Hasta ≈ 2 h</button>
         </div>
         <button class="clear hidden" id="clearFilters">Limpiar filtros ✕</button>
       </div>
@@ -1378,7 +1378,8 @@
         els.listHint.textContent = 'pelis de los últimos 6 meses y series con episodios nuevos, ya disponibles';
         data = await fetchNew(state.page);
       } else if (state.mode === 'discover') {
-        const what = state.cat ? `${TYPE_PLURAL[state.type]} · ${state.cat.name}${state.sub ? ' › ' + state.sub[0] : ''}` : TYPE_PLURAL[state.type];
+        const base = state.dur ? `Películas de ${state.dur === '90' ? 'hasta 1 h 30' : 'hasta 2 h'} (aprox.)` : TYPE_PLURAL[state.type];
+        const what = state.cat ? `${base} · ${state.cat.name}${state.sub ? ' › ' + state.sub[0] : ''}` : base;
         els.listTitle.textContent = state.provider ? `${what} en ${state.provider.provider_name}` : state.onlyMine && mine.size ? `${what} en tus plataformas` : what;
         els.listHint.textContent = state.provider ? 'incluidas en la suscripción, por popularidad' : 'por popularidad';
         data = await discover();
