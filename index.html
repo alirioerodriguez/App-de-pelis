@@ -212,6 +212,45 @@
   .app span { color: var(--muted); font-size: .84rem; line-height: 1.4; }
   .app em { font-style: normal; color: var(--accent); font-size: .8rem; font-weight: 600; margin-top: 4px; }
   .app.soon em { color: var(--accent-2); }
+
+  /* Carrusel de otras apps: texto a la izquierda, celular con capturas a la derecha */
+  .more-apps h2 { font-size: 1.3rem; letter-spacing: -.02em; }
+  .apps-show { position: relative; margin-top: 6px; }
+  .as-track { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; border-radius: 26px; }
+  .as-track::-webkit-scrollbar { display: none; }
+  .as-slide { flex: 0 0 100%; scroll-snap-align: start; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 28px;
+    padding: 34px 40px; border-radius: 26px; text-align: left;
+    background: radial-gradient(120% 120% at 100% 0%, color-mix(in srgb, var(--brand) 38%, transparent), transparent 60%), #141416; }
+  .as-copy { display: flex; flex-direction: column; gap: 14px; min-width: 0; max-width: 560px; }
+  .as-head { display: flex; align-items: center; gap: 14px; }
+  .as-head .app-icon { width: 64px; height: 64px; }
+  .as-head b { display: block; font-size: 1.5rem; letter-spacing: -.02em; color: var(--text); }
+  .as-head span { color: rgba(255,255,255,.75); font-size: .95rem; }
+  .as-desc { margin: 0; color: rgba(255,255,255,.82); font-size: .98rem; line-height: 1.55; }
+  .as-points { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+  .as-points li { background: rgba(255,255,255,.09); color: var(--text); border-radius: 980px; padding: 6px 12px; font-size: .82rem; font-weight: 500; }
+  .as-cta { align-self: flex-start; background: #fff; color: #000; }
+  .as-soon { align-self: flex-start; color: var(--accent-2); font-weight: 600; font-size: .9rem; }
+  /* celular: marco, isla y pantalla con capturas que se van pasando */
+  .as-phone { position: relative; width: 236px; border-radius: 42px; background: #0b0b0c; padding: 9px;
+    box-shadow: 0 0 0 2px #2c2c2e, 0 30px 60px rgba(0,0,0,.55); }
+  .as-phone::before { content: ""; position: absolute; top: 18px; left: 50%; transform: translateX(-50%); width: 76px; height: 22px; border-radius: 12px; background: #000; z-index: 2; }
+  .as-screen { position: relative; width: 100%; aspect-ratio: 390 / 664; border-radius: 34px; overflow: hidden; background: var(--brand); }
+  .as-shot { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top; opacity: 0; transition: opacity .7s ease; }
+  .as-shot.on { opacity: 1; }
+  .as-placeholder { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; color: rgba(255,255,255,.85); font-weight: 600; font-size: .9rem;
+    background: linear-gradient(160deg, color-mix(in srgb, var(--brand) 70%, #fff 10%), #111); }
+  .as-placeholder svg { width: 72px; height: 72px; }
+  .as-dots { display: flex; justify-content: center; gap: 6px; margin-top: 14px; }
+  .as-dots button { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 4px; background: rgba(255,255,255,.3); transition: width .3s, background .3s; }
+  .as-dots button.on { width: 24px; background: #fff; }
+  @media (max-width: 720px) {
+    .as-slide { grid-template-columns: 1fr; padding: 26px 20px 24px; gap: 20px; }
+    .as-phone { order: -1; width: 168px; justify-self: center; border-radius: 32px; padding: 7px; }
+    .as-phone::before { top: 13px; width: 56px; height: 16px; }
+    .as-screen { border-radius: 26px; }
+    .as-head b { font-size: 1.3rem; }
+  }
   .legal { padding-top: 18px; border-top: 1px solid var(--line); }
   footer img { display: inline-block; height: 12px; vertical-align: middle; }
 
@@ -581,23 +620,9 @@
   <section class="more-apps" aria-labelledby="moreAppsTitle">
     <h2 id="moreAppsTitle">Otras apps del creador</h2>
     <p>Hechas por la misma persona que hizo esta.</p>
-    <div class="apps">
-      <a class="app" href="https://control-de-facturacion-eight.vercel.app" target="_blank" rel="noopener">
-        <img class="app-icon" src="icons/apps/honorapp.png" alt="" loading="lazy">
-        <div class="app-text"><b>HonorApp</b><span>Control de cobros para profesionales con pacientes: sesiones, pagos, saldos y reportes.</span><em>Abrir ↗</em></div>
-      </a>
-      <a class="app" href="https://control-de-gastos-lyart-theta.vercel.app" target="_blank" rel="noopener">
-        <img class="app-icon" src="icons/apps/mis-cuentas.png" alt="" loading="lazy">
-        <div class="app-text"><b>Mis Cuentas</b><span>Control de gastos personales, simple y gratis.</span><em>Abrir ↗</em></div>
-      </a>
-      <a class="app" href="https://cicloapp.vercel.app" target="_blank" rel="noopener">
-        <img class="app-icon" src="icons/apps/savia.png" alt="" loading="lazy">
-        <div class="app-text"><b>Savia</b><span>Seguimiento del ciclo menstrual, con tus datos guardados en tu teléfono.</span><em>Abrir ↗</em></div>
-      </a>
-      <div class="app soon">
-        <svg class="app-icon" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#2c2c2e"/><path d="M32 14l15 8.5v19L32 50l-15-8.5v-19z M32 14v0 M17 22.5L32 31l15-8.5 M32 31v19" fill="none" stroke="#98989d" stroke-width="2.4" stroke-linejoin="round"/></svg>
-        <div class="app-text"><b>RoomPlanner</b><span>Diseñá y amueblá tus ambientes en 3D.</span><em>Próximamente</em></div>
-      </div>
+    <div class="apps-show" id="appsShow" aria-roledescription="carrusel" aria-label="Otras apps del creador">
+      <div class="as-track" id="asTrack"></div>
+      <div class="as-dots" id="asDots"></div>
     </div>
   </section>
   <div class="legal">
@@ -1774,6 +1799,87 @@
     openDetail(+c.dataset.id, c.dataset.type);
   });
   $('#listBtn').addEventListener('click', openList);
+
+  // ---------- Otras apps del creador ----------
+  // Capturas reales de cada app (sacadas de su portada o de la app en modo local, con datos de ejemplo).
+  const APPS = [
+    { name: 'HonorApp', icon: 'icons/apps/honorapp.png', brand: '#4f7a63', url: 'https://control-de-facturacion-eight.vercel.app',
+      tagline: 'Tus cobros, en orden.',
+      desc: 'Para psicólogas, nutricionistas, kinesiólogos y cualquier profesional que atiende pacientes en Argentina. Anotás sesiones y pagos en pocos toques, ves quién te debe, mandás recordatorios por WhatsApp y le pasás a tu contadora el reporte del mes en Excel o PDF. Pesos y dólares siempre por separado, y te avisa cuando te acercás al tope del monotributo.',
+      points: ['Recordatorios por WhatsApp', 'Reporte para la contadora', 'Tope del monotributo'],
+      shots: ['icons/apps/shots/honorapp-1.jpg', 'icons/apps/shots/honorapp-2.jpg', 'icons/apps/shots/honorapp-3.jpg'] },
+    { name: 'Mis Cuentas', icon: 'icons/apps/mis-cuentas.png', brand: '#c8290f', url: 'https://control-de-gastos-lyart-theta.vercel.app',
+      tagline: 'Tu plata, en orden.',
+      desc: 'Anotás gastos e ingresos en segundos (también dictándolos o con una foto del ticket), ves cuánto tenés disponible sumando bancos, billeteras virtuales y efectivo, seguís las cuotas de la tarjeta mes a mes y dividís gastos con tu pareja, tu familia o con quien vivas. Gratis, sin tarjeta y sin publicidad.',
+      points: ['Gastos compartidos sin límite', 'Cuotas de la tarjeta', 'Metas de ahorro'],
+      shots: ['icons/apps/shots/mis-cuentas-1.jpg', 'icons/apps/shots/mis-cuentas-2.jpg', 'icons/apps/shots/mis-cuentas-3.jpg'] },
+    { name: 'Savia', icon: 'icons/apps/savia.png', brand: '#b8325c', url: 'https://cicloapp.vercel.app',
+      tagline: 'La vida que eres y la vida que das.',
+      desc: 'Te acompaña en tu ciclo, tu embarazo, tu posparto y tu menopausia. Aprende de tus ciclos reales para anticipar el próximo, te da ideas para cuidarte según tu fase, te recuerda la pastilla y arma un resumen para tu ginecóloga. Funciona en Android y iPhone.',
+      points: ['Aprende de tus ciclos', 'Recordatorio de la pastilla', 'Resumen para tu ginecóloga'],
+      shots: ['icons/apps/shots/savia-1.jpg', 'icons/apps/shots/savia-2.jpg', 'icons/apps/shots/savia-3.jpg'] },
+    { name: 'RoomPlanner', icon: null, brand: '#5e5ce6', url: null,
+      tagline: 'Tus ambientes, en 3D.',
+      desc: 'Una app para planificar tus ambientes en 3D: la distribución, las medidas y los muebles, antes de mover nada. Está en desarrollo.',
+      points: ['En 3D', 'Próximamente'],
+      shots: [] },
+  ];
+  const CUBE = '<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 10l18 10v22L32 54 14 42V20z M14 20l18 10 18-10 M32 30v24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/></svg>';
+  function renderApps() {
+    $('#asTrack').innerHTML = APPS.map((a, i) => `
+      <article class="as-slide" style="--brand:${a.brand}" role="group" aria-roledescription="diapositiva" aria-label="${i + 1} de ${APPS.length}: ${esc(a.name)}">
+        <div class="as-copy">
+          <div class="as-head">${a.icon ? `<img class="app-icon" src="${a.icon}" alt="" loading="lazy">` : CUBE.replace('<svg', '<svg class="app-icon" style="padding:12px;background:#2c2c2e;color:#98989d"')}
+            <div><b>${esc(a.name)}</b><span>${esc(a.tagline)}</span></div></div>
+          <p class="as-desc">${esc(a.desc)}</p>
+          <ul class="as-points">${a.points.map(t => `<li>${esc(t)}</li>`).join('')}</ul>
+          ${a.url ? `<a class="btn as-cta" href="${a.url}" target="_blank" rel="noopener">Abrir ${esc(a.name)} ↗</a>` : '<span class="as-soon">Próximamente</span>'}
+        </div>
+        <div class="as-phone"><div class="as-screen">
+          ${a.shots.length ? a.shots.map((src, k) => `<img class="as-shot ${k ? '' : 'on'}" src="${src}" alt="Captura de ${esc(a.name)}" loading="lazy">`).join('')
+            : `<div class="as-placeholder">${CUBE}<span>En desarrollo</span></div>`}
+        </div></div>
+      </article>`).join('');
+    $('#asDots').innerHTML = APPS.map((a, i) => `<button aria-label="Ver ${esc(a.name)}" data-i="${i}" class="${i ? '' : 'on'}"></button>`).join('');
+  }
+  renderApps();
+  // Avance: cada 8 s cambia de app y cada 2,6 s cambia la captura dentro del celular.
+  // Se pausa con el mouse encima, al tocar, con la pestaña oculta o con "reducir movimiento".
+  const as = { i: 0, shot: 0, hold: false, resumeAt: 0, tick: 0 };
+  function asSet(i) {
+    as.i = i; as.shot = 0;
+    $('#asDots').querySelectorAll('button').forEach((b, k) => { b.classList.toggle('on', k === i); b.setAttribute('aria-current', k === i); });
+    $('#asTrack').querySelectorAll('.as-slide').forEach((sl, k) => sl.querySelectorAll('.as-shot').forEach((im, j) => im.classList.toggle('on', j === 0)));
+  }
+  function asGo(i) {
+    const n = APPS.length, track = $('#asTrack');
+    i = (i + n) % n;
+    track.scrollTo({ left: i * track.clientWidth, behavior: reduceMotion ? 'auto' : 'smooth' });
+    asSet(i);
+  }
+  const asVisible = () => { const r = $('#appsShow').getBoundingClientRect(); return r.top < innerHeight && r.bottom > 0; };
+  if (!reduceMotion) setInterval(() => {
+    if (as.hold || Date.now() < as.resumeAt || document.hidden || els.modal.classList.contains('open') || !asVisible()) return;
+    as.tick++;
+    const shots = $('#asTrack').children[as.i]?.querySelectorAll('.as-shot') || [];
+    if (as.tick % 3 === 0) { asGo(as.i + 1); return; }
+    if (shots.length > 1) {
+      as.shot = (as.shot + 1) % shots.length;
+      shots.forEach((im, j) => im.classList.toggle('on', j === as.shot));
+    }
+  }, 2667);
+  const asEl = $('#appsShow');
+  asEl.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') as.hold = true; });
+  asEl.addEventListener('pointerleave', () => { as.hold = false; });
+  asEl.addEventListener('focusin', () => { as.hold = true; });
+  asEl.addEventListener('focusout', () => { as.hold = false; });
+  asEl.addEventListener('touchstart', () => { as.resumeAt = Date.now() + 10000; }, { passive: true });
+  $('#asTrack').addEventListener('scroll', () => {
+    const t = $('#asTrack'), i = Math.round(t.scrollLeft / Math.max(1, t.clientWidth));
+    if (i !== as.i) asSet(i);
+  }, { passive: true });
+  $('#asDots').addEventListener('click', e => { const b = e.target.closest('[data-i]'); if (!b) return; as.resumeAt = Date.now() + 10000; asGo(+b.dataset.i); });
+  addEventListener('resize', () => { const t = $('#asTrack'); t.scrollLeft = as.i * t.clientWidth; });
 
   // Pósters o logos que no cargan: se reemplazan en vez de mostrar el ícono roto
   document.addEventListener('error', e => {
