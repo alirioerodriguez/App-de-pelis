@@ -246,6 +246,9 @@
   .mine-opt.on::after { content: "✓"; color: var(--ok); font-weight: 800; }
   .mine-foot { padding: 12px 22px 22px; display: flex; justify-content: flex-end; }
   .prov.mine { border-color: var(--ok); }
+  a.prov { color: var(--text); text-decoration: none; transition: border-color .15s, background .15s; }
+  a.prov:hover { border-color: var(--accent); background: rgba(255,255,255,.06); }
+  a.prov .ext { color: var(--muted); font-size: .8rem; margin-left: 2px; }
   .owned { grid-column: 1/-1; display: flex; flex-wrap: wrap; gap: 10px; }
   .bar .icon-btn + .icon-btn { margin-left: 0; }
 
@@ -1299,7 +1302,13 @@
 
     const group = (label, color, list) => list?.length ? `
       <h4><span class="dot" style="background:${color}"></span>${label}</h4>
-      <div class="provs">${list.map(s => `<div class="prov ${mine.has(s.provider_id) ? 'mine' : ''}"><img src="${IMG}w92${s.logo_path}" alt="">${esc(s.provider_name)}${mine.has(s.provider_id) ? ' ⭐' : ''}</div>`).join('')}</div>` : '';
+      <div class="provs">${list.map(s => {
+        const url = openUrl(s.provider_name, title);
+        const inner = `<img src="${IMG}w92${s.logo_path}" alt="">${esc(s.provider_name)}${mine.has(s.provider_id) ? ' ⭐' : ''}`;
+        return url
+          ? `<a class="prov ${mine.has(s.provider_id) ? 'mine' : ''}" data-prov="${esc(provKey(s.provider_name) || '')}" href="${url}" target="_blank" rel="noopener" data-copy="${esc(title)}">${inner}<span class="ext">↗</span></a>`
+          : `<div class="prov ${mine.has(s.provider_id) ? 'mine' : ''}">${inner}</div>`;
+      }).join('')}</div>` : '';
 
     let verdict;
     if (owned.length) verdict = `<div class="verdict yes">⭐ ¡La tenés! Está en ${owned.map(s => esc(s.provider_name)).join(', ')}, que ya pagás.</div>`;
@@ -1312,9 +1321,12 @@
     // que abre el título exacto (vía JustWatch). Es lo más directo que permiten los datos.
     // Un botón por plataforma. Arranca apuntando a la búsqueda de la plataforma y, cuando llega
     // el enlace exacto del título (Wikidata), se reemplaza por "▶ Ver en …".
-    const openBtns = (owned.length ? owned : subs).map(s => {
+    const rentOnly = !subs.length;
+    const linkable = owned.length ? owned : subs.length ? subs : dedupe([...(p?.rent || []), ...(p?.buy || [])]);
+    const openBtns = linkable.map(s => {
       const url = openUrl(s.provider_name, title);
-      return `<a class="btn ghost ${url ? '' : 'hidden'}" data-prov="${esc(provKey(s.provider_name) || '')}" data-name="${esc(s.provider_name)}" href="${url || '#'}" target="_blank" rel="noopener" data-copy="${esc(title)}">Abrir ${esc(s.provider_name)} ↗</a>`;
+      const label = rentOnly ? `Alquilar o comprar en ${esc(s.provider_name)}` : `Abrir ${esc(s.provider_name)}`;
+      return `<a class="btn ghost ${url ? '' : 'hidden'}" data-prov="${esc(provKey(s.provider_name) || '')}" data-name="${esc(s.provider_name)}" href="${url || '#'}" target="_blank" rel="noopener" data-copy="${esc(title)}">${label} ↗</a>`;
     }).join('') + (p?.link && (subs.length || p.rent || p.buy)
       ? `<a class="btn ghost" href="${p.link}" target="_blank" rel="noopener">Ver todas las opciones ↗</a>` : '');
 
@@ -1422,6 +1434,8 @@
       if (!url) return;
       a.href = appLink(a.dataset.prov, url);
       if (a.href.startsWith('intent:')) a.removeAttribute('target');
+      a.removeAttribute('data-copy');
+      if (a.classList.contains('prov')) return; // logo de la lista: solo cambia a dónde lleva
       a.textContent = `▶ Ver en ${a.dataset.name}`;
       a.classList.remove('ghost', 'hidden');
       a.removeAttribute('data-copy');
