@@ -204,9 +204,11 @@
   .more-apps h2 { font-size: 1rem; margin: 8px 0 4px; color: var(--text); }
   .more-apps > p { margin: 0 0 14px; }
   .apps { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
-  .app { display: flex; flex-direction: column; gap: 4px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; color: var(--text); text-decoration: none; transition: border-color .15s, transform .15s; }
+  .app { display: flex; flex-direction: row; align-items: flex-start; gap: 14px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; color: var(--text); text-decoration: none; transition: border-color .15s, transform .15s; }
   a.app:hover { border-color: var(--accent); transform: translateY(-2px); }
   .app b { font-size: .98rem; }
+  .app-icon { width: 56px; height: 56px; flex: none; border-radius: 22%; box-shadow: 0 4px 12px rgba(0,0,0,.4); }
+  .app-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
   .app span { color: var(--muted); font-size: .84rem; line-height: 1.4; }
   .app em { font-style: normal; color: var(--accent); font-size: .8rem; font-weight: 600; margin-top: 4px; }
   .app.soon em { color: var(--accent-2); }
@@ -581,16 +583,20 @@
     <p>Hechas por la misma persona que hizo esta.</p>
     <div class="apps">
       <a class="app" href="https://control-de-facturacion-eight.vercel.app" target="_blank" rel="noopener">
-        <b>HonorApp</b><span>Control de cobros para profesionales con pacientes: sesiones, pagos, saldos y reportes.</span><em>Abrir ↗</em>
+        <img class="app-icon" src="icons/apps/honorapp.png" alt="" loading="lazy">
+        <div class="app-text"><b>HonorApp</b><span>Control de cobros para profesionales con pacientes: sesiones, pagos, saldos y reportes.</span><em>Abrir ↗</em></div>
       </a>
       <a class="app" href="https://control-de-gastos-lyart-theta.vercel.app" target="_blank" rel="noopener">
-        <b>Mis Cuentas</b><span>Control de gastos personales, simple y gratis.</span><em>Abrir ↗</em>
+        <img class="app-icon" src="icons/apps/mis-cuentas.png" alt="" loading="lazy">
+        <div class="app-text"><b>Mis Cuentas</b><span>Control de gastos personales, simple y gratis.</span><em>Abrir ↗</em></div>
       </a>
       <a class="app" href="https://cicloapp.vercel.app" target="_blank" rel="noopener">
-        <b>Savia</b><span>Seguimiento del ciclo menstrual, con tus datos guardados en tu teléfono.</span><em>Abrir ↗</em>
+        <img class="app-icon" src="icons/apps/savia.png" alt="" loading="lazy">
+        <div class="app-text"><b>Savia</b><span>Seguimiento del ciclo menstrual, con tus datos guardados en tu teléfono.</span><em>Abrir ↗</em></div>
       </a>
       <div class="app soon">
-        <b>RoomPlanner</b><span>Diseñá y amueblá tus ambientes en 3D.</span><em>Próximamente</em>
+        <svg class="app-icon" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#2c2c2e"/><path d="M32 14l15 8.5v19L32 50l-15-8.5v-19z M32 14v0 M17 22.5L32 31l15-8.5 M32 31v19" fill="none" stroke="#98989d" stroke-width="2.4" stroke-linejoin="round"/></svg>
+        <div class="app-text"><b>RoomPlanner</b><span>Diseñá y amueblá tus ambientes en 3D.</span><em>Próximamente</em></div>
       </div>
     </div>
   </section>
