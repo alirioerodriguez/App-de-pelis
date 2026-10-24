@@ -1361,14 +1361,15 @@
   // plataforma (Netflix, Disney+, Prime Video, Max, Apple TV…) junto con el formato de su URL.
   function provKey(name) {
     const n = name.toLowerCase();
+    // las marcas van antes que Prime Video: "MUBI Amazon Channel" es MUBI, no Prime
     if (n.includes('netflix')) return 'netflix';
     if (n.includes('disney')) return 'disney';
-    if (n.includes('prime video') || n.includes('amazon')) return 'prime';
-    if (n.includes('hbo') || /(^|\s)max(\s|$)/.test(n)) return 'max';
-    if (n.includes('apple tv')) return 'apple';
-    if (n.includes('paramount')) return 'paramount';
     if (n.includes('mubi')) return 'mubi';
+    if (n.includes('paramount')) return 'paramount';
     if (n.includes('crunchyroll')) return 'crunchyroll';
+    if (n.includes('apple tv')) return 'apple';
+    if (n.includes('hbo') || /(^|\s)max(\s|$)/.test(n)) return 'max';
+    if (n.includes('prime video') || n.includes('amazon')) return 'prime';
     return null;
   }
   // En Android, un "intent" abre la app instalada y, si no está, cae a la web de la plataforma.
