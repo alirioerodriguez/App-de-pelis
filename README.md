@@ -2,10 +2,12 @@
 
 Buscador de películas y series que muestra en qué plataforma de streaming están disponibles en tu país de Latinoamérica (suscripción, gratis, alquiler o compra). Arranca siempre en Argentina; el país se cambia desde la bandera del encabezado.
 
+App publicada: **https://donde-la-veo-app.vercel.app** (la dirección vieja, `alirioerodriguez.github.io/App-de-pelis`, redirige acá y se lleva «Mis plataformas» y «Mi lista»).
+
 ## Uso
-1. Abrí `index.html` en el navegador (o publicalo en GitHub Pages / Vercel / Netlify).
-2. La primera vez te pide una clave gratuita de TMDB: creá cuenta en themoviedb.org → Configuración → API. Sirve tanto la *API Key* (v3) como el *Read Access Token* (v4).
-3. La clave queda guardada solo en tu navegador.
+No pide ninguna clave. Las consultas a TMDB pasan por `api/tmdb.js`, una función de Vercel que agrega la clave del proyecto y guarda las respuestas en caché (búsquedas 1 h, el resto 6 h). Solo responde a su propia página.
+
+Para publicarla en otro proyecto de Vercel: importar este repo y agregar la variable de entorno `TMDB_TOKEN` con el *Read Access Token* (v4) o la *API Key* (v3) de themoviedb.org → Configuración → API.
 
 ## Qué hace
 - Búsqueda en vivo de películas y series.
