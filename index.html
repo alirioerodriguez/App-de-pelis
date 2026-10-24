@@ -1413,8 +1413,10 @@
   // En iPhone los enlaces https de estas plataformas los abre su app si está instalada.
   const ANDROID_APP = { netflix: 'com.netflix.mediaclient', disney: 'com.disney.disneyplus', prime: 'com.amazon.avod.thirdpartyclient' };
   const isAndroid = /Android/i.test(navigator.userAgent);
+  // Dentro de la app nativa (Android/iPhone) los enlaces https los abre la app de cada plataforma
+  const inApp = /DondeLaVeoApp/.test(navigator.userAgent);
   function appLink(key, url) {
-    if (!isAndroid || !ANDROID_APP[key] || !url.startsWith('https://')) return url;
+    if (inApp || !isAndroid || !ANDROID_APP[key] || !url.startsWith('https://')) return url;
     return `intent://${url.slice(8)}#Intent;scheme=https;package=${ANDROID_APP[key]};S.browser_fallback_url=${encodeURIComponent(url)};end`;
   }
 
@@ -1537,7 +1539,8 @@
       const it = JSON.parse(els.sheet.dataset.item);
       const url = location.origin + location.pathname + `#${it.media_type}-${it.id}`;
       const text = `Mirá dónde ver “${it.title}” en ${CN()}`;
-      if (navigator.share) { try { await navigator.share({ title: it.title, text, url }); } catch {} }
+      if (window.ReactNativeWebView) window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'share', title: it.title, text, url }));
+      else if (navigator.share) { try { await navigator.share({ title: it.title, text, url }); } catch {} }
       else navigator.clipboard?.writeText(url).then(() => toast('Enlace copiado', true)).catch(() => toast(url, true));
     }
     const sim = e.target.closest('.sim');
@@ -1690,7 +1693,7 @@
   const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
   const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   let installEvt = null;
-  if (!standalone) {
+  if (!standalone && !inApp) {
     if (isIOS) {
       // Safari no tiene botón de instalar: se explica el paso a paso
       $('#installHow').textContent = 'En Safari, tocá Compartir (el cuadrado con la flecha) y después “Agregar a inicio”.';
