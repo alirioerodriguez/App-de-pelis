@@ -611,7 +611,7 @@
 (() => {
   // País: siempre arranca en Argentina; se puede cambiar desde la bandera del encabezado.
   const COUNTRIES = [['AR', 'Argentina'], ['BO', 'Bolivia'], ['CL', 'Chile'], ['CO', 'Colombia'], ['CR', 'Costa Rica'],
-    ['CU', 'Cuba'], ['EC', 'Ecuador'], ['SV', 'El Salvador'], ['GT', 'Guatemala'], ['HN', 'Honduras'], ['MX', 'México'],
+    ['CU', 'Cuba'], ['EC', 'Ecuador'], ['SV', 'El Salvador'], ['US', 'Estados Unidos'], ['GT', 'Guatemala'], ['HN', 'Honduras'], ['MX', 'México'],
     ['NI', 'Nicaragua'], ['PA', 'Panamá'], ['PY', 'Paraguay'], ['PE', 'Perú'], ['PR', 'Puerto Rico'],
     ['DO', 'República Dominicana'], ['UY', 'Uruguay'], ['VE', 'Venezuela']];
   let REGION = 'AR';
@@ -1493,7 +1493,7 @@
           <button class="btn ${inList(type, id) ? 'saved' : 'ghost'}" data-wl>${inList(type, id) ? '✓ En mi lista' : '🔖 Guardar en mi lista'}</button>
           ${trailer ? `<a class="btn ghost" href="https://www.youtube.com/watch?v=${encodeURIComponent(trailer.key)}" target="_blank" rel="noopener">▶ Tráiler</a>` : ''}
           <button class="btn ghost" data-share>↗ Compartir</button>
-          <a class="btn ghost" href="https://www.justwatch.com/${REGION.toLowerCase()}/buscar?q=${encodeURIComponent(title)}" target="_blank" rel="noopener">JustWatch ↗</a>
+          <a class="btn ghost" href="https://www.justwatch.com/${REGION.toLowerCase()}/${REGION === 'US' ? 'search' : 'buscar'}?q=${encodeURIComponent(title)}" target="_blank" rel="noopener">JustWatch ↗</a>
         </div>
         ${sims.length ? `<div class="similar"><h4>Si te gustó, mirá también</h4><div class="sim-row">${sims.map(r => `
           <button class="sim" data-id="${r.id}" data-type="${r.media_type || type}">
