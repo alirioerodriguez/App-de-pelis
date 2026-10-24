@@ -100,6 +100,18 @@
   .section-title { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin: 26px 0 12px; }
   .section-title h2 { font-size: 1.15rem; margin: 0; }
   .section-title .hint { color: var(--muted); font-size: .85rem; }
+  .seasons { margin: 18px 0 6px; }
+  .seasons h4 { margin: 0 0 10px; }
+  .se-load { color: var(--muted); font-size: .9rem; }
+  .se-list { display: grid; gap: 8px; }
+  .se-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; background: var(--card); }
+  .se-row.mine { box-shadow: inset 0 0 0 1.5px var(--ok); }
+  .se-row img { width: 36px; height: 36px; border-radius: 9px; flex: none; }
+  .se-txt { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+  .se-txt span { color: var(--muted); font-size: .85rem; }
+  .se-num { font-weight: 700; font-size: 1.1rem; font-variant-numeric: tabular-nums; }
+  .se-num small { color: var(--muted); font-weight: 500; font-size: .8rem; }
+  .se-note { color: var(--muted); font-size: .82rem; margin: 8px 0 0; }
   .plat-acc { display: inline-flex; align-items: baseline; gap: 10px; }
   /* Plataformas ocultas: también se esconde «Solo mis plataformas» */
   body.plat-oculto #chips, body.plat-oculto #chipsMore, body.plat-oculto #onlyMineWrap, body.plat-oculto .plat-hint { display: none !important; }
@@ -1547,6 +1559,7 @@
           ${group('Alquiler', 'var(--rent)', p?.rent)}
           ${group('Compra', 'var(--buy)', p?.buy)}
         </div>
+        ${type === 'tv' && (d.seasons || []).filter(s => s.season_number > 0).length > 1 ? '<div class="seasons" id="seasons"><h4>Temporadas por plataforma</h4><div class="se-load">Buscando qué temporadas tiene cada plataforma…</div></div>' : ''}
         ${d.overview ? `<p class="overview">${esc(d.overview)}</p>` : ''}
         <div class="actions">
           <button class="btn ${inList(type, id) ? 'saved' : 'ghost'}" data-wl>${inList(type, id) ? '✓ En mi lista' : '🔖 Guardar en mi lista'}</button>
@@ -1564,6 +1577,66 @@
     focusSheet();
     loadAwards(type, id, seq);
     loadDeepLinks(type, id, seq);
+    if (type === 'tv') loadSeasons(id, d, seq);
+  }
+
+  // ---------- Temporadas por plataforma ----------
+  // TMDB/JustWatch dan la disponibilidad de cada temporada por separado: así se ve, por ejemplo,
+  // que una plataforma tiene todas las temporadas y otra solo las primeras.
+  const seasonCache = new Map();
+  function seasonProviders(id, n) {
+    const ck = REGION + ':' + id + ':' + n;
+    if (!seasonCache.has(ck)) {
+      seasonCache.set(ck, api(`/tv/${id}/season/${n}/watch/providers`).then(r => r.results?.[REGION] || null).catch(() => undefined));
+    }
+    return seasonCache.get(ck);
+  }
+  function rangos(nums) {
+    const out = [];
+    for (let i = 0; i < nums.length; i++) {
+      let j = i;
+      while (j + 1 < nums.length && nums[j + 1] === nums[j] + 1) j++;
+      out.push(j > i ? `${nums[i]}–${nums[j]}` : String(nums[i]));
+      i = j;
+    }
+    return out.join(', ');
+  }
+  async function loadSeasons(id, d, seq) {
+    const box = $('#seasons');
+    if (!box) return;
+    const temps = (d.seasons || []).filter(s => s.season_number > 0);
+    const epis = new Map(temps.map(s => [s.season_number, s.episode_count || 0]));
+    const res = [];
+    for (let i = 0; i < temps.length; i += 6) { // de a 6 consultas para no saturar
+      res.push(...await Promise.all(temps.slice(i, i + 6).map(s => seasonProviders(id, s.season_number))));
+      if (seq !== detailSeq) return;
+    }
+    const porProv = new Map(), sinDatos = [];
+    temps.forEach((s, i) => {
+      const r = res[i];
+      if (r === undefined) return; // la consulta falló
+      const lista = r ? dedupe([...(r.flatrate || []), ...(r.free || []), ...(r.ads || [])]) : [];
+      if (!lista.length) { sinDatos.push(s.season_number); return; }
+      lista.forEach(pv => {
+        if (!porProv.has(pv.provider_id)) porProv.set(pv.provider_id, { pv, nums: [] });
+        porProv.get(pv.provider_id).nums.push(s.season_number);
+      });
+    });
+    if (!porProv.size) { box.remove(); return; }
+    const filas = [...porProv.values()]
+      .map(x => ({ ...x, eps: x.nums.reduce((t, n) => t + (epis.get(n) || 0), 0) }))
+      .sort((a, b) => b.nums.length - a.nums.length || b.eps - a.eps);
+    const max = filas[0].nums.length;
+    box.innerHTML = `<h4>Temporadas por plataforma</h4>
+      <div class="se-list">${filas.map(f => `
+        <div class="se-row ${mine.has(f.pv.provider_id) ? 'mine' : ''}">
+          <img src="${IMG}w92${f.pv.logo_path}" alt="">
+          <div class="se-txt"><b>${esc(f.pv.provider_name)}${mine.has(f.pv.provider_id) ? ' ⭐' : ''}</b>
+            <span>${f.nums.length === temps.length ? 'Todas las temporadas' : `Temporada${f.nums.length > 1 ? 's' : ''} ${rangos(f.nums)}`} · ${f.eps} episodio${f.eps === 1 ? '' : 's'}</span></div>
+          <span class="se-num">${f.nums.length}<small>/${temps.length}</small></span>
+        </div>`).join('')}</div>
+      ${filas.length > 1 && filas[1].nums.length < max ? `<p class="se-note">La más completa: <b>${esc(filas[0].pv.provider_name)}</b>.</p>` : ''}
+      ${sinDatos.length ? `<p class="se-note">Sin datos para la${sinDatos.length > 1 ? 's temporadas' : ' temporada'} ${rangos(sinDatos)}: pueden estar en alguna plataforma aunque no figure.</p>` : ''}`;
   }
 
   // ---------- Enlace directo al título en cada plataforma ----------
