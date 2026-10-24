@@ -100,6 +100,15 @@
   .section-title { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin: 26px 0 12px; }
   .section-title h2 { font-size: 1.15rem; margin: 0; }
   .section-title .hint { color: var(--muted); font-size: .85rem; }
+  .extra { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 980px; font-size: .72rem; font-weight: 600;
+    color: #ff9f0a; background: rgba(255,159,10,.14); white-space: nowrap; vertical-align: middle; }
+  .se-txt .extra { margin: 2px 0; align-self: flex-start; }
+  .report { margin: 14px 0 0; }
+  .linkbtn { background: none; border: 0; padding: 4px 0; color: var(--muted); font: inherit; font-size: .85rem; text-decoration: underline; cursor: pointer; }
+  .report-opts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .report-opts button { font: inherit; font-size: .85rem; border: 1px solid var(--line); background: var(--card); color: var(--text); border-radius: 980px; padding: 7px 12px; cursor: pointer; }
+  .report-opts button:disabled { opacity: .5; }
+  .report-ok { color: var(--ok); font-size: .9rem; margin: 6px 0 0; }
   .seasons { margin: 18px 0 6px; }
   .seasons h4 { margin: 0 0 10px; }
   .se-load { color: var(--muted); font-size: .9rem; }
@@ -761,8 +770,10 @@
       if (Array.isArray(d.lista)) {
         const cur = safeJSON(safeGet(LIST_STORE)) || [];
         const ids = new Set(cur.map(x => x.media_type + x.id));
-        d.lista.forEach(x => { if (x && x.id && !ids.has(x.media_type + x.id)) cur.push(x); });
+        let n = 0;
+        d.lista.forEach(x => { if (x && x.id && !ids.has(x.media_type + x.id)) { cur.push(x); n++; } });
         safeSet(LIST_STORE, JSON.stringify(cur));
+        if (n) setTimeout(() => toast(`Se sumaron ${n} título${n > 1 ? 's' : ''} a Mi lista`, true), 900);
       }
     } catch { /* datos dañados: se ignoran */ }
     history.replaceState(null, '', location.pathname + location.search + (m[2] ? '#' + m[2] : ''));
@@ -1440,6 +1451,15 @@
   }
 
   function subsOf(p) { return p ? [...(p.flatrate || []), ...(p.free || []), ...(p.ads || [])] : []; }
+  // Canales que se contratan aparte dentro de otra app (p. ej. «MUBI Amazon Channel» = MUBI pagado dentro de Prime Video)
+  function canalDe(name) {
+    const m = /\s(amazon|apple tv) channel$/i.exec(name || '');
+    return m ? (m[1].toLowerCase() === 'amazon' ? 'Prime Video' : 'Apple TV') : null;
+  }
+  function etiquetaCanal(name) {
+    const c = canalDe(name);
+    return c ? `<span class="extra" title="Se paga aparte, además de ${c}">+ pago extra en ${c}</span>` : '';
+  }
   function dedupe(list) { const seen = new Set(); return list.filter(s => !seen.has(s.provider_id) && seen.add(s.provider_id)); }
 
   // Muestra logos de plataformas en la tarjeta; las que tenés van primero y resaltadas
@@ -1510,7 +1530,7 @@
       <h4><span class="dot" style="background:${color}"></span>${label}</h4>
       <div class="provs">${list.map(s => {
         const url = openUrl(s.provider_name, title);
-        const inner = `<img src="${IMG}w92${s.logo_path}" alt="">${esc(s.provider_name)}${mine.has(s.provider_id) ? ' ⭐' : ''}`;
+        const inner = `<img src="${IMG}w92${s.logo_path}" alt="">${esc(s.provider_name)}${mine.has(s.provider_id) ? ' ⭐' : ''}${etiquetaCanal(s.provider_name)}`;
         return url
           ? `<a class="prov ${mine.has(s.provider_id) ? 'mine' : ''}" data-prov="${esc(provKey(s.provider_name) || '')}" href="${url}" target="_blank" rel="noopener" data-copy="${esc(title)}">${inner}<span class="ext">↗</span></a>`
           : `<div class="prov ${mine.has(s.provider_id) ? 'mine' : ''}">${inner}</div>`;
@@ -1518,7 +1538,7 @@
 
     let verdict;
     if (owned.length) verdict = `<div class="verdict yes">⭐ ¡La tenés! Está en ${owned.map(s => esc(s.provider_name)).join(', ')}, que ya pagás.</div>`;
-    else if (subs.length) verdict = `<div class="verdict yes">✅ Disponible en ${esc(CN())} con suscripción en: ${subs.map(s => esc(s.provider_name)).join(', ')}${mine.size ? ' (ninguna de las tuyas)' : ''}</div>`;
+    else if (subs.length) verdict = `<div class="verdict yes">✅ Disponible en ${esc(CN())} con suscripción en: ${subs.map(s => esc(s.provider_name)).join(', ')}${mine.size ? ' (ninguna de las tuyas)' : ''}${subs.every(s => canalDe(s.provider_name)) ? `<br><small>Ojo: solo está en canales que se pagan aparte, además de ${esc(canalDe(subs[0].provider_name))}.</small>` : ''}</div>`;
     else if (p && (p.rent || p.buy)) verdict = `<div class="verdict no">💸 No está incluida en ninguna suscripción en ${esc(CN())}, pero se puede alquilar o comprar.</div>`;
     else if (p && cine?.now.has(id) && type === 'movie') verdict = `<div class="verdict yes">🎬 Está en cines en ${esc(CN())}. Todavía no llegó a ninguna plataforma.</div>`;
     else if (p && cine?.soon.has(id) && type === 'movie') verdict = `<div class="verdict yes">📅 Se estrena en cines de ${esc(CN())} el ${fmtDay(cine.soon.get(id))}. Todavía no está en ninguna plataforma.</div>`;
@@ -1573,7 +1593,17 @@
             <span>${esc(r.title || r.name)}</span>
           </button>`).join('')}</div></div>` : ''}
         <div class="credit">Disponibilidad para ${esc(CN())} provista por JustWatch. “▶ Ver en…” abre el título exacto: en el celular, en la app de la plataforma si la tenés instalada; en la compu, en su web. Si para un título no tenemos el enlace exacto, “Abrir…” va a la búsqueda de la plataforma y copia el título. Si ya iniciaste sesión, entra con tu cuenta.</div>
+        <div class="report">
+          <button class="linkbtn" data-report-open type="button" aria-expanded="false">¿El dato está mal en ${esc(CN())}? Avisanos</button>
+          <div class="report-opts hidden">
+            <button type="button" data-report="no-esta">Dice que está y no está</button>
+            <button type="button" data-report="otra-plataforma">Está en otra plataforma</button>
+            ${type === 'tv' ? '<button type="button" data-report="temporadas">Faltan temporadas</button>' : ''}
+            <button type="button" data-report="otro">Otro problema</button>
+          </div>
+        </div>
       </div>`;
+    els.sheet.dataset.provs = JSON.stringify(dedupe([...(p?.flatrate || []), ...(p?.free || []), ...(p?.ads || []), ...(p?.rent || []), ...(p?.buy || [])]).map(s => s.provider_name));
     focusSheet();
     loadAwards(type, id, seq);
     loadDeepLinks(type, id, seq);
@@ -1631,7 +1661,7 @@
       <div class="se-list">${filas.map(f => `
         <div class="se-row ${mine.has(f.pv.provider_id) ? 'mine' : ''}">
           <img src="${IMG}w92${f.pv.logo_path}" alt="">
-          <div class="se-txt"><b>${esc(f.pv.provider_name)}${mine.has(f.pv.provider_id) ? ' ⭐' : ''}</b>
+          <div class="se-txt"><b>${esc(f.pv.provider_name)}${mine.has(f.pv.provider_id) ? ' ⭐' : ''}</b>${etiquetaCanal(f.pv.provider_name)}
             <span>${f.nums.length === temps.length ? 'Todas las temporadas' : `Temporada${f.nums.length > 1 ? 's' : ''} ${rangos(f.nums)}`} · ${f.eps} episodio${f.eps === 1 ? '' : 's'}</span></div>
           <span class="se-num">${f.nums.length}<small>/${temps.length}</small></span>
         </div>`).join('')}</div>
@@ -1781,6 +1811,39 @@
       b.textContent = on ? '✓ En mi lista' : '🔖 Guardar en mi lista';
       toast(on ? 'Guardada en Mi lista' : 'Sacada de Mi lista', true);
     }
+    if (e.target.closest('[data-report-open]')) {
+      const b = e.target.closest('[data-report-open]');
+      const opts = b.nextElementSibling;
+      opts.classList.toggle('hidden');
+      b.setAttribute('aria-expanded', String(!opts.classList.contains('hidden')));
+      return;
+    }
+    const rep = e.target.closest('[data-report]');
+    if (rep) {
+      const it = JSON.parse(els.sheet.dataset.item);
+      const box = rep.closest('.report');
+      box.querySelectorAll('button').forEach(x => (x.disabled = true));
+      try {
+        const r = await fetch('/api/reporte', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: it.id, tipo: it.media_type, pais: REGION, motivo: rep.dataset.report, titulo: it.title, plataformas: JSON.parse(els.sheet.dataset.provs || '[]') }) });
+        if (!r.ok) throw new Error();
+        box.innerHTML = '<p class="report-ok">¡Gracias! Lo vamos a revisar. 🙌</p>';
+      } catch {
+        box.querySelectorAll('button').forEach(x => (x.disabled = false));
+        toast('No se pudo enviar el aviso. Probá de nuevo.');
+      }
+      return;
+    }
+    if (e.target.closest('[data-share-list]')) {
+      const lista = watchlist.map(x => ({ id: x.id, media_type: x.media_type, title: x.title, poster_path: x.poster_path, release_date: x.release_date }));
+      const b = btoa(unescape(encodeURIComponent(JSON.stringify({ lista })))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+      const url = location.origin + location.pathname + '#importar=' + b;
+      const text = `Mi lista de pelis y series (${watchlist.length}) en ¿Dónde la veo?`;
+      if (window.ReactNativeWebView) window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'share', title: 'Mi lista', text, url }));
+      else if (navigator.share) { try { await navigator.share({ title: 'Mi lista', text, url }); } catch {} }
+      else navigator.clipboard?.writeText(url).then(() => toast('Link de tu lista copiado', true)).catch(() => toast('No se pudo copiar el link'));
+      return;
+    }
     if (e.target.closest('[data-share]')) {
       const it = JSON.parse(els.sheet.dataset.item);
       const url = location.origin + location.pathname + `#${it.media_type}-${it.id}`;
@@ -1895,6 +1958,7 @@
       <div class="mine-head">
         <h3>Mi lista</h3>
         <p>Lo que guardaste para ver. Te muestro dónde está hoy en ${esc(CN())}. Se guarda en este dispositivo.</p>
+        ${watchlist.length ? '<button class="btn ghost" data-share-list type="button">↗ Compartir mi lista</button><p class="hint" style="margin:6px 0 0;font-size:.8rem">Sirve para pasarla a otro celular o mandársela a alguien: al abrir el link, los títulos se suman a su lista.</p>' : ''}
       </div>
       <div class="grid wl-grid" style="padding:0 22px 22px">${watchlist.length ? watchlist.map(card).join('') :
         '<div class="empty">Todavía no guardaste nada. Abrí una peli o serie y tocá “🔖 Guardar en mi lista”.</div>'}</div>`;

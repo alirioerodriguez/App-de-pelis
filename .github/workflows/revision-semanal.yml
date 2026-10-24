@@ -1,0 +1,18 @@
+name: Revisión semanal
+
+on:
+  schedule:
+    - cron: '0 12 * * 1' # lunes 9:00 de Argentina
+  workflow_dispatch:
+
+jobs:
+  revisar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Consultar 30 títulos en 4 países
+        run: node scripts/revision-semanal.mjs
