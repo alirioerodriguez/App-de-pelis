@@ -532,7 +532,8 @@
     <input id="keyInput" type="password" placeholder="Pegá tu API key o token de TMDB" autocomplete="off">
     <div class="err" id="keyErr"></div>
     <button class="btn" id="saveKey">Guardar y empezar</button>
-    <p style="color:var(--muted);font-size:.82rem;margin-bottom:0">La clave queda guardada solo en este navegador.</p>
+    <button class="btn ghost" id="noKey" type="button">Usar sin clave</button>
+    <p style="color:var(--muted);font-size:.82rem;margin-bottom:0">La clave queda guardada solo en este navegador. Sin clave, la app usa la del proyecto.</p>
   </section>
 
   <section id="app" class="hidden">
@@ -650,6 +651,9 @@
   const LIST_STORE = 'mi_lista';
   // Clave de TMDB fija: si está cargada, la app entra directo sin pedir nada
   const EMBEDDED_KEY = '';
+  // Intermediario sin clave (función api/tmdb.js en Vercel). Desde Vercel se usa la misma dirección;
+  // desde GitHub Pages o la app nativa, la del proyecto de Vercel.
+  const PROXY = /\.vercel\.app$/.test(location.hostname) ? '/api/tmdb' : 'https://donde-la-veo-app.vercel.app/api/tmdb';
   // Plataformas que se muestran primero si están disponibles en AR
   const PRIORITY = ['Netflix', 'Amazon Prime Video', 'Disney Plus', 'Max', 'HBO Max', 'Paramount Plus', 'Apple TV Plus', 'Apple TV+', 'Mubi', 'Crunchyroll', 'Flow', 'Star Plus', 'Universal+', 'Claro video', 'DGO', 'Cine.ar', 'Pluto TV'];
   // A dónde lleva el botón "Abrir en…". La API no da el enlace exacto al título:
@@ -736,17 +740,25 @@
 
   // ---------- API ----------
   async function api(path, params = {}, k = key) {
-    const url = new URL(API + path);
+    let url;
     const headers = { accept: 'application/json' };
-    // El token v4 (JWT) va como Bearer; la API key v3 va como parámetro
-    if (k.startsWith('eyJ')) headers.Authorization = 'Bearer ' + k;
-    else url.searchParams.set('api_key', k);
+    if (k) {
+      url = new URL(API + path);
+      // El token v4 (JWT) va como Bearer; la API key v3 va como parámetro
+      if (k.startsWith('eyJ')) headers.Authorization = 'Bearer ' + k;
+      else url.searchParams.set('api_key', k);
+    } else {
+      // Sin clave propia: el intermediario de Vercel agrega la clave del proyecto y cachea las respuestas
+      url = new URL(PROXY, location.href);
+      url.searchParams.set('p', path);
+    }
     url.searchParams.set('language', LANG);
     for (const [p, v] of Object.entries(params)) if (v != null && v !== '') url.searchParams.set(p, v);
     let r;
     try { r = await fetch(url, { headers }); }
     catch { throw new Error('Sin conexión. Revisá tu internet y probá de nuevo.'); }
     if (r.status === 401) throw Object.assign(new Error('API key inválida'), { auth: true });
+    if (!k && (r.status === 403 || r.status === 503)) throw Object.assign(new Error('El servicio sin clave no está disponible'), { auth: true });
     if (!r.ok) throw new Error('Error ' + r.status + ' al consultar TMDB');
     return r.json();
   }
@@ -813,6 +825,15 @@
   });
   els.keyInput.addEventListener('keydown', e => { if (e.key === 'Enter') $('#saveKey').click(); });
   $('#keyBtn').addEventListener('click', () => showSetup());
+  $('#noKey').addEventListener('click', async () => {
+    els.keyErr.textContent = 'Probando…';
+    try {
+      await api('/configuration', {}, null);
+      safeSet(KEY_STORE, null); key = null;
+      els.keyErr.textContent = '';
+      start();
+    } catch { els.keyErr.textContent = 'El servicio sin clave no responde ahora. Probá con tu propia clave.'; }
+  });
 
   // ---------- Plataformas ----------
   async function providersFor(type) {
@@ -1901,7 +1922,8 @@
   }
   function handleErr(e) {
     if (e.auth && EMBEDDED_KEY) return toast('La clave de TMDB integrada dejó de funcionar.');
-    if (e.auth) { safeSet(KEY_STORE, null); key = null; return showSetup('Tu clave dejó de funcionar. Cargá una nueva.'); }
+    if (e.auth && !key) return showSetup('El servicio sin clave no responde ahora. Podés usar tu propia clave de TMDB.');
+    if (e.auth) { safeSet(KEY_STORE, null); key = null; return showSetup('Tu clave dejó de funcionar. Cargá una nueva o borrala para usar la app sin clave.'); }
     toast(e.message || 'Algo falló. Probá de nuevo.');
   }
   function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]); }
@@ -1936,7 +1958,11 @@
   addEventListener('appinstalled', () => { $('#installSec').classList.add('hidden'); toast('¡Listo! Ya la tenés como app.', true); });
 
   if (EMBEDDED_KEY) $('#keyBtn').classList.add('hidden');
-  key ? start() : showSetup();
+  if (key) start();
+  else {
+    // Sin clave propia: se prueba el intermediario; si no está disponible, se pide la clave como antes
+    api('/configuration').then(() => start(), () => showSetup());
+  }
 })();
 </script>
 </body>

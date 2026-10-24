@@ -3,7 +3,7 @@
 //   si no hay conexión, se usa la última copia guardada.
 // - Pósters y logos de TMDB se guardan a medida que se ven, para que carguen más rápido.
 // - Las consultas a las APIs (TMDB, Wikidata) nunca se guardan: la disponibilidad tiene que estar al día.
-const VERSION = 'v1';
+const VERSION = 'v2';
 const SHELL = `shell-${VERSION}`;
 const IMAGES = `img-${VERSION}`;
 const SHELL_FILES = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
@@ -22,6 +22,9 @@ self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
+
+  // El intermediario de TMDB (api/tmdb en Vercel) es una consulta: nunca se guarda
+  if (url.pathname.includes('/api/')) return;
 
   // Página y archivos propios: red primero, copia guardada si no hay conexión
   if (url.origin === location.origin) {
