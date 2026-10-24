@@ -55,6 +55,8 @@
   img { display: block; max-width: 100%; }
 
   .wrap { max-width: 1200px; margin: 0 auto; padding: 0 16px; }
+  /* Reserva el alto de la app mientras carga: así el pie no arranca arriba y no «salta» (CLS) */
+  main.wrap { min-height: 100vh; min-height: 100svh; }
 
   /* ---------- Header ---------- */
   header {
