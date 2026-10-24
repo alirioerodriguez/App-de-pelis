@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+
+Sitemap: https://donde-la-veo-app.vercel.app/sitemap.xml

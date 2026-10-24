@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/t/:tipo/:id", "destination": "/api/pagina?tipo=:tipo&id=:id" },
+    { "source": "/sitemap.xml", "destination": "/api/sitemap" }
+  ]
+}

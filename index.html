@@ -13,6 +13,13 @@
 <meta name="apple-mobile-web-app-title" content="Dónde la veo">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%2364d2ff'/%3E%3Cstop offset='1' stop-color='%235e5ce6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='9' fill='url(%23g)'/%3E%3Cpath d='M16 6.5c-4.4 0-8 3.4-8 7.7 0 5.6 6.7 10.9 7.3 11.3.4.3 1 .3 1.4 0 .6-.4 7.3-5.7 7.3-11.3 0-4.3-3.6-7.7-8-7.7z' fill='%23fff'/%3E%3Cpath d='M14.3 11.2v6l5-3z' fill='%235e5ce6'/%3E%3C/svg%3E">
 <meta name="description" content="Buscá una película o serie y mirá en qué plataforma de streaming está disponible en tu país de Latinoamérica.">
+<link rel="canonical" href="https://donde-la-veo-app.vercel.app/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="¿Dónde la veo?">
+<meta property="og:title" content="¿Dónde la veo? · En qué plataforma está cada peli y serie">
+<meta property="og:description" content="Buscá una película o serie y mirá en qué plataforma de streaming está en tu país de Latinoamérica. Gratis y sin cuenta.">
+<meta property="og:url" content="https://donde-la-veo-app.vercel.app/">
+<meta property="og:image" content="https://donde-la-veo-app.vercel.app/icons/icon-512.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -1846,7 +1853,11 @@
     }
     if (e.target.closest('[data-share]')) {
       const it = JSON.parse(els.sheet.dataset.item);
-      const url = location.origin + location.pathname + `#${it.media_type}-${it.id}`;
+      // En Vercel cada título tiene su página (/t/…) con póster y título en la vista previa de WhatsApp y redes
+      const slug = String(it.title || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
+      const url = /\.vercel\.app$/.test(location.hostname)
+        ? `${location.origin}/t/${it.media_type}/${it.id}-${slug}${REGION !== 'AR' ? '?pais=' + REGION : ''}`
+        : location.origin + location.pathname + `#${it.media_type}-${it.id}`;
       const text = `Mirá dónde ver “${it.title}” en ${CN()}`;
       if (window.ReactNativeWebView) window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'share', title: it.title, text, url }));
       else if (navigator.share) { try { await navigator.share({ title: it.title, text, url }); } catch {} }
