@@ -174,6 +174,15 @@
 
   .skeleton { border-radius: var(--radius); aspect-ratio: 2/3.6; background: linear-gradient(90deg, #171724 25%, #222234 50%, #171724 75%); background-size: 200% 100%; animation: shimmer 1.2s infinite; }
   @keyframes shimmer { to { background-position: -200% 0; } }
+  .sk { background: linear-gradient(90deg, #171724 25%, #222234 50%, #171724 75%); background-size: 200% 100%; animation: shimmer 1.2s infinite; border-radius: 10px; }
+  .sk-sheet .sk-hero { height: 220px; border-radius: 0; }
+  .sk-sheet .sk-body { display: grid; grid-template-columns: 110px 1fr; gap: 16px; padding: 18px 22px; }
+  .sk-sheet .sk-poster { aspect-ratio: 2/3; }
+  .sk-sheet .sk-line { height: 16px; margin-bottom: 10px; }
+  .sk-prov { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .sk-prov .sk:first-child { width: 56px; height: 56px; border-radius: 14px; }
+  .sk-prov .sk:last-child { width: 60px; height: 10px; }
+  @media (prefers-reduced-motion: reduce) { .sk, .skeleton { animation: none; } }
 
   .empty { color: var(--muted); text-align: center; padding: 40px 10px; grid-column: 1/-1; }
   .more { display: block; margin: 0 auto 40px; background: var(--bg-2); border: 1px solid var(--line); color: var(--text); padding: 12px 22px; border-radius: 12px; font-weight: 600; }
@@ -358,6 +367,9 @@
   .filters { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
   .toggle { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: .85rem; cursor: pointer; }
   .toggle input { accent-color: var(--ok); width: 16px; height: 16px; }
+  .dur { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+  .dur button { font: inherit; font-size: .8rem; border: 1px solid var(--line); background: transparent; color: var(--muted); border-radius: 980px; padding: 5px 11px; cursor: pointer; }
+  .dur button.on { background: var(--text); color: var(--bg); border-color: var(--text); }
   /* Interruptor estilo iPhone (prendido / apagado) */
   .switch-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 14px 0 4px; padding: 12px 16px;
     background: var(--card, rgba(127,127,127,.08)); border-radius: 14px; font-size: .95rem; cursor: pointer; user-select: none; }
@@ -627,6 +639,11 @@
       <div class="filters">
         <span class="hint" id="listHint"></span>
         <label class="toggle"><input type="checkbox" id="onlyAvail"> Solo lo que se puede ver en <span class="cname">Argentina</span></label>
+        <div class="dur" id="durSeg" role="group" aria-label="Duración de las películas">
+          <button type="button" data-dur="" class="on" aria-pressed="true">Cualquier duración</button>
+          <button type="button" data-dur="90" aria-pressed="false">Pelis de menos de 90 min</button>
+          <button type="button" data-dur="120" aria-pressed="false">Menos de 2 h</button>
+        </div>
         <button class="clear hidden" id="clearFilters">Limpiar filtros ✕</button>
       </div>
     </div>
@@ -759,7 +776,7 @@
     listTitle: $('#listTitle'), listHint: $('#listHint'), modal: $('#modal'), sheet: $('#sheet'), toast: $('#toast')
   };
 
-  const state = { type: 'all', mode: 'trending', query: '', provider: null, cat: null, sub: null, onlyAvail: false, onlyMine: false, showNew: false, feed: 'trending', page: 1, totalPages: 1, providers: {} };
+  const state = { type: 'all', mode: 'trending', query: '', provider: null, cat: null, sub: null, onlyAvail: false, onlyMine: false, dur: null, showNew: false, feed: 'trending', page: 1, totalPages: 1, providers: {} };
   const provCache = new Map();
 
   // Mudanza desde alirioerodriguez.github.io/App-de-pelis: esa página redirige acá con
@@ -883,6 +900,9 @@
   function prio(p) { return p.display_priorities?.[REGION] ?? p.display_priority ?? 999; }
   function rank(p) { const i = PRIORITY.findIndex(n => p.provider_name.toLowerCase() === n.toLowerCase()); return i < 0 ? 999 : i; }
 
+  // Esqueletos: la forma de lo que viene, para que la pantalla no salte mientras carga
+  const SK_FICHA = '<div class="sk-sheet" aria-busy="true" aria-label="Cargando"><div class="sk sk-hero"></div><div class="sk-body"><div class="sk sk-poster"></div><div><div class="sk sk-line" style="width:70%;height:24px"></div><div class="sk sk-line" style="width:45%"></div><div class="sk sk-line" style="width:90%;height:52px;margin-top:16px"></div><div class="sk sk-line" style="width:60%"></div></div></div></div>';
+  if (!els.chips.children.length) els.chips.innerHTML = Array(8).fill('<div class="sk-prov" aria-hidden="true"><div class="sk"></div><div class="sk"></div></div>').join('');
   async function loadProviders() {
     try { await providersFor(state.type); } catch (e) { return handleErr(e); }
     renderChips();
@@ -946,7 +966,7 @@
         state.cat.subs.map((s, i) => `<button class="cat ${state.sub?.[0] === s[0] ? 'on' : ''}" data-sub="${i}">${s[0]}</button>`).join('');
       sc.classList.remove('hidden');
     } else sc.classList.add('hidden');
-    $('#clearFilters').classList.toggle('hidden', !state.cat && !state.provider && !state.onlyAvail && !state.onlyMine);
+    $('#clearFilters').classList.toggle('hidden', !state.cat && !state.provider && !state.onlyAvail && !state.onlyMine && !state.dur);
     $('#onlyMineWrap').classList.toggle('hidden', !mine.size || !!state.provider || state.mode === 'search');
   }
   $('#cats').addEventListener('click', e => {
@@ -963,14 +983,25 @@
     renderCats(); load();
   });
   $('#onlyAvail').addEventListener('change', e => { state.onlyAvail = e.target.checked; renderCats(); load(); });
+  // «¿Qué vemos hoy?»: películas cortas, combinable con géneros y «Solo mis plataformas»
+  function pintarDur() {
+    $('#durSeg').querySelectorAll('button').forEach(b => { const on = (b.dataset.dur || null) === state.dur; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
+  }
+  $('#durSeg').addEventListener('click', e => {
+    const b = e.target.closest('[data-dur]'); if (!b) return;
+    state.dur = b.dataset.dur || null;
+    els.q.value = ''; state.query = '';
+    pintarDur(); setMode(); renderCats(); load();
+  });
   $('#clearFilters').addEventListener('click', () => {
+    state.dur = null; pintarDur();
     state.cat = state.sub = state.provider = null; state.onlyAvail = state.onlyMine = false; $('#onlyAvail').checked = $('#onlyMine').checked = false;
     setMode(); renderCats(); renderChips(); load();
   });
   // keepNew: al cambiar Todo/Pelis/Series se sigue viendo "Estrenos"; cualquier otro filtro sale de ese modo
   function setMode(keepNew) {
     if (!keepNew) state.showNew = false;
-    state.mode = state.query ? 'search' : state.showNew ? 'new' : (state.cat || state.provider || (state.onlyMine && mine.size)) ? 'discover' : 'trending';
+    state.mode = state.query ? 'search' : state.showNew ? 'new' : (state.cat || state.provider || state.dur || (state.onlyMine && mine.size)) ? 'discover' : 'trending';
     $('#newSec').classList.toggle('hidden', state.mode !== 'trending');
     $('#feeds').classList.toggle('hidden', state.mode !== 'trending');
   }
@@ -1293,11 +1324,13 @@
   // ---------- Listado ----------
   // Arma los filtros de /discover para un tipo; null si la categoría no existe para ese tipo
   async function discoverParams(type) {
+    if (state.dur && type === 'tv') return null; // la duración es de películas
     const params = { sort_by: 'popularity.desc', page: state.page, include_adult: false };
     if (state.provider) Object.assign(params, { watch_region: REGION, with_watch_providers: state.provider.provider_id, with_watch_monetization_types: 'flatrate|free|ads' });
     else if (state.onlyMine && mine.size) Object.assign(params, { watch_region: REGION, with_watch_providers: [...mine].join('|'), with_watch_monetization_types: 'flatrate|free|ads' });
     else if (state.onlyAvail) Object.assign(params, { watch_region: REGION, with_watch_monetization_types: 'flatrate|free|ads|rent|buy' });
     else params['vote_count.gte'] = 30; // sin filtro de plataforma, evitar títulos desconocidos
+    if (state.dur && type === 'movie') Object.assign(params, { 'with_runtime.lte': state.dur, 'with_runtime.gte': 40 });
     const kws = [];
     if (state.cat) {
       const g = state.cat[type];
@@ -1331,8 +1364,9 @@
     const label = { all: 'películas y series', movie: 'películas', tv: 'series' }[state.type];
     if (!append) { els.grid.innerHTML = Array(12).fill('<div class="skeleton"></div>').join(''); $('#lockedSec').classList.add('hidden'); }
     $('#onlyAvail').parentElement.classList.toggle('hidden', state.mode !== 'discover' || !!state.provider || state.onlyMine);
-    $('#clearFilters').classList.toggle('hidden', !state.cat && !state.provider && !state.onlyAvail && !state.onlyMine && !state.showNew);
+    $('#clearFilters').classList.toggle('hidden', !state.cat && !state.provider && !state.onlyAvail && !state.onlyMine && !state.dur && !state.showNew);
     $('#onlyMineWrap').classList.toggle('hidden', !mine.size || !!state.provider || state.mode === 'search' || state.mode === 'new');
+    $('#durSeg').classList.toggle('hidden', state.type === 'tv' || state.mode === 'search' || state.mode === 'new');
     let data;
     try {
       if (state.mode === 'search') {
@@ -1508,7 +1542,7 @@
 
   async function openDetail(id, type) {
     const seq = ++detailSeq;
-    els.sheet.innerHTML = '<div style="padding:60px;text-align:center;color:var(--muted)">Cargando…</div>';
+    els.sheet.innerHTML = SK_FICHA;
     openModal(`#${type}-${id}`);
     let d, p, cine = null;
     try {
@@ -2025,7 +2059,7 @@
 
   // ---------- Mis plataformas ----------
   async function openMine() {
-    els.sheet.innerHTML = '<div style="padding:60px;text-align:center;color:var(--muted)">Cargando…</div>';
+    els.sheet.innerHTML = SK_FICHA;
     openModal();
     let list;
     try { list = await providersFor('all'); } catch (e) { closeModal(); return handleErr(e); }
