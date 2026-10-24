@@ -1592,6 +1592,7 @@
           <button class="btn ${inList(type, id) ? 'saved' : 'ghost'}" data-wl>${inList(type, id) ? '✓ En mi lista' : '🔖 Guardar en mi lista'}</button>
           ${trailer ? `<a class="btn ghost" href="https://www.youtube.com/watch?v=${encodeURIComponent(trailer.key)}" target="_blank" rel="noopener">▶ Tráiler</a>` : ''}
           <button class="btn ghost" data-share>↗ Compartir</button>
+          <button class="btn ghost" data-story title="Imagen vertical para historias de Instagram o WhatsApp">🖼️ Historia</button>
           <a class="btn ghost" href="https://www.justwatch.com/${REGION.toLowerCase()}/${REGION === 'US' ? 'search' : 'buscar'}?q=${encodeURIComponent(title)}" target="_blank" rel="noopener">JustWatch ↗</a>
         </div>
         ${sims.length ? `<div class="similar"><h4>Si te gustó, mirá también</h4><div class="sim-row">${sims.map(r => `
@@ -1610,11 +1611,108 @@
           </div>
         </div>
       </div>`;
+    const paraTarjeta = subs.length ? subs : dedupe([...(p?.rent || []), ...(p?.buy || [])]);
+    els.sheet.dataset.card = JSON.stringify({ title, year, poster: d.poster_path, backdrop: d.backdrop_path, alquiler: !subs.length,
+      provs: paraTarjeta.slice(0, 6).map(s => ({ n: s.provider_name, logo: s.logo_path })) });
     els.sheet.dataset.provs = JSON.stringify(dedupe([...(p?.flatrate || []), ...(p?.free || []), ...(p?.ads || []), ...(p?.rent || []), ...(p?.buy || [])]).map(s => s.provider_name));
     focusSheet();
     loadAwards(type, id, seq);
     loadDeepLinks(type, id, seq);
     if (type === 'tv') loadSeasons(id, d, seq);
+  }
+
+  // ---------- Tarjeta para historias (Instagram / WhatsApp) ----------
+  // Imagen vertical 1080×1920 armada en el teléfono: póster, título y dónde verla.
+  function cargarImg(src) {
+    return new Promise((ok, mal) => {
+      const im = new Image();
+      im.crossOrigin = 'anonymous';
+      im.onload = () => ok(im);
+      im.onerror = mal;
+      im.src = src;
+    });
+  }
+  function redondeado(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+  }
+  function lineas(ctx, texto, ancho, max) {
+    const palabras = texto.split(' '), out = [];
+    let l = '';
+    for (const p of palabras) {
+      const prueba = l ? l + ' ' + p : p;
+      if (ctx.measureText(prueba).width > ancho && l) { out.push(l); l = p; } else l = prueba;
+    }
+    if (l) out.push(l);
+    if (out.length > max) { out.length = max; out[max - 1] = out[max - 1].replace(/\s*\S*$/, '') + '…'; }
+    return out;
+  }
+  async function compartirHistoria(c) {
+    const W = 1080, H = 1920;
+    const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+    const ctx = cv.getContext('2d');
+    const fuente = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+
+    const [fondo, poster, ...logos] = await Promise.all([
+      c.backdrop ? cargarImg(IMG + 'w1280' + c.backdrop).catch(() => null) : null,
+      c.poster ? cargarImg(IMG + 'w780' + c.poster).catch(() => null) : null,
+      ...c.provs.map(s => cargarImg(IMG + 'w154' + s.logo).catch(() => null)),
+    ]);
+    if (fondo) {
+      const esc2 = H / fondo.height, w = fondo.width * esc2;
+      ctx.globalAlpha = 0.45; ctx.drawImage(fondo, (W - w) / 2, 0, w, H); ctx.globalAlpha = 1;
+    }
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, 'rgba(0,0,0,.35)'); g.addColorStop(0.55, 'rgba(0,0,0,.75)'); g.addColorStop(1, 'rgba(0,0,0,.95)');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+
+    let y = 170;
+    if (poster) {
+      const pw = 560, ph = pw * 1.5;
+      ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = 60; ctx.shadowOffsetY = 20;
+      redondeado(ctx, (W - pw) / 2, y, pw, ph, 36); ctx.fillStyle = '#111'; ctx.fill(); ctx.restore();
+      ctx.save(); redondeado(ctx, (W - pw) / 2, y, pw, ph, 36); ctx.clip(); ctx.drawImage(poster, (W - pw) / 2, y, pw, ph); ctx.restore();
+      y += ph + 80;
+    }
+    ctx.textAlign = 'center'; ctx.fillStyle = '#fff';
+    ctx.font = `700 76px ${fuente}`;
+    for (const l of lineas(ctx, c.title, W - 140, 2)) { ctx.fillText(l, W / 2, y); y += 88; }
+    if (c.year) { ctx.font = `500 40px ${fuente}`; ctx.fillStyle = 'rgba(255,255,255,.6)'; ctx.fillText(c.year, W / 2, y); y += 70; }
+    else y += 20;
+
+    ctx.font = `600 42px ${fuente}`; ctx.fillStyle = 'rgba(255,255,255,.85)';
+    ctx.fillText(c.provs.length ? (c.alquiler ? `Para alquilar o comprar en ${CN()}:` : `Dónde verla en ${CN()}:`) : `Todavía no está en plataformas de ${CN()}`, W / 2, y);
+    y += 50;
+    if (c.provs.length) {
+      const L = 128, gap = 46;
+      c.provs.forEach((s, i) => {
+        const fila = Math.floor(i / 3), enFila = Math.min(3, c.provs.length - fila * 3);
+        const x0 = (W - (enFila * L + (enFila - 1) * gap)) / 2 + (i % 3) * (L + gap);
+        const yy = y + fila * (L + 90);
+        ctx.save(); redondeado(ctx, x0, yy, L, L, 28); ctx.clip();
+        if (logos[i]) ctx.drawImage(logos[i], x0, yy, L, L); else { ctx.fillStyle = '#333'; ctx.fillRect(x0, yy, L, L); }
+        ctx.restore();
+        ctx.font = `500 26px ${fuente}`; ctx.fillStyle = 'rgba(255,255,255,.8)';
+        ctx.fillText(lineas(ctx, s.n.replace(/\s+(Amazon|Apple TV) [Cc]hannel$/, ''), L + gap - 6, 1)[0], x0 + L / 2, yy + L + 40);
+      });
+    }
+    ctx.font = `700 40px ${fuente}`; ctx.fillStyle = '#fff'; ctx.fillText('¿Dónde la veo?', W / 2, H - 120);
+    ctx.font = `400 32px ${fuente}`; ctx.fillStyle = 'rgba(255,255,255,.6)'; ctx.fillText(location.host, W / 2, H - 70);
+
+    const blob = await new Promise(ok => cv.toBlob(ok, 'image/png'));
+    const archivo = new File([blob], 'donde-la-veo.png', { type: 'image/png' });
+    if (navigator.canShare?.({ files: [archivo] })) {
+      try { await navigator.share({ files: [archivo], title: c.title }); } catch { /* la persona canceló */ }
+    } else {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = 'donde-la-veo-' + c.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.png';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+      toast('Imagen descargada: subila a tu historia', true);
+    }
+    return cv;
   }
 
   // ---------- Temporadas por plataforma ----------
@@ -1839,6 +1937,14 @@
         box.querySelectorAll('button').forEach(x => (x.disabled = false));
         toast('No se pudo enviar el aviso. Probá de nuevo.');
       }
+      return;
+    }
+    const sb = e.target.closest('[data-story]');
+    if (sb) {
+      sb.disabled = true; const txt = sb.textContent; sb.textContent = 'Armando…';
+      try { await compartirHistoria(JSON.parse(els.sheet.dataset.card)); }
+      catch { toast('No se pudo armar la imagen. Probá de nuevo.'); }
+      finally { sb.disabled = false; sb.textContent = txt; }
       return;
     }
     if (e.target.closest('[data-share-list]')) {
