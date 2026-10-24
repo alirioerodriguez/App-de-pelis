@@ -1,7 +1,7 @@
 # ¿Dónde la veo? · app para Android y iPhone
 
 App nativa hecha con Expo 58 (la misma base que Savia). Muestra la web publicada en
-`https://alirioerodriguez.github.io/App-de-pelis/`, así cada cambio que se publica en la web
+`https://donde-la-veo-app.vercel.app/`, así cada cambio que se publica en la web
 llega solo a la app, sin volver a compilarla.
 
 Lo que agrega la app sobre la web:

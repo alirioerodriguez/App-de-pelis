@@ -12,14 +12,16 @@ type WebViewHandle = WebView<{}>;
 const RNWebView = WebView as unknown as ComponentType<WebViewProps & { ref?: Ref<WebViewHandle> }>;
 
 // La app muestra la web publicada: cada cambio que se publica llega solo, sin volver a compilar.
-const SITE = 'https://alirioerodriguez.github.io/App-de-pelis/';
+const SITE = 'https://donde-la-veo-app.vercel.app/';
+// Dirección anterior: ahora redirige a SITE, así que también cuenta como propia
+const SITE_ANTERIOR = 'https://alirioerodriguez.github.io/App-de-pelis/';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 // Lo que es de la web se queda adentro; cualquier otro enlace (Netflix, Disney+, YouTube…) se abre afuera,
 // así el teléfono lo manda a la app de esa plataforma si está instalada.
 function isInternal(url: string) {
-  return url.startsWith(SITE) || url.startsWith('about:') || url.startsWith('data:') || url.startsWith('blob:');
+  return url.startsWith(SITE) || url.startsWith(SITE_ANTERIOR) || url.startsWith('about:') || url.startsWith('data:') || url.startsWith('blob:');
 }
 
 // Enlaces "intent://" de Android: se abre la URL https equivalente, que Android manda a la app.

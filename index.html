@@ -327,6 +327,17 @@
   .filters { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
   .toggle { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: .85rem; cursor: pointer; }
   .toggle input { accent-color: var(--ok); width: 16px; height: 16px; }
+  /* Interruptor estilo iPhone (prendido / apagado) */
+  .switch-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 14px 0 4px; padding: 12px 16px;
+    background: var(--card, rgba(127,127,127,.08)); border-radius: 14px; font-size: .95rem; cursor: pointer; user-select: none; }
+  .switch { appearance: none; -webkit-appearance: none; flex: none; position: relative; width: 51px; height: 31px; margin: 0; border-radius: 999px;
+    background: rgba(120,120,128,.32); cursor: pointer; transition: background .25s ease; }
+  .switch::before { content: ""; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff;
+    box-shadow: 0 3px 8px rgba(0,0,0,.15), 0 1px 1px rgba(0,0,0,.16); transition: transform .25s cubic-bezier(.3,.7,.4,1); }
+  .switch:checked { background: #34c759; }
+  .switch:checked::before { transform: translateX(20px); }
+  .switch:focus-visible { outline: 2px solid #34c759; outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { .switch, .switch::before { transition: none; } }
   .clear { background: transparent; border: 0; color: var(--accent); font-size: .85rem; font-weight: 600; padding: 4px; }
   .sug.cat-sug .ph { display: grid; place-items: center; font-size: 1.3rem; }
   .retry { margin-top: 12px; }
@@ -514,26 +525,16 @@
       <button class="icon-btn" id="listBtn" title="Lo que guardaste para ver">🔖<span class="lbl"> Mi lista</span><span class="count" id="listCount"></span></button>
       <button class="icon-btn" id="mineBtn" title="Elegí las plataformas que tenés">⭐<span class="lbl"> Mis plataformas</span></button>
       <button class="icon-btn country-btn" id="countryBtn" title="Cambiar país" aria-label="País: Argentina. Cambiar país"><img id="countryFlag" src="https://flagcdn.com/w40/ar.png" alt=""><span id="countryCode">AR</span><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5l3 3 3-3" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg></button>
-      <button class="icon-btn" id="keyBtn" title="Cambiar API key">🔑</button>
     </div>
   </div>
 </header>
 
 <main class="wrap">
-  <!-- Pantalla de configuración (solo la primera vez) -->
+  <!-- Aviso si el servicio de datos no responde al abrir la app -->
   <section id="setup" class="setup hidden">
-    <h2>Configuración inicial (una sola vez)</h2>
-    <p>La app usa la API gratuita de <strong>TMDB</strong>, cuyos datos de disponibilidad por país vienen de <strong>JustWatch</strong>. Necesitás tu propia clave:</p>
-    <ol>
-      <li>Creá una cuenta gratis en <a href="https://www.themoviedb.org/signup" target="_blank" rel="noopener">themoviedb.org</a>.</li>
-      <li>Andá a <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener">Configuración → API</a> y pedí una clave (uso personal).</li>
-      <li>Copiá la <em>API Key</em> o el <em>API Read Access Token</em> y pegala acá.</li>
-    </ol>
-    <input id="keyInput" type="password" placeholder="Pegá tu API key o token de TMDB" autocomplete="off">
-    <div class="err" id="keyErr"></div>
-    <button class="btn" id="saveKey">Guardar y empezar</button>
-    <button class="btn ghost" id="noKey" type="button">Usar sin clave</button>
-    <p style="color:var(--muted);font-size:.82rem;margin-bottom:0">La clave queda guardada solo en este navegador. Sin clave, la app usa la del proyecto.</p>
+    <h2>No pudimos cargar las películas</h2>
+    <p id="keyErr">El servicio de datos no responde en este momento. Probá de nuevo en un ratito.</p>
+    <button class="btn" id="retry" type="button">Reintentar</button>
   </section>
 
   <section id="app" class="hidden">
@@ -565,6 +566,10 @@
     </div>
     <div class="prov-grid collapsed" id="chips"></div>
     <button class="see-more hidden" id="chipsMore" aria-controls="chips" aria-expanded="false">Ver todas</button>
+    <label class="switch-row hidden" id="onlyMineWrap" for="onlyMine">
+      <span>⭐ Solo mis plataformas</span>
+      <input type="checkbox" role="switch" class="switch" id="onlyMine">
+    </label>
 
     <section id="newSec">
       <div class="section-title">
@@ -589,7 +594,6 @@
       <h2 id="listTitle">Tendencias</h2>
       <div class="filters">
         <span class="hint" id="listHint"></span>
-        <label class="toggle hidden" id="onlyMineWrap"><input type="checkbox" id="onlyMine"> ⭐ Solo mis plataformas</label>
         <label class="toggle"><input type="checkbox" id="onlyAvail"> Solo lo que se puede ver en <span class="cname">Argentina</span></label>
         <button class="clear hidden" id="clearFilters">Limpiar filtros ✕</button>
       </div>
@@ -644,16 +648,13 @@
   const CN = () => (COUNTRIES.find(c => c[0] === REGION) || [, REGION])[1];
   const flagUrl = cc => `https://flagcdn.com/w40/${cc.toLowerCase()}.png`;
   const LANG = 'es-AR';
-  const API = 'https://api.themoviedb.org/3';
   const IMG = 'https://image.tmdb.org/t/p/';
-  const KEY_STORE = 'tmdb_key';
+  const KEY_STORE = 'tmdb_key'; // clave personal de versiones viejas: ya no se usa y se borra al abrir
   const MINE_STORE = 'mis_plataformas';
   const LIST_STORE = 'mi_lista';
   // Clave de TMDB fija: si está cargada, la app entra directo sin pedir nada
-  const EMBEDDED_KEY = '';
-  // Intermediario sin clave (función api/tmdb.js en Vercel). Desde Vercel se usa la misma dirección;
-  // desde GitHub Pages o la app nativa, la del proyecto de Vercel.
-  const PROXY = /\.vercel\.app$/.test(location.hostname) ? '/api/tmdb' : 'https://donde-la-veo-app.vercel.app/api/tmdb';
+  // Intermediario de TMDB (función api/tmdb.js), en la misma dirección que la página
+  const PROXY = '/api/tmdb';
   // Plataformas que se muestran primero si están disponibles en AR
   const PRIORITY = ['Netflix', 'Amazon Prime Video', 'Disney Plus', 'Max', 'HBO Max', 'Paramount Plus', 'Apple TV Plus', 'Apple TV+', 'Mubi', 'Crunchyroll', 'Flow', 'Star Plus', 'Universal+', 'Claro video', 'DGO', 'Cine.ar', 'Pluto TV'];
   // A dónde lleva el botón "Abrir en…". La API no da el enlace exacto al título:
@@ -721,14 +722,37 @@
 
   const $ = s => document.querySelector(s);
   const els = {
-    setup: $('#setup'), app: $('#app'), keyInput: $('#keyInput'), keyErr: $('#keyErr'),
+    setup: $('#setup'), app: $('#app'), keyErr: $('#keyErr'),
     q: $('#q'), grid: $('#grid'), chips: $('#chips'), more: $('#more'), suggest: $('#suggest'),
     listTitle: $('#listTitle'), listHint: $('#listHint'), modal: $('#modal'), sheet: $('#sheet'), toast: $('#toast')
   };
 
   const state = { type: 'all', mode: 'trending', query: '', provider: null, cat: null, sub: null, onlyAvail: false, onlyMine: false, showNew: false, feed: 'trending', page: 1, totalPages: 1, providers: {} };
   const provCache = new Map();
-  let key = EMBEDDED_KEY || safeGet(KEY_STORE);
+
+  // Mudanza desde alirioerodriguez.github.io/App-de-pelis: esa página redirige acá con
+  // #importar=<datos> para que «Mis plataformas» y «Mi lista» no se pierdan al cambiar de dirección.
+  (function importarDeLaDireccionVieja() {
+    const m = location.hash.match(/^#importar=([A-Za-z0-9_-]+)(?:&((?:movie|tv)-\d+))?$/);
+    if (!m) return;
+    try {
+      const d = JSON.parse(decodeURIComponent(escape(atob(m[1].replace(/-/g, '+').replace(/_/g, '/')))));
+      if (Array.isArray(d.mine)) {
+        const cur = new Set(safeJSON(safeGet(MINE_STORE)) || []);
+        d.mine.forEach(x => cur.add(x));
+        safeSet(MINE_STORE, JSON.stringify([...cur]));
+      }
+      if (Array.isArray(d.lista)) {
+        const cur = safeJSON(safeGet(LIST_STORE)) || [];
+        const ids = new Set(cur.map(x => x.media_type + x.id));
+        d.lista.forEach(x => { if (x && x.id && !ids.has(x.media_type + x.id)) cur.push(x); });
+        safeSet(LIST_STORE, JSON.stringify(cur));
+      }
+    } catch { /* datos dañados: se ignoran */ }
+    history.replaceState(null, '', location.pathname + location.search + (m[2] ? '#' + m[2] : ''));
+  })();
+
+  safeSet(KEY_STORE, null);
   let mine = new Set(safeJSON(safeGet(MINE_STORE)) || []);
   // Mi lista: [{id, media_type, title, poster_path, release_date}] guardada en este dispositivo
   let watchlist = safeJSON(safeGet(LIST_STORE)) || [];
@@ -739,26 +763,17 @@
   function safeJSON(v) { try { return JSON.parse(v); } catch { return null; } }
 
   // ---------- API ----------
-  async function api(path, params = {}, k = key) {
-    let url;
-    const headers = { accept: 'application/json' };
-    if (k) {
-      url = new URL(API + path);
-      // El token v4 (JWT) va como Bearer; la API key v3 va como parámetro
-      if (k.startsWith('eyJ')) headers.Authorization = 'Bearer ' + k;
-      else url.searchParams.set('api_key', k);
-    } else {
-      // Sin clave propia: el intermediario de Vercel agrega la clave del proyecto y cachea las respuestas
-      url = new URL(PROXY, location.href);
-      url.searchParams.set('p', path);
-    }
+  // Todas las consultas pasan por el intermediario de Vercel (api/tmdb.js), que agrega la clave
+  // del proyecto y cachea las respuestas. Nadie necesita ni ve una clave.
+  async function api(path, params = {}) {
+    const url = new URL(PROXY, location.href);
+    url.searchParams.set('p', path);
     url.searchParams.set('language', LANG);
     for (const [p, v] of Object.entries(params)) if (v != null && v !== '') url.searchParams.set(p, v);
     let r;
-    try { r = await fetch(url, { headers }); }
+    try { r = await fetch(url, { headers: { accept: 'application/json' } }); }
     catch { throw new Error('Sin conexión. Revisá tu internet y probá de nuevo.'); }
-    if (r.status === 401) throw Object.assign(new Error('API key inválida'), { auth: true });
-    if (!k && (r.status === 403 || r.status === 503)) throw Object.assign(new Error('El servicio sin clave no está disponible'), { auth: true });
+    if (r.status === 401 || r.status === 403 || r.status === 503) throw Object.assign(new Error('El servicio de datos no responde'), { servicio: true });
     if (!r.ok) throw new Error('Error ' + r.status + ' al consultar TMDB');
     return r.json();
   }
@@ -788,9 +803,8 @@
   function showSetup(msg = '') {
     els.app.classList.add('hidden');
     els.setup.classList.remove('hidden');
-    els.keyErr.textContent = msg;
-    els.keyInput.value = '';
-    els.keyInput.focus();
+    if (msg) els.keyErr.textContent = msg;
+    $('#retry').focus();
   }
 
   async function start() {
@@ -810,29 +824,10 @@
     load();
   }
 
-  $('#saveKey').addEventListener('click', async () => {
-    const k = els.keyInput.value.trim();
-    if (!k) return (els.keyErr.textContent = 'Pegá tu clave.');
-    els.keyErr.textContent = 'Verificando…';
-    try {
-      await api('/configuration', {}, k);
-      key = k; safeSet(KEY_STORE, k);
-      els.keyErr.textContent = '';
-      start();
-    } catch (e) {
-      els.keyErr.textContent = e.auth ? 'La clave no es válida. Revisala.' : e.message;
-    }
-  });
-  els.keyInput.addEventListener('keydown', e => { if (e.key === 'Enter') $('#saveKey').click(); });
-  $('#keyBtn').addEventListener('click', () => showSetup());
-  $('#noKey').addEventListener('click', async () => {
+  $('#retry').addEventListener('click', async () => {
     els.keyErr.textContent = 'Probando…';
-    try {
-      await api('/configuration', {}, null);
-      safeSet(KEY_STORE, null); key = null;
-      els.keyErr.textContent = '';
-      start();
-    } catch { els.keyErr.textContent = 'El servicio sin clave no responde ahora. Probá con tu propia clave.'; }
+    try { await api('/configuration'); start(); }
+    catch (e) { els.keyErr.textContent = e.message + '. Probá de nuevo en un ratito.'; }
   });
 
   // ---------- Plataformas ----------
@@ -1316,7 +1311,7 @@
       }
     } catch (e) {
       if (seq !== loadSeq) return;
-      if (!append) els.grid.innerHTML = `<div class="empty">${esc(e.auth ? 'No se pudo consultar TMDB.' : e.message)}<br><button class="btn retry" data-retry>Reintentar</button></div>`;
+      if (!append) els.grid.innerHTML = `<div class="empty">${esc(e.servicio ? 'No se pudo consultar TMDB.' : e.message)}<br><button class="btn retry" data-retry>Reintentar</button></div>`;
       return handleErr(e);
     }
     if (seq !== loadSeq) return; // llegó la respuesta de un filtro anterior
@@ -1921,9 +1916,6 @@
     toast.t = setTimeout(() => els.toast.classList.remove('show'), 3500);
   }
   function handleErr(e) {
-    if (e.auth && EMBEDDED_KEY) return toast('La clave de TMDB integrada dejó de funcionar.');
-    if (e.auth && !key) return showSetup('El servicio sin clave no responde ahora. Podés usar tu propia clave de TMDB.');
-    if (e.auth) { safeSet(KEY_STORE, null); key = null; return showSetup('Tu clave dejó de funcionar. Cargá una nueva o borrala para usar la app sin clave.'); }
     toast(e.message || 'Algo falló. Probá de nuevo.');
   }
   function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]); }
@@ -1957,12 +1949,8 @@
   });
   addEventListener('appinstalled', () => { $('#installSec').classList.add('hidden'); toast('¡Listo! Ya la tenés como app.', true); });
 
-  if (EMBEDDED_KEY) $('#keyBtn').classList.add('hidden');
-  if (key) start();
-  else {
-    // Sin clave propia: se prueba el intermediario; si no está disponible, se pide la clave como antes
-    api('/configuration').then(() => start(), () => showSetup());
-  }
+  // Se prueba el servicio de datos; si no responde, se muestra el aviso con «Reintentar»
+  api('/configuration').then(() => start(), () => showSetup());
 })();
 </script>
 </body>

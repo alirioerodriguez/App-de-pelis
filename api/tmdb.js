@@ -8,17 +8,11 @@ const API = 'https://api.themoviedb.org/3';
 // Solo lo que usa la app, y solo lectura
 const RUTA_OK = /^\/(configuration|search\/(multi|movie|tv|keyword)|watch\/providers\/(regions|movie|tv)|(movie|tv)\/(\d+(\/watch\/providers)?|popular|top_rated|now_playing|upcoming|on_the_air|airing_today)|discover\/(movie|tv)|trending\/(all|movie|tv)\/(day|week))$/;
 
-const ORIGENES = [/^https:\/\/alirioerodriguez\.github\.io$/, /^https:\/\/[a-z0-9-]+\.vercel\.app$/, /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/];
-
 module.exports = async function handler(req, res) {
+  // Solo para la propia página (misma dirección). No se mandan permisos CORS: la caché de Vercel
+  // no distingue el origen, así que otros sitios no pueden leer las respuestas desde el navegador.
   const origen = req.headers.origin;
-  if (origen && ORIGENES.some((r) => r.test(origen))) {
-    res.setHeader('Access-Control-Allow-Origin', origen);
-    res.setHeader('Vary', 'Origin');
-  } else if (origen) {
-    return res.status(403).json({ error: 'Origen no permitido' });
-  }
-  if (req.method === 'OPTIONS') { res.setHeader('Access-Control-Allow-Methods', 'GET'); return res.status(204).end(); }
+  if (origen && origen !== `https://${req.headers.host}`) return res.status(403).json({ error: 'Origen no permitido' });
   if (req.method !== 'GET') return res.status(405).json({ error: 'Solo GET' });
 
   const token = process.env.TMDB_TOKEN;
