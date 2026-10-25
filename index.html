@@ -414,11 +414,10 @@
   .similar h4 { margin: 8px 0 10px; font-size: .95rem; }
   /* Carrusel que avanza solo de derecha a izquierda, en loop y sin barra (la lista va dos veces: al llegar a la mitad vuelve al inicio sin salto) */
   .sim-row { overflow: hidden; padding-bottom: 6px; -webkit-mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent); mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent); }
-  .sim-track { display: flex; gap: 10px; width: max-content; animation: simLoop var(--dur, 40s) linear infinite; }
+  .sim-row { touch-action: pan-y; cursor: grab; user-select: none; -webkit-user-select: none; }
+  .sim-row.arrastrando { cursor: grabbing; }
+  .sim-track { display: flex; gap: 10px; width: max-content; will-change: transform; }
   .sim-track .sim:last-child { margin-right: 10px; }
-  .sim-row:hover .sim-track, .sim-row:focus-within .sim-track, .sim-row.tocando .sim-track { animation-play-state: paused; }
-  @keyframes simLoop { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-  @media (prefers-reduced-motion: reduce) { .sim-row { overflow-x: auto; scrollbar-width: none; } .sim-row::-webkit-scrollbar { display: none; } .sim-track .sim[aria-hidden] { display: none; } }
   .sim { flex: none; width: 96px; background: transparent; border: 0; padding: 0; color: var(--text); text-align: left; font-size: .78rem; }
   .sim img, .sim .noposter { width: 96px; border-radius: 8px; aspect-ratio: 2/3; object-fit: cover; font-size: 1.2rem; }
   .sim span { display: block; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1641,7 +1640,7 @@
           <button class="btn ghost" data-story title="Imagen vertical para historias de Instagram o WhatsApp">🖼️ Historia</button>
           <a class="btn ghost" href="https://www.justwatch.com/${REGION.toLowerCase()}/${REGION === 'US' ? 'search' : 'buscar'}?q=${encodeURIComponent(title)}" target="_blank" rel="noopener">JustWatch ↗</a>
         </div>
-        ${sims.length ? `<div class="similar"><h4>Si te gustó, mirá también</h4><div class="sim-row"><div class="sim-track" style="--dur:${sims.length * 4}s">${[0, 1].map(copia => sims.map(r => `
+        ${sims.length ? `<div class="similar"><h4>Si te gustó, mirá también</h4><div class="sim-row"><div class="sim-track">${[0, 1].map(copia => sims.map(r => `
           <button class="sim" data-id="${r.id}" data-type="${r.media_type || type}"${copia ? ' aria-hidden="true" tabindex="-1"' : ''}>
             ${r.poster_path ? `<img src="${IMG}w185${r.poster_path}" alt="" loading="lazy">` : '<div class="noposter">🎬</div>'}
             <span>${esc(r.title || r.name)}</span>
@@ -1662,6 +1661,7 @@
       provs: paraTarjeta.slice(0, 6).map(s => ({ n: s.provider_name, logo: s.logo_path })) });
     els.sheet.dataset.provs = JSON.stringify(dedupe([...(p?.flatrate || []), ...(p?.free || []), ...(p?.ads || []), ...(p?.rent || []), ...(p?.buy || [])]).map(s => s.provider_name));
     focusSheet();
+    carruselSims(els.sheet.querySelector('.sim-row'));
     loadAwards(type, id, seq);
     loadDeepLinks(type, id, seq);
     if (type === 'tv') loadSeasons(id, d, seq);
@@ -2020,9 +2020,46 @@
     if (sim) { els.sheet.scrollTop = 0; openDetail(+sim.dataset.id, sim.dataset.type); }
   });
 
-  // El carrusel de «Si te gustó» se frena mientras lo tocás en el celular
-  els.sheet.addEventListener('touchstart', e => { const r = e.target.closest('.sim-row'); if (r) { clearTimeout(r._suelta); r.classList.add('tocando'); } }, { passive: true });
-  els.sheet.addEventListener('touchend', e => { const r = e.target.closest('.sim-row'); if (r) r._suelta = setTimeout(() => r.classList.remove('tocando'), 1500); }, { passive: true });
+  // «Si te gustó»: avanza solo de derecha a izquierda y en loop; se puede arrastrar con el dedo o el mouse
+  // hacia los dos lados para volver a una que ya pasó. Al soltar sigue solo. Un toque corto abre la película.
+  function carruselSims(row) {
+    const track = row?.querySelector('.sim-track');
+    if (!track) return;
+    const VEL = 28;                                   // px por segundo
+    const quieto = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let x = 0, ultimo = performance.now(), arrastre = null, pausaHasta = 0;
+    const mitad = () => track.scrollWidth / 2;        // la lista va dos veces: una mitad es una vuelta
+    const ubicar = () => { const w = mitad(); if (w > 0) { x %= w; if (x > 0) x -= w; } track.style.transform = `translateX(${x}px)`; };
+    const paso = t => {
+      if (!row.isConnected) return;                   // se cerró la ficha
+      const dt = Math.min(0.1, (t - ultimo) / 1000); ultimo = t;
+      if (!arrastre && !quieto && t > pausaHasta) { x -= VEL * dt; ubicar(); }
+      requestAnimationFrame(paso);
+    };
+    requestAnimationFrame(paso);
+    row.addEventListener('pointerdown', e => {
+      if (e.button !== 0) return;
+      arrastre = { x0: e.clientX, desde: x, movio: false, id: e.pointerId };
+    });
+    row.addEventListener('pointermove', e => {
+      if (!arrastre || e.pointerId !== arrastre.id) return;
+      const dx = e.clientX - arrastre.x0;
+      if (!arrastre.movio && Math.abs(dx) > 6) { arrastre.movio = true; row.setPointerCapture(e.pointerId); row.classList.add('arrastrando'); }
+      if (arrastre.movio) { x = arrastre.desde + dx; ubicar(); }
+    });
+    const soltar = e => {
+      if (!arrastre || (e.pointerId !== undefined && e.pointerId !== arrastre.id)) return;
+      if (arrastre.movio) { row._sinClick = true; pausaHasta = performance.now() + 1500; }
+      arrastre = null; row.classList.remove('arrastrando');
+    };
+    row.addEventListener('pointerup', soltar);
+    row.addEventListener('pointercancel', soltar);
+    // si fue un arrastre, el clic que viene después no abre la película
+    row.addEventListener('click', e => { if (row._sinClick) { row._sinClick = false; e.stopPropagation(); e.preventDefault(); } }, true);
+    // con la rueda o el trackpad (gesto lateral) también se mueve
+    row.addEventListener('wheel', e => { if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) { e.preventDefault(); x -= e.deltaX; ubicar(); pausaHasta = performance.now() + 1500; } }, { passive: false });
+    track.querySelectorAll('img').forEach(i => { i.draggable = false; });
+  }
 
   // Al abrir una plataforma, copiamos el título para pegarlo en su buscador
   els.sheet.addEventListener('click', e => {
