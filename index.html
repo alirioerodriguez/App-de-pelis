@@ -554,6 +554,63 @@
   .wl-chip.on { background: var(--accent); color: #08131f; border-color: var(--accent); font-weight: 700; }
   .wl-new { position: absolute; top: 8px; left: 8px; z-index: 2; background: var(--ok); color: #04210f; font-size: .7rem; font-weight: 700; border-radius: 6px; padding: 2px 6px; }
   #listBtn .dot-alert { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); display: inline-block; margin-left: 4px; vertical-align: middle; }
+  /* ---------- Deportes: sección aparte, con look de marcador ---------- */
+  body.en-deporte #app > :not(.topnav):not(#sportsView) { display: none !important; }
+  body.en-deporte #cats, body.en-deporte #subcats { display: none !important; }
+  .seg button[data-type="deporte"] { margin-left: 6px; }
+  .sports { padding-bottom: 40px; }
+  .sports-hero { padding: 28px 0 8px; }
+  .sports-hero h1 { margin: 0 0 6px; font-size: clamp(1.8rem, 5vw, 2.6rem); letter-spacing: -.02em; }
+  .sports-hero p { margin: 0; color: var(--muted); }
+  .sp-tabs { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding: 14px 0 4px; }
+  .sp-tabs::-webkit-scrollbar { display: none; }
+  .sp-tab { flex: none; display: inline-flex; align-items: center; gap: 8px; background: var(--card); border: 1px solid var(--line); color: var(--text); border-radius: 14px; padding: 10px 16px; font: inherit; font-weight: 600; cursor: pointer; }
+  .sp-tab .ic { font-size: 1.2rem; }
+  .sp-tab.on { background: var(--text); color: var(--bg); border-color: var(--text); }
+  .sp-days { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 10px 0; }
+  .sp-days::-webkit-scrollbar { display: none; }
+  .sp-day { flex: none; min-width: 58px; background: transparent; border: 1px solid var(--line); color: var(--text); border-radius: 12px; padding: 6px 10px; font: inherit; cursor: pointer; text-align: center; line-height: 1.15; }
+  .sp-day b { display: block; font-size: 1.05rem; }
+  .sp-day small { color: var(--muted); font-size: .72rem; text-transform: capitalize; }
+  .sp-day.on { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+  .sp-day.on small { color: var(--accent); }
+  .sp-leagues { display: flex; gap: 6px; flex-wrap: wrap; padding: 4px 0 10px; }
+  .sp-lg { display: inline-flex; align-items: center; gap: 6px; background: var(--card); border: 1px solid var(--line); color: var(--text); border-radius: 980px; padding: 5px 12px 5px 6px; font: inherit; font-size: .82rem; cursor: pointer; }
+  .sp-lg img { width: 20px; height: 20px; object-fit: contain; }
+  .sp-lg.on { border-color: var(--accent); color: var(--accent); }
+  .sp-block { margin-top: 18px; }
+  .sp-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+  .sp-head img { width: 30px; height: 30px; object-fit: contain; }
+  .sp-head h3 { margin: 0; font-size: 1.1rem; }
+  .sp-where { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: .8rem; color: var(--muted); width: 100%; }
+  .sp-plat { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--line); border-radius: 8px; padding: 3px 8px; color: var(--text); text-decoration: none; font-size: .8rem; background: var(--card); }
+  .sp-plat img { width: 18px; height: 18px; border-radius: 4px; }
+  .sp-plat.mine { border-color: var(--ok); }
+  .sp-plat small { color: var(--muted); }
+  .sp-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 10px; }
+  .match { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; display: grid; gap: 8px; }
+  .match.live { border-color: rgba(255, 69, 58, .6); }
+  .m-top { display: flex; justify-content: space-between; align-items: center; font-size: .78rem; color: var(--muted); gap: 8px; }
+  .m-top .sede { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .live-pill { display: inline-flex; align-items: center; gap: 5px; color: #ff453a; font-weight: 700; flex: none; }
+  .live-pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #ff453a; animation: latido 1.2s infinite; }
+  @keyframes latido { 50% { opacity: .25; } }
+  @media (prefers-reduced-motion: reduce) { .live-pill::before { animation: none; } }
+  .m-row { display: grid; grid-template-columns: 26px 1fr auto; align-items: center; gap: 10px; font-size: .95rem; }
+  .m-row img { width: 26px; height: 26px; object-fit: contain; }
+  .m-row .n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .m-row .sc { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 1.05rem; min-width: 1.5em; text-align: right; }
+  .m-row.lose { color: var(--muted); }
+  .m-row.lose .sc { font-weight: 500; }
+  .m-sets { font-variant-numeric: tabular-nums; letter-spacing: .08em; }
+  .f1-ses { display: grid; gap: 6px; }
+  .f1-row { display: grid; grid-template-columns: 54px 1fr auto; gap: 8px; align-items: center; font-size: .88rem; }
+  .f1-row .tag { font-weight: 700; font-size: .75rem; background: var(--line); border-radius: 6px; padding: 2px 6px; text-align: center; }
+  .f1-row .pod { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sp-cal { display: grid; gap: 6px; margin-top: 8px; }
+  .sp-cal div { display: flex; justify-content: space-between; gap: 10px; font-size: .88rem; border-bottom: 1px solid var(--line); padding: 6px 0; }
+  .sp-empty { color: var(--muted); padding: 24px 0; }
+  .sp-note { color: var(--muted); font-size: .78rem; margin-top: 26px; line-height: 1.5; }
   .locked-sec { margin: 8px 0 40px; border-top: 1px solid var(--line); padding-top: 18px; }
   .locked-sec summary { list-style: none; cursor: pointer; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; font-size: 1.1rem; font-weight: 700; letter-spacing: -.01em; color: var(--muted); }
   .locked-sec summary::-webkit-details-marker { display: none; }
@@ -620,6 +677,7 @@
         <button class="on" data-type="all" role="tab" aria-selected="true">Todo</button>
         <button data-type="movie" role="tab" aria-selected="false">Películas</button>
         <button data-type="tv" role="tab" aria-selected="false">Series</button>
+        <button data-type="deporte" role="tab" aria-selected="false">⚽ Deportes</button>
       </div>
       <div class="cats" id="cats"></div>
     </nav>
@@ -688,6 +746,18 @@
       <summary><span id="lockedTitle">No disponibles</span><span class="hint" id="lockedHint"></span></summary>
       <div class="grid" id="lockedGrid"></div>
     </details>
+
+    <section id="sportsView" class="sports hidden" aria-label="Deportes">
+      <div class="sports-hero">
+        <h1>Deportes en vivo.</h1>
+        <p>Partidos, carreras y torneos, y en qué plataforma se ven en <span class="cname">Argentina</span>.</p>
+      </div>
+      <div class="sp-tabs" id="spTabs" role="tablist" aria-label="Deporte"></div>
+      <div class="sp-days" id="spDays" role="group" aria-label="Día"></div>
+      <div class="sp-leagues" id="spLeagues"></div>
+      <div id="spList" aria-live="polite"></div>
+      <p class="sp-note">Horarios en tu hora local. Resultados y calendario: ESPN. Dónde se ve: armado con lo que publican medios y plataformas (octubre de 2026); los derechos cambian de un torneo a otro y algunos partidos van por un solo canal, así que confirmalo en la app antes de contratar.</p>
+    </section>
   </section>
 </main>
 
@@ -935,6 +1005,7 @@
     await loadProviders();
     load();
     revisarMiLista();
+    if (location.hash === '#deportes') abrirDeportes();
   }
 
   $('#retry').addEventListener('click', async () => {
@@ -1259,6 +1330,7 @@
     await loadProviders();
     load();
     revisarMiLista();
+    if (document.body.classList.contains('en-deporte')) pintarDeportes();
   }
   $('#newAll').addEventListener('click', () => {
     state.showNew = true; state.cat = state.sub = state.provider = null; els.q.value = ''; state.query = '';
@@ -1438,7 +1510,11 @@
   }
 
   document.querySelector('.seg').addEventListener('click', async e => {
-    const b = e.target.closest('button'); if (!b || b.dataset.type === state.type) return;
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.type === 'deporte') return abrirDeportes();
+    const veniaDeDeporte = document.body.classList.contains('en-deporte');
+    if (veniaDeDeporte) cerrarDeportes();
+    if (b.dataset.type === state.type) { if (veniaDeDeporte) marcarSeg(state.type); return; }
     document.querySelectorAll('.seg button').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-selected', x === b); });
     state.type = b.dataset.type;
     state.provider = null;
@@ -2400,6 +2476,196 @@
     openDetail(+c.dataset.id, c.dataset.type);
   });
   $('#listBtn').addEventListener('click', openList);
+
+  // ---------- Deportes ----------
+  // Sección aparte: calendario y resultados de ESPN (api/deporte.js) y, por país, en qué plataforma se ve
+  // cada competencia. La tabla es propia (ESPN no lo informa) y hay que revisarla cada temporada.
+  const SUD = ['AR', 'BO', 'CL', 'CO', 'EC', 'PE', 'PY', 'UY', 'VE'];
+  const LATAM = [...SUD, 'CR', 'CU', 'SV', 'GT', 'HN', 'NI', 'PA', 'PR', 'DO']; // sin México ni EE. UU.
+  // id = plataforma de TMDB (para el logo y para resaltar las que tenés)
+  const PLAT = {
+    disney: { n: 'Disney+ Premium', id: 337, url: () => 'https://www.disneyplus.com/', nota: 'con ESPN' },
+    dgo: { n: 'DGO', id: DGO_ID, url: () => `https://www.directvgo.com/${DGO_COUNTRIES.has(REGION) ? REGION.toLowerCase() : 'ar'}/home` },
+    max: { n: 'HBO Max', id: 1899, url: () => 'https://www.hbomax.com/' },
+    prime: { n: 'Prime Video', id: 119, url: () => 'https://www.primevideo.com/' },
+    vix: { n: 'ViX Premium', id: 457, url: () => 'https://vix.com/' },
+    packfutbol: { n: 'Pack Fútbol', nota: 'ESPN Premium y TNT Sports, por tu cable' },
+    fox: { n: 'FOX', nota: 'FOX One' },
+    foxar: { n: 'Fox Sports' },
+    telefe: { n: 'Telefe', nota: '1 partido por semana, gratis' },
+    tntcl: { n: 'TNT Sports Premium' },
+    win: { n: 'Win+ Fútbol', nota: 'Win Play' },
+    l1max: { n: 'L1 MAX' },
+    antel: { n: 'AntelTV', url: () => 'https://www.anteltv.com.uy/' },
+    bein: { n: 'beIN SPORTS' },
+    sky: { n: 'Sky Sports' },
+    f1tv: { n: 'F1 TV Pro', url: () => 'https://f1tv.formula1.com/' },
+    leaguepass: { n: 'NBA League Pass', url: () => 'https://www.nba.com/watch/league-pass-stream' },
+  };
+  const en = (paises, plats) => Object.fromEntries(paises.map(cc => [cc, plats]));
+  const DERECHOS = {
+    'arg.1': { AR: ['packfutbol', 'dgo'] },
+    'mex.1': { MX: ['vix', 'prime', 'fox'] },
+    'col.1': { CO: ['win'] },
+    'chi.1': { CL: ['tntcl', 'max'] },
+    'per.1': { PE: ['l1max'] },
+    'uru.1': { UY: ['disney', 'antel'] },
+    'conmebol.libertadores': { ...en(SUD, ['disney']), AR: ['disney', 'foxar', 'telefe'], MX: ['bein'] },
+    'conmebol.sudamericana': { ...en(SUD, ['dgo', 'disney']) },
+    'uefa.champions': { ...en(LATAM, ['disney']), AR: ['disney', 'foxar'], MX: ['max'] },
+    'eng.1': { ...en(LATAM, ['disney']), MX: ['max', 'fox'] },
+    'esp.1': { ...en(SUD, ['disney', 'dgo']), MX: ['sky'] },
+    f1: { ...en(LATAM, ['disney', 'f1tv']), AR: ['disney', 'foxar', 'f1tv'], MX: ['sky', 'f1tv'] },
+    nba: { ...en([...LATAM, 'MX'], ['disney', 'leaguepass']) },
+    // tenis: los Grand Slams van por ESPN; el resto del circuito, según el torneo
+    tenis: { ...en([...LATAM, 'MX'], ['disney']) },
+  };
+  const GRAND_SLAM = /australian open|roland|french open|wimbledon|us open/i;
+  const DEPORTES = [
+    { id: 'futbol', n: 'Fútbol', ic: '⚽', ligas: [['arg.1', 'Liga Profesional', 'AR'], ['mex.1', 'Liga MX', 'MX'], ['col.1', 'Liga BetPlay', 'CO'], ['chi.1', 'Liga de Primera', 'CL'], ['per.1', 'Liga 1', 'PE'], ['uru.1', 'Campeonato Uruguayo', 'UY'], ['conmebol.libertadores', 'Libertadores'], ['conmebol.sudamericana', 'Sudamericana'], ['uefa.champions', 'Champions League'], ['eng.1', 'Premier League'], ['esp.1', 'LaLiga']] },
+    { id: 'f1', n: 'Fórmula 1', ic: '🏎️', ligas: [['f1', 'Fórmula 1']] },
+    { id: 'nba', n: 'NBA', ic: '🏀', ligas: [['nba', 'NBA']] },
+    { id: 'tenis', n: 'Tenis', ic: '🎾', ligas: [['atp', 'ATP'], ['wta', 'WTA']] },
+  ];
+  const sp = { dep: 'futbol', dia: 0, liga: null, seq: 0, timer: null, logos: {} };
+
+  function marcarSeg(tipo) { document.querySelectorAll('.seg button').forEach(x => { const on = x.dataset.type === tipo; x.classList.toggle('on', on); x.setAttribute('aria-selected', on); }); }
+  function abrirDeportes() {
+    hideSuggest();
+    document.body.classList.add('en-deporte');
+    $('#sportsView').classList.remove('hidden');
+    marcarSeg('deporte');
+    if (location.hash !== '#deportes') history.replaceState(history.state, '', '#deportes');
+    pintarDeportes();
+    window.scrollTo({ top: 0 });
+  }
+  function cerrarDeportes() {
+    document.body.classList.remove('en-deporte');
+    $('#sportsView').classList.add('hidden');
+    clearInterval(sp.timer); sp.timer = null;
+    if (location.hash === '#deportes') history.replaceState(history.state, '', location.pathname + location.search);
+  }
+  const ymd = dt => `${dt.getFullYear()}${String(dt.getMonth() + 1).padStart(2, '0')}${String(dt.getDate()).padStart(2, '0')}`;
+  const diaDe = n => { const dt = new Date(); dt.setHours(12, 0, 0, 0); dt.setDate(dt.getDate() + n); return dt; };
+  const hora = iso => new Date(iso).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+  const fechaCorta = iso => new Date(iso).toLocaleDateString('es-AR', { weekday: 'short', day: 'numeric', month: 'short' });
+  const mismoDia = (iso, dt) => ymd(new Date(iso)) === ymd(dt);
+
+  function dondeVer(clave, nombreTorneo) {
+    const tabla = DERECHOS[clave === 'atp' || clave === 'wta' ? 'tenis' : clave] || {};
+    let lista = tabla[REGION] || [];
+    if ((clave === 'atp' || clave === 'wta') && !GRAND_SLAM.test(nombreTorneo || '')) lista = [];
+    const todas = state.providers.all || state.providers.movie || state.providers.tv || [];
+    const chips = lista.map(k => {
+      const pl = PLAT[k]; if (!pl) return '';
+      const logo = pl.id && todas.find(x => x.provider_id === pl.id)?.logo_path;
+      const tengo = pl.id && mine.has(pl.id);
+      const inner = `${logo ? `<img src="${IMG}w92${logo}" alt="">` : ''}${esc(pl.n)}${tengo ? ' ⭐' : ''}${pl.nota ? ` <small>${esc(pl.nota)}</small>` : ''}`;
+      return pl.url ? `<a class="sp-plat ${tengo ? 'mine' : ''}" href="${pl.url()}" target="_blank" rel="noopener">${inner} ↗</a>` : `<span class="sp-plat">${inner}</span>`;
+    }).join('');
+    const sinDato = (clave === 'atp' || clave === 'wta') ? 'según el torneo: buscalo en la guía de tu cable o en ESPN' : `no encontramos dónde se ve en ${esc(CN())}`;
+    return `<div class="sp-where">📺 En ${esc(CN())}: ${chips || `<span>${sinDato}</span>`}</div>`;
+  }
+
+  function pintarDeportes() {
+    $('#spTabs').innerHTML = DEPORTES.map(d => `<button type="button" class="sp-tab ${d.id === sp.dep ? 'on' : ''}" role="tab" aria-selected="${d.id === sp.dep}" data-dep="${d.id}"><span class="ic">${d.ic}</span>${d.n}</button>`).join('');
+    const conDias = sp.dep !== 'f1';
+    $('#spDays').classList.toggle('hidden', !conDias);
+    if (conDias) $('#spDays').innerHTML = [-1, 0, 1, 2, 3, 4, 5, 6].map(n => {
+      const dt = diaDe(n);
+      const nombre = n === 0 ? 'hoy' : n === 1 ? 'mañana' : n === -1 ? 'ayer' : dt.toLocaleDateString('es-AR', { weekday: 'short' });
+      return `<button type="button" class="sp-day ${n === sp.dia ? 'on' : ''}" data-dia="${n}" aria-pressed="${n === sp.dia}"><small>${nombre}</small><b>${dt.getDate()}</b></button>`;
+    }).join('');
+    const dep = DEPORTES.find(d => d.id === sp.dep);
+    // en fútbol, la liga del país elegido va primero
+    const ligas = dep.ligas.slice().sort((a, b) => (b[2] === REGION) - (a[2] === REGION));
+    $('#spLeagues').classList.toggle('hidden', ligas.length < 2);
+    if (ligas.length > 1) $('#spLeagues').innerHTML = `<button type="button" class="sp-lg ${!sp.liga ? 'on' : ''}" data-liga="">Todas</button>` +
+      ligas.map(l => `<button type="button" class="sp-lg ${sp.liga === l[0] ? 'on' : ''}" data-liga="${l[0]}">${sp.logos[l[0]] ? `<img src="${esc(sp.logos[l[0]])}" alt="">` : ''}${esc(l[1])}</button>`).join('');
+    cargarDeportes();
+  }
+
+  async function cargarDeportes() {
+    const seq = ++sp.seq;
+    clearInterval(sp.timer); sp.timer = null;
+    const dep = DEPORTES.find(d => d.id === sp.dep);
+    let ligas = dep.ligas.slice().sort((a, b) => (b[2] === REGION) - (a[2] === REGION));
+    if (sp.liga) ligas = ligas.filter(l => l[0] === sp.liga);
+    const dia = diaDe(sp.dia);
+    $('#spList').innerHTML = '<div class="sp-list">' + Array(4).fill('<div class="skeleton" style="height:120px;border-radius:16px"></div>').join('') + '</div>';
+    const res = await Promise.all(ligas.map(async l => {
+      const u = new URL('/api/deporte', location.href);
+      u.searchParams.set('l', l[0]);
+      if (sp.dep !== 'f1') u.searchParams.set('d', ymd(dia));
+      try { const r = await fetch(u); if (!r.ok) throw 0; return { l, d: await r.json() }; } catch { return { l, d: null }; }
+    }));
+    if (seq !== sp.seq) return;
+    let hayVivo = false, logosNuevos = false;
+    const bloques = res.map(({ l, d }) => {
+      if (!d) return `<div class="sp-block"><div class="sp-head"><h3>${esc(l[1])}</h3></div><p class="sp-empty">No se pudo cargar. Probá de nuevo en un rato.</p></div>`;
+      if (d.liga.logo && !sp.logos[l[0]]) { sp.logos[l[0]] = d.liga.logo; logosNuevos = true; }
+      const head = n => `<div class="sp-head">${d.liga.logo ? `<img src="${esc(d.liga.logo)}" alt="">` : ''}<h3>${esc(n || d.liga.nombre || l[1])}</h3>${dondeVer(l[0], n)}</div>`;
+      if (sp.dep === 'f1') return pintarF1(d, head);
+      if (sp.dep === 'tenis') return d.eventos.map(t => {
+        const ps = t.partidos.filter(x => mismoDia(x.fecha, dia)).sort((a, b) => (b.estado === 'in') - (a.estado === 'in') || a.fecha.localeCompare(b.fecha)).slice(0, 12);
+        if (!ps.length) return '';
+        if (ps.some(x => x.estado === 'in')) hayVivo = true;
+        return `<div class="sp-block">${head(t.nombre)}<div class="sp-list">${ps.map(tarjetaTenis).join('')}</div></div>`;
+      }).join('');
+      const evs = d.eventos.filter(e => mismoDia(e.fecha, dia) || e.estado === 'in');
+      if (!evs.length) return '';
+      if (evs.some(e => e.estado === 'in')) hayVivo = true;
+      return `<div class="sp-block">${head()}<div class="sp-list">${evs.map(tarjetaPartido).join('')}</div></div>`;
+    }).join('');
+    $('#spList').innerHTML = bloques || `<p class="sp-empty">No hay ${sp.dep === 'futbol' ? 'partidos' : 'nada'} ${sp.liga ? 'de esta competencia ' : ''}${sp.dia === 0 ? 'hoy' : 'ese día'}. Probá con otro día${sp.liga ? ' u otra competencia' : ''}.</p>`;
+    if (logosNuevos && DEPORTES.find(x => x.id === sp.dep).ligas.length > 1) {
+      $('#spLeagues').querySelectorAll('[data-liga]').forEach(b => { const lg = sp.logos[b.dataset.liga]; if (lg && !b.querySelector('img')) b.insertAdjacentHTML('afterbegin', `<img src="${esc(lg)}" alt="">`); });
+    }
+    // con algo en vivo, se actualiza solo cada minuto mientras la sección está abierta
+    if (hayVivo) sp.timer = setInterval(() => { if (document.visibilityState === 'visible') cargarDeportes(); }, 60000);
+  }
+
+  function filaEquipo(t, otro, termino) {
+    const pierde = termino && t.tanto != null && otro.tanto != null && +t.tanto < +otro.tanto;
+    return `<div class="m-row ${pierde ? 'lose' : ''}">${t.logo ? `<img src="${esc(t.logo)}" alt="" loading="lazy">` : '<span></span>'}<span class="n">${esc(t.nombre)}</span><span class="sc">${t.tanto ?? ''}</span></div>`;
+  }
+  function estadoHtml(e) {
+    if (e.estado === 'in') return `<span class="live-pill">EN VIVO ${esc(e.reloj || e.detalle)}</span>`;
+    if (e.estado === 'post') return `<span>${esc(e.detalle || 'Final')}</span>`;
+    return `<span>${hora(e.fecha)}</span>`;
+  }
+  function tarjetaPartido(e) {
+    const vivo = e.estado === 'in', termino = e.estado === 'post';
+    const sinTantos = e.estado === 'pre';
+    const loc = { ...e.local, tanto: sinTantos ? null : e.local.tanto }, vis = { ...e.visita, tanto: sinTantos ? null : e.visita.tanto };
+    return `<div class="match ${vivo ? 'live' : ''}">
+      <div class="m-top"><span class="sede">${esc(e.sede)}</span>${estadoHtml(e)}</div>
+      ${filaEquipo(loc, vis, termino)}${filaEquipo(vis, loc, termino)}
+    </div>`;
+  }
+  function tarjetaTenis(m) {
+    const fila = (j, otro) => `<div class="m-row ${m.estado === 'post' && !j.ganador ? 'lose' : ''}">${j.pais ? `<img src="${esc(j.pais)}" alt="" loading="lazy">` : '<span></span>'}<span class="n">${esc(j.nombre)}</span><span class="sc m-sets">${m.estado === 'pre' ? '' : j.sets.map(x => Math.round(x)).join(' ')}</span></div>`;
+    return `<div class="match ${m.estado === 'in' ? 'live' : ''}"><div class="m-top"><span class="sede">${esc(m.ronda)}</span>${estadoHtml(m)}</div>${fila(m.j1, m.j2)}${fila(m.j2, m.j1)}</div>`;
+  }
+  function pintarF1(d, head) {
+    const gp = d.eventos[0];
+    const nombres = { FP1: 'Libre 1', FP2: 'Libre 2', FP3: 'Libre 3', Qual: 'Clasif.', Race: 'Carrera', Sprint: 'Sprint', SS: 'Sprint Q' };
+    const ses = gp ? `<div class="match ${gp.sesiones.some(x => x.estado === 'in') ? 'live' : ''}">
+      <div class="m-top"><b style="color:var(--text);font-size:.95rem">${esc(gp.nombre)}</b><span>${esc(gp.sede)}</span></div>
+      <div class="f1-ses">${gp.sesiones.map(x => `<div class="f1-row"><span class="tag">${esc(nombres[x.nombre] || x.nombre)}</span>
+        <span class="pod">${x.estado === 'pre' ? fechaCorta(x.fecha) + ' · ' + hora(x.fecha) : x.podio.map((n, i) => `${i + 1}. ${esc(n)}`).join('  ')}</span>
+        ${x.estado === 'in' ? '<span class="live-pill">EN VIVO</span>' : x.estado === 'post' ? '<span>✓</span>' : '<span></span>'}</div>`).join('')}</div>
+    </div>` : '<p class="sp-empty">No hay un Gran Premio en curso.</p>';
+    const ahora = Date.now();
+    const prox = (d.calendario || []).filter(c => new Date(c.fin).getTime() > ahora && (!gp || c.nombre !== gp.nombre)).slice(0, 4);
+    const cal = prox.length ? `<div class="sp-block"><div class="sp-head"><h3>Lo que viene</h3></div><div class="sp-cal">${prox.map(c => `<div><span>${esc(c.nombre)}</span><span>${fechaCorta(c.fecha)}</span></div>`).join('')}</div></div>` : '';
+    return `<div class="sp-block">${head()}<div class="sp-list">${ses}</div></div>${cal}`;
+  }
+
+  window.addEventListener('hashchange', () => { if (location.hash === '#deportes' && !document.body.classList.contains('en-deporte')) abrirDeportes(); });
+  $('#spTabs').addEventListener('click', e => { const b = e.target.closest('[data-dep]'); if (!b || b.dataset.dep === sp.dep) return; sp.dep = b.dataset.dep; sp.liga = null; pintarDeportes(); });
+  $('#spDays').addEventListener('click', e => { const b = e.target.closest('[data-dia]'); if (!b) return; sp.dia = +b.dataset.dia; $('#spDays').querySelectorAll('.sp-day').forEach(x => { const on = x === b; x.classList.toggle('on', on); x.setAttribute('aria-pressed', on); }); cargarDeportes(); });
+  $('#spLeagues').addEventListener('click', e => { const b = e.target.closest('[data-liga]'); if (!b) return; sp.liga = b.dataset.liga || null; $('#spLeagues').querySelectorAll('.sp-lg').forEach(x => x.classList.toggle('on', x === b)); cargarDeportes(); });
 
   // ---------- Elegí por mí ----------
   // Elige al azar algo que se pueda ver en el país, respetando los filtros puestos. Si en pantalla hay
