@@ -716,6 +716,10 @@
   const PROXY = '/api/tmdb';
   // Plataformas que se muestran primero si están disponibles en AR
   const PRIORITY = ['Netflix', 'Amazon Prime Video', 'Disney Plus', 'Max', 'HBO Max', 'Paramount Plus', 'Apple TV Plus', 'Apple TV+', 'Mubi', 'Crunchyroll', 'Flow', 'Star Plus', 'Universal+', 'Claro video', 'DGO', 'Cine.ar', 'Pluto TV'];
+  // DGO: en TMDB figura como «DIRECTV GO» (id 467); se muestra con su nombre actual. Países donde TMDB tiene su catálogo.
+  const DGO_ID = 467;
+  const DGO_COUNTRIES = new Set(['AR', 'CL', 'CO', 'PE', 'UY', 'MX']);
+  const comoDGO = p => (p.provider_id === DGO_ID || /directv\s*go/i.test(p.provider_name)) ? { ...p, provider_name: 'DGO' } : p;
   // A dónde lleva el botón "Abrir en…". La API no da el enlace exacto al título:
   // donde la plataforma tiene búsqueda pública por URL, abre la búsqueda; si no, su inicio.
   const OPEN = [
@@ -727,6 +731,7 @@
     [/max/i, () => 'https://www.hbomax.com/'],
     [/paramount/i, () => 'https://www.paramountplus.com/'],
     [/mubi/i, () => 'https://mubi.com/'],
+    [/^dgo$/i, () => `https://www.directvgo.com/${DGO_COUNTRIES.has(REGION) ? REGION.toLowerCase() : 'ar'}/home`],
     [/youtube/i, t => `https://www.youtube.com/results?search_query=${t}`],
     [/google play/i, t => `https://play.google.com/store/search?q=${t}&c=movies`],
   ];
@@ -840,10 +845,14 @@
   }
 
   async function watchProviders(type, id) {
-    const ck = type + id;
+    const ck = REGION + ':' + type + id;
     if (provCache.has(ck)) return provCache.get(ck);
-    // {} = no está en ninguna plataforma de AR; null = no se pudo consultar
-    const p = api(`/${type}/${id}/watch/providers`).then(d => d.results?.[REGION] || {}).catch(() => null);
+    // {} = no está en ninguna plataforma del país; null = no se pudo consultar
+    const p = api(`/${type}/${id}/watch/providers`).then(d => {
+      const reg = { ...(d.results?.[REGION] || {}) };
+      for (const k of ['flatrate', 'free', 'ads', 'rent', 'buy']) if (reg[k]) reg[k] = reg[k].map(comoDGO);
+      return reg;
+    }).catch(() => null);
     provCache.set(ck, p);
     return p;
   }
@@ -902,7 +911,7 @@
       list = [...byId.values()];
     } else {
       const d = await api(`/watch/providers/${type}`, { watch_region: REGION });
-      list = d.results || [];
+      list = (d.results || []).map(comoDGO);
     }
     list.sort((a, b) => rank(a) - rank(b) || prio(a) - prio(b));
     return (state.providers[type] = list);
