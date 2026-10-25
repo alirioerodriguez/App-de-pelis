@@ -218,6 +218,7 @@
   .sheet-body h3 { margin: 50px 0 4px; font-size: clamp(1.2rem, 3.5vw, 1.7rem); line-height: 1.15; }
   @media (max-width: 640px) { .sheet-body h3 { margin-top: 30px; } }
   .facts { color: var(--muted); font-size: .88rem; display: flex; flex-wrap: wrap; gap: 6px 12px; }
+  .trailer-btn { display: inline-flex; margin-top: 10px; padding: 7px 14px; font-size: .9rem; }
   .overview { grid-column: 1/-1; color: #cfcfe0; line-height: 1.55; margin: 0; }
   .where { grid-column: 1/-1; }
   .where h4 { margin: 16px 0 8px; font-size: .95rem; display: flex; align-items: center; gap: 8px; }
@@ -1613,6 +1614,7 @@
         <div>
           <h3>${esc(title)}</h3>
           <div class="facts"><span class="kind ${type}" style="padding:2px 6px;border-radius:6px;font-weight:700;font-size:.72rem;text-transform:uppercase">${TYPE_LABEL[type]}</span>${[year, runtime, genres, d.vote_average ? '★ ' + d.vote_average.toFixed(1) : ''].filter(Boolean).map(esc).map(x => `<span>${x}</span>`).join('')}</div>
+          <a class="btn ghost trailer-btn" href="${trailer ? `https://www.youtube.com/watch?v=${encodeURIComponent(trailer.key)}` : `https://www.youtube.com/results?search_query=${encodeURIComponent(`${title} ${year || ''} tráiler`)}`}" target="_blank" rel="noopener">▶ ${trailer ? 'Ver tráiler' : 'Buscar el tráiler'}</a>
         </div>
         ${verdict}
         <div class="awards hidden" id="awards"></div>
@@ -1627,7 +1629,6 @@
         ${d.overview ? `<p class="overview">${esc(d.overview)}</p>` : ''}
         <div class="actions">
           <button class="btn ${inList(type, id) ? 'saved' : 'ghost'}" data-wl>${inList(type, id) ? '✓ En mi lista' : '🔖 Guardar en mi lista'}</button>
-          ${trailer ? `<a class="btn ghost" href="https://www.youtube.com/watch?v=${encodeURIComponent(trailer.key)}" target="_blank" rel="noopener">▶ Tráiler</a>` : ''}
           <button class="btn ghost" data-share>↗ Compartir</button>
           <button class="btn ghost" data-story title="Imagen vertical para historias de Instagram o WhatsApp">🖼️ Historia</button>
           <a class="btn ghost" href="https://www.justwatch.com/${REGION.toLowerCase()}/${REGION === 'US' ? 'search' : 'buscar'}?q=${encodeURIComponent(title)}" target="_blank" rel="noopener">JustWatch ↗</a>
