@@ -12,6 +12,11 @@ const LIGAS = {
   'conmebol.sudamericana': 'soccer/conmebol.sudamericana', 'uefa.champions': 'soccer/uefa.champions',
   'eng.1': 'soccer/eng.1', 'esp.1': 'soccer/esp.1',
   f1: 'racing/f1', nba: 'basketball/nba', atp: 'tennis/atp', wta: 'tennis/wta',
+  mlb: 'baseball/mlb', 'beisbol.caribe': 'baseball/caribbean-series', 'beisbol.dom': 'baseball/dominican-winter-league',
+  'beisbol.clasico': 'baseball/world-baseball-classic', nhl: 'hockey/nhl',
+  // rugby: ESPN usa números (Test Matches incluye la Nations Championship de Los Pumas)
+  'rugby.test': 'rugby/289234', 'rugby.6n': 'rugby/180659', 'rugby.mundial': 'rugby/164205',
+  'rugby.super': 'rugby/242041', 'rugby.urc': 'rugby/270557', 'rugby.prem': 'rugby/267979',
 };
 
 const estadoDe = s => ({ estado: s?.type?.state || 'pre', detalle: s?.type?.shortDetail || s?.type?.detail || '', reloj: s?.displayClock || '' });
@@ -66,32 +71,39 @@ module.exports = async function handler(req, res) {
   const l = String(req.query.l || '');
   const d = String(req.query.d || '');
   if (!LIGAS[l]) return res.status(400).json({ error: 'Competencia no permitida' });
-  if (d && !/^\d{8}$/.test(d)) return res.status(400).json({ error: 'Fecha inválida' });
+  // un día (AAAAMMDD) o dos (AAAAMMDD-AAAAMMDD). ESPN agrupa por día de EE. UU. y no acepta rangos en
+  // todos los deportes, así que se pide cada día por separado y se juntan; la página filtra por hora local.
+  if (d && !/^\d{8}(-\d{8})?$/.test(d)) return res.status(400).json({ error: 'Fecha inválida' });
+  const dias = d ? d.split('-') : [''];
 
-  const url = new URL(ESPN + LIGAS[l] + '/scoreboard');
-  url.searchParams.set('lang', 'es');
-  url.searchParams.set('region', 'ar');
-  url.searchParams.set('limit', '100');
-  if (d) url.searchParams.set('dates', d);
-
-  let datos;
-  try {
+  async function pedir(dia) {
+    const url = new URL(ESPN + LIGAS[l] + '/scoreboard');
+    url.searchParams.set('lang', 'es');
+    url.searchParams.set('region', 'ar');
+    url.searchParams.set('limit', '100');
+    if (dia) url.searchParams.set('dates', dia);
     const r = await fetch(url, { headers: { accept: 'application/json' } });
     if (!r.ok) throw new Error(String(r.status));
-    datos = await r.json();
-  } catch {
+    return r.json();
+  }
+
+  let partes;
+  try { partes = await Promise.all(dias.map(pedir)); }
+  catch {
     res.setHeader('Cache-Control', 'no-store');
     return res.status(502).json({ error: 'ESPN no respondió' });
   }
 
-  const liga = (datos.leagues || [])[0] || {};
-  const eventos = (datos.events || []).map(e => l === 'f1' ? carrera(e) : (l === 'atp' || l === 'wta') ? torneo(e) : partido(e));
+  const liga = partes.map(x => (x.leagues || [])[0]).find(Boolean) || {};
+  const vistos = new Set();
+  const crudos = partes.flatMap(x => x.events || []).filter(e => !vistos.has(e.id) && vistos.add(e.id));
+  const eventos = crudos.map(e => l === 'f1' ? carrera(e) : (l === 'atp' || l === 'wta') ? torneo(e) : partido(e));
   const calendario = l === 'f1' ? (liga.calendar || []).map(c => ({ nombre: c.label, fecha: c.startDate, fin: c.endDate })) : undefined;
 
   // En vivo: 30 s. Días pasados: 1 h. Lo que viene: 10 min.
   const enVivo = JSON.stringify(eventos).includes('"estado":"in"');
   const hoy = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-  const segundos = enVivo ? 30 : d && d < hoy ? 3600 : 600;
+  const segundos = enVivo ? 30 : d && d.slice(-8) < hoy ? 3600 : 600;
   res.setHeader('Cache-Control', `public, s-maxage=${segundos}, stale-while-revalidate=${segundos}`);
   return res.status(200).json({ liga: { clave: l, nombre: liga.name || '', logo: liga.logos?.[0]?.href || '' }, eventos, calendario });
 };

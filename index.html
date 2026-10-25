@@ -2501,6 +2501,7 @@
     sky: { n: 'Sky Sports' },
     f1tv: { n: 'F1 TV Pro', url: () => 'https://f1tv.formula1.com/' },
     leaguepass: { n: 'NBA League Pass', url: () => 'https://www.nba.com/watch/league-pass-stream' },
+    mlbtv: { n: 'MLB.TV', url: () => 'https://www.mlb.com/tv' },
   };
   const en = (paises, plats) => Object.fromEntries(paises.map(cc => [cc, plats]));
   const DERECHOS = {
@@ -2517,6 +2518,9 @@
     'esp.1': { ...en(SUD, ['disney', 'dgo']), MX: ['sky'] },
     f1: { ...en(LATAM, ['disney', 'f1tv']), AR: ['disney', 'foxar', 'f1tv'], MX: ['sky', 'f1tv'] },
     nba: { ...en([...LATAM, 'MX'], ['disney', 'leaguepass']) },
+    mlb: { ...en([...LATAM, 'MX'], ['disney', 'mlbtv']) },
+    nhl: { ...en([...LATAM, 'MX'], ['disney']) },
+    // rugby, Serie del Caribe, liga dominicana y Clásico Mundial: sin fuente confiable todavía
     // tenis: los Grand Slams van por ESPN; el resto del circuito, según el torneo
     tenis: { ...en([...LATAM, 'MX'], ['disney']) },
   };
@@ -2526,6 +2530,9 @@
     { id: 'f1', n: 'Fórmula 1', ic: '🏎️', ligas: [['f1', 'Fórmula 1']] },
     { id: 'nba', n: 'NBA', ic: '🏀', ligas: [['nba', 'NBA']] },
     { id: 'tenis', n: 'Tenis', ic: '🎾', ligas: [['atp', 'ATP'], ['wta', 'WTA']] },
+    { id: 'beisbol', n: 'Béisbol', ic: '⚾', ligas: [['mlb', 'MLB'], ['beisbol.dom', 'Liga Dominicana', 'DO'], ['beisbol.caribe', 'Serie del Caribe'], ['beisbol.clasico', 'Clásico Mundial']] },
+    { id: 'rugby', n: 'Rugby', ic: '🏉', ligas: [['rugby.test', 'Test Matches · Los Pumas'], ['rugby.6n', 'Seis Naciones'], ['rugby.mundial', 'Mundial'], ['rugby.super', 'Super Rugby'], ['rugby.urc', 'URC'], ['rugby.prem', 'Premiership']] },
+    { id: 'hockey', n: 'Hockey (NHL)', ic: '🏒', ligas: [['nhl', 'NHL']] },
   ];
   const sp = { dep: 'futbol', dia: 0, liga: null, seq: 0, timer: null, logos: {} };
 
@@ -2596,7 +2603,8 @@
     const res = await Promise.all(ligas.map(async l => {
       const u = new URL('/api/deporte', location.href);
       u.searchParams.set('l', l[0]);
-      if (sp.dep !== 'f1') u.searchParams.set('d', ymd(dia));
+      // ESPN agrupa por día de EE. UU.: se pide también el día anterior y se filtra por la hora local
+      if (sp.dep !== 'f1') u.searchParams.set('d', ymd(diaDe(sp.dia - 1)) + '-' + ymd(dia));
       try { const r = await fetch(u); if (!r.ok) throw 0; return { l, d: await r.json() }; } catch { return { l, d: null }; }
     }));
     if (seq !== sp.seq) return;
@@ -2612,12 +2620,13 @@
         if (ps.some(x => x.estado === 'in')) hayVivo = true;
         return `<div class="sp-block">${head(t.nombre)}<div class="sp-list">${ps.map(tarjetaTenis).join('')}</div></div>`;
       }).join('');
-      const evs = d.eventos.filter(e => mismoDia(e.fecha, dia) || e.estado === 'in');
+      // lo que está en vivo va en «hoy» aunque haya empezado antes de la medianoche
+      const evs = d.eventos.filter(e => mismoDia(e.fecha, dia) || (sp.dia === 0 && e.estado === 'in'));
       if (!evs.length) return '';
       if (evs.some(e => e.estado === 'in')) hayVivo = true;
       return `<div class="sp-block">${head()}<div class="sp-list">${evs.map(tarjetaPartido).join('')}</div></div>`;
     }).join('');
-    $('#spList').innerHTML = bloques || `<p class="sp-empty">No hay ${sp.dep === 'futbol' ? 'partidos' : 'nada'} ${sp.liga ? 'de esta competencia ' : ''}${sp.dia === 0 ? 'hoy' : 'ese día'}. Probá con otro día${sp.liga ? ' u otra competencia' : ''}.</p>`;
+    $('#spList').innerHTML = bloques || `<p class="sp-empty">No hay partidos ${sp.liga ? 'de esta competencia ' : ''}${sp.dia === 0 ? 'hoy' : 'ese día'}. Probá con otro día${sp.liga ? ' u otra competencia' : ''}.</p>`;
     if (logosNuevos && DEPORTES.find(x => x.id === sp.dep).ligas.length > 1) {
       $('#spLeagues').querySelectorAll('[data-liga]').forEach(b => { const lg = sp.logos[b.dataset.liga]; if (lg && !b.querySelector('img')) b.insertAdjacentHTML('afterbegin', `<img src="${esc(lg)}" alt="">`); });
     }
