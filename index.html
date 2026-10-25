@@ -323,6 +323,13 @@
   .card .kind { display: inline-block; font-size: .7rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: 2px 6px; border-radius: 6px; margin-right: 6px; }
   .kind.movie { background: rgba(117,170,219,.18); color: var(--accent); }
   .kind.tv { background: rgba(246,180,14,.16); color: var(--accent-2); }
+  .kind.dn { background: rgba(255,69,58,.16); color: #ff6961; }
+  .dn-poster { display: grid; place-content: center; gap: 6px; text-align: center; padding: 12px; background: linear-gradient(160deg, #2b0d10, #120607); }
+  .dn-poster b { font-size: 1.3rem; letter-spacing: .08em; color: #ff453a; }
+  .dn-poster span { font-size: .78rem; color: var(--muted); }
+  .dn-sheet { padding: 22px; display: grid; gap: 14px; }
+  .dn-sheet h3 { margin: 0; font-size: 1.5rem; }
+  .dn-sheet .badge-dn { display: inline-block; background: rgba(255,69,58,.16); color: #ff6961; border-radius: 6px; padding: 2px 8px; font-size: .75rem; font-weight: 700; letter-spacing: .04em; }
   .mini-prov img.mine { box-shadow: 0 0 0 2px var(--ok), 0 2px 6px rgba(0,0,0,.5); }
 
   /* ---------- Mis plataformas ---------- */
@@ -830,7 +837,19 @@
     [/youtube/i, t => `https://www.youtube.com/results?search_query=${t}`],
     [/google play/i, t => `https://play.google.com/store/search?q=${t}&c=movies`],
   ];
-  const TYPE_LABEL = { movie: 'Película', tv: 'Serie' };
+  const TYPE_LABEL = { movie: 'Película', tv: 'Serie', dn: 'DNews' };
+  // Programas propios de DNEWS en DGO: no están en TMDB, así que van en esta lista (leída de la sección de
+  // DNEWS en DGO el 25/10/2026). Se ven en los países donde DGO tiene DNEWS. Revisarla cada tanto.
+  const DNEWS = [{"id":1,"n":"Familias narco","t":"serie","g":"Documentales","a":"2024","d":"1 temporada","gen":"Documental, policíaco","desc":"Los secretos de este grupo criminal de Venezuela que se formó en la cárcel de Tocorón, en Caracas, que logró expandirse en Chile, Colombia, Perú y Ecuador. Episodios: Tren de Aragua, Cartel de Sinaloa, El Clan del Golfo, Los Choneros, Cártel de Jalisco, Los Pulpos, Mafia albanesa, Los Lobos y Chapo Guzmán.","u":"/home/pdp/series/c063dc50-76d0-49d0-a6c7-9ca087de021d"},{"id":2,"n":"El juicio al mal","t":"serie","g":"Documentales","a":"2025","d":"1 temporada","gen":"Documental","desc":"Este documental revive el histórico Juicio a las Juntas a través de las voces de sus protagonistas y valioso material de archivo.","u":"/home/pdp/series/60932e34-03f6-484d-ae8b-24fdd2595bee"},{"id":3,"n":"Cromañón","t":"especial","g":"Documentales","a":"2024","d":"29 min","gen":"Noticias","desc":"El 30 de diciembre de 2004, se produjo un incendio provocado en el boliche Cromañón, un lugar que no cumplía con las medidas de seguridad para abrir sus puertas, tragedia que acabó con las vidas de 194 jóvenes y dejó heridas a más de 1432 personas.","u":"/home/pdp/vod/8896b176-b1b5-48ed-8acc-554c803318fc"},{"id":4,"n":"La cárcel de las maras","t":"especial","g":"Documentales","a":"2023","d":"29 min","gen":"Documental","desc":"El 24 de febrero del 2023 abrió sus puertas en El Salvador la «megacárcel» construida por el presidente Nayib Bukele. A partir de su inauguración, organismos humanitarios cuestionaron el trato que reciben los presuntos pandilleros allí alojados.","u":"/home/pdp/vod/7a0cd95f-3e61-48c7-a01c-46290a7c8b09"},{"id":5,"n":"Ahora ellas","t":"especial","g":"Documentales","a":"2023","d":"24 min","gen":"Documental","desc":"La Copa Mundial Femenina de Fútbol abrirá nuevos caminos en términos de alcance e impacto. Hay jugadoras que lucharon para que el fútbol femenino llegara a ser un deporte profesional, y lo lograron. Esta es su historia.","u":"/home/pdp/vod/4ea45bd5-3823-4fe3-879c-91b15f325188"},{"id":6,"n":"Maradona, el juicio que no fue","t":"serie","g":"Documentales","a":"2025","d":"1 temporada","gen":"Noticias","desc":"Investigación periodística de 4 episodios que reconstruye los días finales de Diego Armando Maradona y revela aspectos poco conocidos del proceso judicial tras su muerte.","u":"/home/pdp/series/9947bcd7-12e1-4186-a832-02dfcc152772"},{"id":7,"n":"Masacre de Flores","t":"especial","g":"Documentales","a":"2026","d":"32 min","gen":"Documental, policíaco","desc":"Revive el crimen que conmocionó a la Argentina. Con entrevistas exclusivas y el testimonio del único sobreviviente, reconstruye minuto a minuto una de las masacres más impactantes de la historia del país.","u":""},{"id":8,"n":"Surreal","t":"serie","g":"Topic","a":"2026","d":"1 temporada","gen":"Crónica","desc":"Programa de crónica documental urbana que revela el universo oculto que late en las ciudades peruanas. Una mirada directa y sin filtros sobre la delincuencia, el narcotráfico y las redes que operan en las sombras.","u":"/home/pdp/series/7ef30166-fa3c-48ac-8c12-43e0cae34165"},{"id":9,"n":"Ecuador oculto","t":"serie","g":"Topic","a":"2026","d":"1 temporada","gen":"Investigación","desc":"Programa periodístico de investigación que indaga en los conflictos y economías ilegales que atraviesan Ecuador, desde el narcotráfico hasta la minería ilegal y la delincuencia organizada.","u":"/home/pdp/series/d6f73690-f81b-4115-a2cc-e07e1e3d7bde"},{"id":10,"n":"Cocotrips","t":"serie","g":"Topic","a":"2025","d":"1 temporada","gen":"Viajes","desc":"Coco Maggio, actor y conductor argentino que después de casi 20 años trabajando en televisión, decide dar rienda suelta a su sueño de vivir viajando: comer, conocer y compartir sus experiencias.","u":"/home/pdp/series/10b9752d-5b76-407c-80d3-450343b9a86a"},{"id":11,"n":"Literalmente cubano","t":"serie","g":"Topic","a":"2025","d":"1 temporada","gen":"Documental","desc":"Desde el corazón de La Habana, se recorre la realidad de la Cuba de hoy: su sociedad, la crisis que atraviesa y la forma en que viven y resisten los cubanos en su día a día.","u":"/home/pdp/series/5d976be9-66bf-4610-a65b-6a06f9a2c4fa"},{"id":12,"n":"Así me gano la vida","t":"serie","g":"Topic","a":"2026","d":"1 temporada","gen":"Entrevistas","desc":"Retratos de historias reales de trabajadores informales en Colombia: hombres y mujeres que sostienen a sus familias en contextos desafiantes.","u":"/home/pdp/series/ec67601b-659f-4d94-8bff-8fb4e7f93fe4"},{"id":13,"n":"Punto Rojo","t":"serie","g":"Topic","a":"2025","d":"1 temporada","gen":"Debate, política","desc":"Una mirada valiente y comprometida sobre los grandes dilemas que atraviesan a América Latina y al mundo.","u":"/home/pdp/series/8759fc48-828c-4ff9-bae6-4517e3c96519"},{"id":14,"n":"Malditos Optimistas","t":"serie","g":"Topic","a":"2025","d":"1 temporada","gen":"Especial","desc":"","u":"/home/pdp/series/35f6e6d6-f9d5-4f54-bd1d-eda4ba742e65"},{"id":15,"n":"Finca Las Divas: cocina con historia","t":"serie","g":"Topic","a":"","d":"1 temporada","gen":"Gastronomía, viajes","desc":"Un viaje gastronómico que recorre las cocinas y tradiciones culinarias de los pueblos huarpes, incas y criollos que habitaron la región de Cuyo para rescatar los sabores, ingredientes ancestrales y las historias que dieron forma a la identidad gastronómica cuyana.","u":"/home/pdp/series/d86961a9-dc27-4ae2-be71-295d131e6c40"},{"id":16,"n":"Barreda, el femicida múltiple","t":"especial","g":"Biopics","a":"2025","d":"27 min","gen":"Documental, policíaco","desc":"Programa periodístico que repasa uno de los casos más impactantes de la historia criminal argentina: el de Ricardo Barreda, el odontólogo que en 1992 asesinó a su esposa, sus dos hijas y su suegra en la ciudad de La Plata.","u":"/home/pdp/vod/04bdd754-eb5e-4179-8cb7-4d4bffc576a3"},{"id":17,"n":"Mandela","t":"especial","g":"Biopics","a":"2024","d":"25 min","gen":"Documental, biografía","desc":"Nelson Mandela, el hombre que liberó a los sudafricanos de sus cadenas y decidió renunciar al odio para lograr la paz. A 10 años de su muerte, una historia necesaria.","u":"/home/pdp/vod/5019f1e7-aa07-48d9-8e5a-37e15a6167ef"},{"id":18,"n":"La hazaña de los Andes","t":"especial","g":"Biopics","a":"2024","d":"1 h 14 min","gen":"Documental","desc":"A 51 años del accidente de Los Andes, los sobrevivientes participan en este documental que repasa la odisea desde las voces de los propios protagonistas.","u":"/home/pdp/vod/7b73e8a3-e256-4468-9ad0-b5132502d42b"},{"id":19,"n":"Los cuentos de Cortázar","t":"especial","g":"Biopics","a":"2024","d":"24 min","gen":"Noticias","desc":"El escritor argentino murió en París el 12 de febrero de 1984. Su obra, y sobre todo sus cuentos, han sido la puerta de entrada a la literatura para varias generaciones.","u":"/home/pdp/vod/f177ee9e-8b93-4e7c-8717-65b3a0b41160"},{"id":20,"n":"Pablo Escobar a 30 años de su muerte","t":"especial","g":"Biopics","a":"2023","d":"27 min","gen":"Documental","desc":"El narcotraficante más buscado en los años noventa fue abatido el 2 de diciembre de 1993. A 30 años de su muerte, se analiza el presente de Colombia y el impacto que produjo en su historia.","u":"/home/pdp/vod/ec9673b0-df38-448a-9197-ced0139438be"},{"id":21,"n":"Las hermanas de Diego","t":"especial","g":"Biopics","a":"2022","d":"56 min","gen":"Documental","desc":"Una mirada sobre la figura de Diego Armando Maradona, a través del testimonio de sus cinco hermanas.","u":"/home/pdp/vod/8fd737b9-e4aa-46e5-9d57-a1c4fef0a762"},{"id":22,"n":"Camino a la luna","t":"especial","g":"Biopics","a":"2022","d":"28 min","gen":"Especial","desc":"La NASA prepara su regreso a la Luna luego de más de 50 años de ausencia de humanos en ese paraje.","u":"/home/pdp/vod/c3c1646b-345f-4be2-afc8-4e5a762846e8"},{"id":23,"n":"¿Quién es Claudia Sheinbaum?","t":"especial","g":"Biopics","a":"2024","d":"24 min","gen":"Biografía","desc":"El perfil de la primera presidenta de México con vistas a la toma de posesión: su historia, sus inicios en la política y el camino al gobierno.","u":"/home/pdp/vod/2323c40d-189c-4c0b-816e-2fe483cd2ff1"},{"id":24,"n":"A un año de la invasión a Ucrania","t":"especial","g":"Biopics","a":"2023","d":"1 h 55 min","gen":"Documental","desc":"El año de la invasión de Rusia a Ucrania, desde el primer día, en un programa especial de 2 horas.","u":"/home/pdp/vod/36812f06-4976-48ce-826b-3836a4ee80a7"},{"id":25,"n":"Andes, tragedia y milagro","t":"especial","g":"Biopics","a":"2022","d":"47 min","gen":"Documental","desc":"Setenta y dos días en la nieve y una enseñanza que perdura 50 años. En 1972, un avión uruguayo cayó en la Cordillera de los Andes con 45 personas a bordo. Dieciséis lograron sobrevivir.","u":"/home/pdp/vod/7f3858fe-0fb7-49e0-b9cd-00df8be9338a"},{"id":26,"n":"Cerati","t":"serie","g":"Biopics","a":"2024","d":"1 temporada","gen":"Documental, música","desc":"A 10 años de la muerte del cantante argentino, biógrafos, colegas y amigos recuerdan al músico que marcó a Latinoamérica.","u":"/home/pdp/series/ecb33fc2-4f0d-4fa8-b01f-350788938155"},{"id":27,"n":"Diego (+)","t":"especial","g":"Biopics","a":"2024","d":"57 min","gen":"Documental","desc":"Los recuerdos de Diego Maradona y sus hazañas, a 30 años de su último partido con la selección argentina y del doping positivo que provocó el icónico «me cortaron las piernas».","u":"/home/pdp/vod/c9619792-df39-4bc7-9dc2-c2bc4bbb789e"},{"id":28,"n":"Efecto Milei","t":"especial","g":"Biopics","a":"2024","d":"29 min","gen":"Documental, política","desc":"A un año de la asunción de Javier Milei, políticos latinoamericanos y analistas examinan sus políticas, su irrupción en América Latina y el impacto de su mandato en la región.","u":"/home/pdp/vod/fd002b34-ea1c-4b0e-81de-57471e9f446f"},{"id":29,"n":"Eternos","t":"serie","g":"Biopics","a":"2024","d":"1 temporada","gen":"Fútbol","desc":"Magazine deportivo sobre ídolos del fútbol, como Francescoli, que brilló con la selección de Uruguay y con River Plate, y Saralegui, que jugó en clubes charrúas y en Racing Club.","u":"/home/pdp/series/0eb89fdc-c163-4532-9658-6bb0f6873744"},{"id":30,"n":"Gabo","t":"especial","g":"Biopics","a":"2024","d":"29 min","gen":"Documental, biografía","desc":"A 10 años de la muerte de Gabriel García Márquez, un recorrido por la historia del escritor que marcó la región y al mundo con su literatura.","u":"/home/pdp/vod/fce600d2-ba02-4462-be60-bb89c2633dd5"},{"id":31,"n":"Íntimo: Mau y Ricky","t":"especial","g":"Biopics","a":"2024","d":"20 min","gen":"Música","desc":"Son hermanos, son una marca latina de la música y tienen mucho para contar: Mau y Ricky en una charla íntima con DNews Música.","u":"/home/pdp/vod/4b607b97-8c6c-4e90-a637-269b675c8275"},{"id":32,"n":"Latinas: especial del Día de la Mujer","t":"especial","g":"Biopics","a":"2024","d":"26 min","gen":"Comunidad","desc":"Historias de mujeres latinas que gracias a sus trabajos, actividades y distintas luchas logran marcar una diferencia.","u":"/home/pdp/vod/472a5f43-7668-4cad-93f3-908cfae5a352"},{"id":33,"n":"Maduro","t":"especial","g":"Biopics","a":"2024","d":"51 min","gen":"Documental, política","desc":"Un perfil del presidente de Venezuela camino a la reelección: sus inicios, cómo llegó al poder, sus dos mandatos, la actualidad del país y sus conflictos.","u":"/home/pdp/vod/bafb580d-9324-455c-a586-fe6b093ec967"},{"id":34,"n":"Marcelo Pecci, la muerte del fiscal","t":"especial","g":"Biopics","a":"2023","d":"26 min","gen":"Documental, policíaco","desc":"Marcelo Pecci era un fiscal paraguayo especializado contra el crimen organizado y el narcotráfico. Fue asesinado en su luna de miel en Colombia.","u":"/home/pdp/vod/dc6cfd39-4e6e-4ba6-8615-99048548487f"},{"id":35,"n":"Mi santo","t":"especial","g":"Biopics","a":"2023","d":"28 min","gen":"Documental, religión","desc":"Cientos de santos habitan las calles de Latinoamérica: imágenes y personajes en los que creer y a los que pedir.","u":"/home/pdp/vod/0af1949f-052a-4d16-a9d9-80fae7747b49"},{"id":36,"n":"Radiografía de una crisis","t":"especial","g":"Biopics","a":"2023","d":"28 min","gen":"Noticias","desc":"Los grandes bancos de Estados Unidos viven una fuerte crisis en 2023. Se discute cómo afecta esto a Latinoamérica.","u":"/home/pdp/vod/56700596-2677-4826-8244-396cd3504ea1"},{"id":37,"n":"Titán, la tragedia que conmueve al mundo","t":"especial","g":"Biopics","a":"2023","d":"28 min","gen":"Especial","desc":"La nave, con cinco pasajeros a bordo, se sumergió en el Atlántico Norte para observar el Titanic; su desaparición acaparó la atención mundial hasta el trágico desenlace.","u":"/home/pdp/vod/692d637a-e4b9-4add-b24d-398c1e58fc58"},{"id":38,"n":"Viernes negro","t":"especial","g":"Biopics","a":"2023","d":"52 min","gen":"Documental","desc":"El 18 de febrero de 1983 el bolívar sufrió una fuerte devaluación frente al dólar, el inicio de la crisis económica más grande en la historia de Venezuela.","u":"/home/pdp/vod/a686dcd2-e3ad-4b59-abf0-bfc936cd6e3a"}];
+  const DNEWS_PAISES = new Set(['AR', 'CL', 'CO', 'EC', 'PE', 'UY', 'MX']);
+  const dnItem = x => ({ id: x.id, media_type: 'dn', name: x.n, overview: x.desc, first_air_date: x.a, _dn: x, _tipoReal: x.t === 'serie' ? 'tv' : 'movie' });
+  function dnewsQue(query) {
+    if (!DNEWS_PAISES.has(REGION)) return [];
+    const q = norm(query || '');
+    return DNEWS.filter(x => (state.type === 'all' || state.type === (x.t === 'serie' ? 'tv' : 'movie'))
+      && (!q || /\bd ?news\b/.test(q) || norm(x.n).includes(q) || norm(x.desc).includes(q))).map(dnItem);
+  }
+  const dnUrl = x => x.u ? 'https://www.directvgo.com' + x.u : 'https://www.directvgo.com/home/lander/DNEWS';
   const TYPE_PLURAL = { all: 'Películas y series', movie: 'Películas', tv: 'Series' };
 
   // Categorías → géneros de TMDB (pelis y series usan IDs distintos; "|" = cualquiera de ellos).
@@ -943,6 +962,13 @@
   async function watchProviders(type, id) {
     const ck = REGION + ':' + type + id;
     if (provCache.has(ck)) return provCache.get(ck);
+    if (type === 'dn') {
+      const dgo = [...(state.providers.all || []), ...(state.providers.tv || []), ...(state.providers.movie || [])].find(x => x.provider_id === DGO_ID)
+        || { provider_id: DGO_ID, provider_name: 'DGO', logo_path: '/qLwMbFKj1A5hkw0Os0qx7kmTpLr.png' };
+      const r = Promise.resolve(DNEWS_PAISES.has(REGION) ? { flatrate: [{ ...dgo, provider_name: 'DGO' }] } : {});
+      provCache.set(ck, r);
+      return r;
+    }
     // {} = no está en ninguna plataforma del país; null = no se pudo consultar
     const p = api(`/${type}/${id}/watch/providers`).then(d => {
       const reg = { ...(d.results?.[REGION] || {}) };
@@ -955,13 +981,16 @@
 
   // Búsqueda en pelis, series o ambas; devuelve resultados con media_type
   async function searchTitles(query, page = 1) {
+    const propios = page === 1 ? dnewsQue(query) : [];
+    let d;
     if (state.type === 'all') {
-      const d = await api('/search/multi', { query, page, region: REGION, include_adult: false });
+      d = await api('/search/multi', { query, page, region: REGION, include_adult: false });
       d.results = (d.results || []).filter(r => r.media_type === 'movie' || r.media_type === 'tv');
-      return d;
+    } else {
+      d = await api(`/search/${state.type}`, { query, page, region: REGION, include_adult: false });
+      d.results = (d.results || []).map(r => ({ ...r, media_type: state.type }));
     }
-    const d = await api(`/search/${state.type}`, { query, page, region: REGION, include_adult: false });
-    d.results = (d.results || []).map(r => ({ ...r, media_type: state.type }));
+    d.results = [...propios, ...d.results];
     return d;
   }
 
@@ -1562,6 +1591,7 @@
       return { results: (d.results || []).map(r => ({ ...r, media_type: type })), total_pages: d.total_pages || 0 };
     }));
     const results = res.flatMap(r => r.results).sort((a, b) => b.popularity - a.popularity);
+    if (state.provider?.provider_id === DGO_ID && state.page === 1 && !state.cat && !state.dur) results.push(...dnewsQue(''));
     return { results, total_pages: Math.max(...res.map(r => r.total_pages)) };
   }
 
@@ -1693,7 +1723,7 @@
     const uid = it.media_type + it.id;
     return `
       <button class="card ${it._cinema || it._soon ? 'cinema' : ''}" data-id="${it.id}" data-type="${it.media_type}" aria-label="${esc(title)}, ${TYPE_LABEL[it.media_type]}">
-        ${it.poster_path ? `<img class="poster" src="${IMG}w342${it.poster_path}" alt="" loading="lazy">` : `<div class="noposter">🎬</div>`}
+        ${it.media_type === 'dn' ? `<div class="noposter dn-poster"><b>DNEWS</b><span>${esc(it._dn?.g || 'en DGO')}</span></div>` : it.poster_path ? `<img class="poster" src="${IMG}w342${it.poster_path}" alt="" loading="lazy">` : `<div class="noposter">🎬</div>`}
         ${vote ? `<span class="badge">★ ${vote}</span>` : ''}
         <span class="mini-prov" data-mp="${uid}"></span>
         <span class="lock"><b>🔒</b>No disponible en ${esc(CN())}</span>
@@ -1752,7 +1782,34 @@
     return hit ? hit[1](t) : null;
   }
 
+  function openDnews(id) {
+    const x = DNEWS.find(y => y.id === +id);
+    if (!x) return;
+    openModal(`#dn-${x.id}`);
+    const it = { id: x.id, media_type: 'dn', name: x.n, title: x.n, first_air_date: x.a };
+    els.sheet.dataset.item = JSON.stringify(it);
+    const disponible = DNEWS_PAISES.has(REGION);
+    els.sheet.innerHTML = `
+      <button class="close" data-close aria-label="Cerrar">✕</button>
+      <div class="dn-sheet">
+        <div><span class="badge-dn">ORIGINAL DNEWS</span></div>
+        <h3>${esc(x.n)}</h3>
+        <div class="facts">${[x.t === 'serie' ? 'Serie' : 'Especial', x.a, x.d, x.gen].filter(Boolean).map(v => `<span>${esc(v)}</span>`).join('')}</div>
+        ${x.desc ? `<p class="overview">${esc(x.desc)}</p>` : ''}
+        ${disponible
+          ? `<div class="owned"><a class="btn" href="${dnUrl(x)}" target="_blank" rel="noopener">▶ Ver en DGO ↗</a></div>
+             <p class="hint" style="margin:0;font-size:.85rem">Incluido en DGO (sección DNEWS). Necesitás una cuenta de DGO con plan.</p>`
+          : `<p class="hint">DNEWS se ve por DGO en Argentina, Chile, Colombia, Ecuador, Perú, Uruguay y México; en ${esc(CN())} no está.</p>`}
+        <div class="actions">
+          <button class="btn ${inList('dn', x.id) ? 'saved' : 'ghost'}" data-wl>${inList('dn', x.id) ? '✓ En mi lista' : '🔖 Guardar en mi lista'}</button>
+        </div>
+        <div class="credit">Programa propio de DNEWS: no figura en TMDB ni en JustWatch, por eso lo sumamos a mano desde la sección de DNEWS en DGO.</div>
+      </div>`;
+    focusSheet();
+  }
+
   async function openDetail(id, type, fromRandom = false) {
+    if (type === 'dn') return openDnews(id);
     const seq = ++detailSeq;
     els.sheet.innerHTML = SK_FICHA;
     openModal(`#${type}-${id}`);
