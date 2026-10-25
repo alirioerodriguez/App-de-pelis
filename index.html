@@ -22,7 +22,9 @@
 <meta property="og:image" content="https://donde-la-veo-app.vercel.app/icons/icon-512.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- La fuente no frena el primer pintado: se ve con la del sistema y cambia a Inter cuando llega -->
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"></noscript>
 <style>
   /* Estilo inspirado en las apps de Apple: negro puro, superficies elevadas grises, vidrio esmerilado */
   :root {
@@ -410,7 +412,13 @@
   .see-all { background: transparent; border: 0; color: var(--accent); font-weight: 600; font-size: .9rem; padding: 4px; white-space: nowrap; }
   .similar { grid-column: 1/-1; }
   .similar h4 { margin: 8px 0 10px; font-size: .95rem; }
-  .sim-row { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; }
+  /* Carrusel que avanza solo de derecha a izquierda, en loop y sin barra (la lista va dos veces: al llegar a la mitad vuelve al inicio sin salto) */
+  .sim-row { overflow: hidden; padding-bottom: 6px; -webkit-mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent); mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent); }
+  .sim-track { display: flex; gap: 10px; width: max-content; animation: simLoop var(--dur, 40s) linear infinite; }
+  .sim-track .sim:last-child { margin-right: 10px; }
+  .sim-row:hover .sim-track, .sim-row:focus-within .sim-track, .sim-row.tocando .sim-track { animation-play-state: paused; }
+  @keyframes simLoop { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  @media (prefers-reduced-motion: reduce) { .sim-row { overflow-x: auto; scrollbar-width: none; } .sim-row::-webkit-scrollbar { display: none; } .sim-track .sim[aria-hidden] { display: none; } }
   .sim { flex: none; width: 96px; background: transparent; border: 0; padding: 0; color: var(--text); text-align: left; font-size: .78rem; }
   .sim img, .sim .noposter { width: 96px; border-radius: 8px; aspect-ratio: 2/3; object-fit: cover; font-size: 1.2rem; }
   .sim span { display: block; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1633,11 +1641,11 @@
           <button class="btn ghost" data-story title="Imagen vertical para historias de Instagram o WhatsApp">🖼️ Historia</button>
           <a class="btn ghost" href="https://www.justwatch.com/${REGION.toLowerCase()}/${REGION === 'US' ? 'search' : 'buscar'}?q=${encodeURIComponent(title)}" target="_blank" rel="noopener">JustWatch ↗</a>
         </div>
-        ${sims.length ? `<div class="similar"><h4>Si te gustó, mirá también</h4><div class="sim-row">${sims.map(r => `
-          <button class="sim" data-id="${r.id}" data-type="${r.media_type || type}">
+        ${sims.length ? `<div class="similar"><h4>Si te gustó, mirá también</h4><div class="sim-row"><div class="sim-track" style="--dur:${sims.length * 4}s">${[0, 1].map(copia => sims.map(r => `
+          <button class="sim" data-id="${r.id}" data-type="${r.media_type || type}"${copia ? ' aria-hidden="true" tabindex="-1"' : ''}>
             ${r.poster_path ? `<img src="${IMG}w185${r.poster_path}" alt="" loading="lazy">` : '<div class="noposter">🎬</div>'}
             <span>${esc(r.title || r.name)}</span>
-          </button>`).join('')}</div></div>` : ''}
+          </button>`).join('')).join('')}</div></div></div>` : ''}
         <div class="credit">Disponibilidad para ${esc(CN())} provista por JustWatch. “▶ Ver en…” abre el título exacto: en el celular, en la app de la plataforma si la tenés instalada; en la compu, en su web. Si para un título no tenemos el enlace exacto, “Abrir…” va a la búsqueda de la plataforma y copia el título. Si ya iniciaste sesión, entra con tu cuenta.</div>
         <div class="report">
           <button class="linkbtn" data-report-open type="button" aria-expanded="false">¿El dato está mal en ${esc(CN())}? Avisanos</button>
@@ -2011,6 +2019,10 @@
     const sim = e.target.closest('.sim');
     if (sim) { els.sheet.scrollTop = 0; openDetail(+sim.dataset.id, sim.dataset.type); }
   });
+
+  // El carrusel de «Si te gustó» se frena mientras lo tocás en el celular
+  els.sheet.addEventListener('touchstart', e => { const r = e.target.closest('.sim-row'); if (r) { clearTimeout(r._suelta); r.classList.add('tocando'); } }, { passive: true });
+  els.sheet.addEventListener('touchend', e => { const r = e.target.closest('.sim-row'); if (r) r._suelta = setTimeout(() => r.classList.remove('tocando'), 1500); }, { passive: true });
 
   // Al abrir una plataforma, copiamos el título para pegarlo en su buscador
   els.sheet.addEventListener('click', e => {
