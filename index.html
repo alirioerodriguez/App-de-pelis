@@ -530,6 +530,30 @@
   @media (display-mode: standalone) { .install { display: none; } }
 
   /* No disponibles: al final del listado, plegados al explorar y a la vista al buscar */
+  /* Personas (actores, actrices, dirección) */
+  .sug.person-sug img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+  .credits-box { grid-column: 1/-1; }
+  .credits-box h4 { margin: 4px 0 8px; font-size: .95rem; color: var(--muted); font-weight: 600; }
+  .cast-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; scrollbar-width: none; }
+  .cast-row::-webkit-scrollbar { display: none; }
+  .cast-pill { flex: none; display: inline-flex; align-items: center; gap: 8px; background: var(--card); border: 1px solid var(--line); color: var(--text); border-radius: 999px; padding: 4px 12px 4px 4px; font: inherit; font-size: .82rem; cursor: pointer; text-align: left; }
+  .cast-pill:hover, .cast-pill:focus-visible { border-color: var(--accent); }
+  .cast-pill img, .cast-pill .c-ph { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; background: var(--line); display: grid; place-items: center; flex: none; }
+  .cast-pill small { display: block; color: var(--muted); font-size: .72rem; max-width: 140px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* Elegí por mí */
+  .rand-btn { display: inline-flex; align-items: center; gap: 6px; background: transparent; border: 1px solid var(--accent); color: var(--accent); border-radius: 980px; padding: 6px 14px; font: inherit; font-size: .84rem; font-weight: 600; cursor: pointer; }
+  .rand-btn:hover { background: var(--card); }
+  .rand-btn[disabled] { opacity: .5; cursor: wait; }
+  .rand-banner { grid-column: 1/-1; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; border: 1px solid var(--accent); border-radius: 14px; padding: 10px 14px; font-size: .9rem; }
+  /* Resumen de Mi lista */
+  .wl-summary { padding: 0 22px 14px; }
+  @media (max-width: 640px) { .wl-summary { padding: 0 16px 14px; } }
+  .wl-stats { display: flex; flex-wrap: wrap; gap: 8px; }
+  .wl-chip { display: inline-flex; align-items: center; gap: 6px; background: var(--card); border: 1px solid var(--line); color: var(--text); border-radius: 980px; padding: 6px 12px; font: inherit; font-size: .82rem; cursor: pointer; }
+  .wl-chip img { width: 20px; height: 20px; border-radius: 5px; }
+  .wl-chip.on { background: var(--accent); color: #08131f; border-color: var(--accent); font-weight: 700; }
+  .wl-new { position: absolute; top: 8px; left: 8px; z-index: 2; background: var(--ok); color: #04210f; font-size: .7rem; font-weight: 700; border-radius: 6px; padding: 2px 6px; }
+  #listBtn .dot-alert { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); display: inline-block; margin-left: 4px; vertical-align: middle; }
   .locked-sec { margin: 8px 0 40px; border-top: 1px solid var(--line); padding-top: 18px; }
   .locked-sec summary { list-style: none; cursor: pointer; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; font-size: 1.1rem; font-weight: 700; letter-spacing: -.01em; color: var(--muted); }
   .locked-sec summary::-webkit-details-marker { display: none; }
@@ -654,6 +678,7 @@
           <button type="button" data-dur="90" aria-pressed="false">Pelis de ≈ 1 h 30</button>
           <button type="button" data-dur="120" aria-pressed="false">Hasta ≈ 2 h</button>
         </div>
+        <button type="button" class="rand-btn" id="randomBtn" title="Elegir al azar una película o serie que se pueda ver en tu país, con los filtros que tengas puestos">🎲 Elegí por mí</button>
         <button class="clear hidden" id="clearFilters">Limpiar filtros ✕</button>
       </div>
     </div>
@@ -698,7 +723,7 @@
 
 <script>
 (() => {
-  // País: siempre arranca en Argentina; se puede cambiar desde la bandera del encabezado.
+  // País: el que la persona eligió la última vez; si nunca eligió, el de su conexión (api/pais.js); si no, Argentina.
   const COUNTRIES = [['AR', 'Argentina'], ['BO', 'Bolivia'], ['CL', 'Chile'], ['CO', 'Colombia'], ['CR', 'Costa Rica'],
     ['CU', 'Cuba'], ['EC', 'Ecuador'], ['SV', 'El Salvador'], ['US', 'Estados Unidos'], ['GT', 'Guatemala'], ['HN', 'Honduras'], ['MX', 'México'],
     ['NI', 'Nicaragua'], ['PA', 'Panamá'], ['PY', 'Paraguay'], ['PE', 'Perú'], ['PR', 'Puerto Rico'],
@@ -791,7 +816,7 @@
     listTitle: $('#listTitle'), listHint: $('#listHint'), modal: $('#modal'), sheet: $('#sheet'), toast: $('#toast')
   };
 
-  const state = { type: 'all', mode: 'trending', query: '', provider: null, cat: null, sub: null, onlyAvail: false, onlyMine: false, dur: null, showNew: false, feed: 'trending', page: 1, totalPages: 1, providers: {} };
+  const state = { type: 'all', mode: 'trending', query: '', provider: null, cat: null, sub: null, person: null, onlyAvail: false, onlyMine: false, dur: null, showNew: false, feed: 'trending', page: 1, totalPages: 1, providers: {} };
   const provCache = new Map();
 
   // Mudanza desde alirioerodriguez.github.io/App-de-pelis: esa página redirige acá con
@@ -819,7 +844,8 @@
   })();
 
   safeSet(KEY_STORE, null);
-  let mine = new Set(safeJSON(safeGet(MINE_STORE)) || []);
+  const COUNTRY_STORE = 'pais_elegido';
+  let mine =new Set(safeJSON(safeGet(MINE_STORE)) || []);
   // Mi lista: [{id, media_type, title, poster_path, release_date}] guardada en este dispositivo
   let watchlist = safeJSON(safeGet(LIST_STORE)) || [];
   let loadSeq = 0, detailSeq = 0;
@@ -877,7 +903,23 @@
     $('#retry').focus();
   }
 
+  // Solo se recuerda el país que la persona elige a mano; el detectado se vuelve a mirar en cada visita
+  // (si viaja, ve lo de donde está).
+  async function elegirPaisInicial() {
+    const valido = cc => cc && COUNTRIES.some(c => c[0] === cc);
+    let cc = safeGet(COUNTRY_STORE);
+    if (!valido(cc)) {
+      try {
+        const r = await Promise.race([fetch('/api/pais', { cache: 'no-store' }).then(x => x.json()), new Promise(ok => setTimeout(() => ok({}), 1500))]);
+        cc = r.pais;
+      } catch { cc = null; }
+    }
+    if (valido(cc)) REGION = cc;
+    syncCountryUI();
+  }
+
   async function start() {
+    await elegirPaisInicial();
     els.setup.classList.add('hidden');
     els.app.classList.remove('hidden');
     renderCats();
@@ -892,6 +934,7 @@
     }
     await loadProviders();
     load();
+    revisarMiLista();
   }
 
   $('#retry').addEventListener('click', async () => {
@@ -985,7 +1028,7 @@
         state.cat.subs.map((s, i) => `<button class="cat ${state.sub?.[0] === s[0] ? 'on' : ''}" data-sub="${i}">${s[0]}</button>`).join('');
       sc.classList.remove('hidden');
     } else sc.classList.add('hidden');
-    $('#clearFilters').classList.toggle('hidden', !state.cat && !state.provider && !state.onlyAvail && !state.onlyMine && !state.dur);
+    $('#clearFilters').classList.toggle('hidden', !state.cat && !state.provider && !state.person && !state.onlyAvail && !state.onlyMine && !state.dur);
     $('#onlyMineWrap').classList.toggle('hidden', !mine.size || !!state.provider || state.mode === 'search');
   }
   $('#cats').addEventListener('click', e => {
@@ -1014,13 +1057,15 @@
   });
   $('#clearFilters').addEventListener('click', () => {
     state.dur = null; pintarDur();
-    state.cat = state.sub = state.provider = null; state.onlyAvail = state.onlyMine = false; $('#onlyAvail').checked = $('#onlyMine').checked = false;
+    state.cat = state.sub = state.provider = state.person = null; state.onlyAvail = state.onlyMine = false; $('#onlyAvail').checked = $('#onlyMine').checked = false;
     setMode(); renderCats(); renderChips(); load();
   });
   // keepNew: al cambiar Todo/Pelis/Series se sigue viendo "Estrenos"; cualquier otro filtro sale de ese modo
   function setMode(keepNew) {
     if (!keepNew) state.showNew = false;
-    state.mode = state.query ? 'search' : state.showNew ? 'new' : (state.cat || state.provider || state.dur || (state.onlyMine && mine.size)) ? 'discover' : 'trending';
+    // elegir otro filtro, buscar o ver estrenos sale de la filmografía de la persona
+    if (state.person && (state.query || state.showNew || state.cat || state.provider || state.dur)) state.person = null;
+    state.mode = state.query ? 'search' : state.showNew ? 'new' : state.person ? 'person' : (state.cat || state.provider || state.dur || (state.onlyMine && mine.size)) ? 'discover' : 'trending';
     $('#newSec').classList.toggle('hidden', state.mode !== 'trending');
     $('#feeds').classList.toggle('hidden', state.mode !== 'trending');
   }
@@ -1194,21 +1239,26 @@
     setCountry(b.dataset.cc);
   });
   $('#countryBtn').addEventListener('click', openCountry);
+  function syncCountryUI() {
+    $('#countryFlag').src = flagUrl(REGION);
+    $('#countryCode').textContent = REGION;
+    $('#countryBtn').setAttribute('aria-label', `País: ${CN()}. Cambiar país`);
+    document.querySelectorAll('.cname').forEach(x => { x.textContent = CN(); });
+  }
   async function setCountry(cc) {
     if (cc === REGION) return;
     REGION = cc;
+    safeSet(COUNTRY_STORE, cc);
     provCache.clear();
     state.providers = {};
     state.provider = null;
-    $('#countryFlag').src = flagUrl(cc);
-    $('#countryCode').textContent = cc;
-    $('#countryBtn').setAttribute('aria-label', `País: ${CN()}. Cambiar país`);
-    document.querySelectorAll('.cname').forEach(x => { x.textContent = CN(); });
+    syncCountryUI();
     toast(`Mostrando disponibilidad en ${CN()}`, true);
     setMode(state.showNew);
     renderNew();
     await loadProviders();
     load();
+    revisarMiLista();
   }
   $('#newAll').addEventListener('click', () => {
     state.showNew = true; state.cat = state.sub = state.provider = null; els.q.value = ''; state.query = '';
@@ -1286,7 +1336,7 @@
     else if (e.key === 'Escape') hideSuggest();
     else if (e.key === 'Enter') {
       e.preventDefault();
-      if (open && sugActive >= 0) { const it = sugItems[sugActive]; if (it.intent) return applyIntent(it.intent); hideSuggest(); openDetail(it.id, it.media_type); }
+      if (open && sugActive >= 0) { const it = sugItems[sugActive]; if (it.intent) return applyIntent(it.intent); if (it.person) return selectPerson(it.person); hideSuggest(); openDetail(it.id, it.media_type); }
       else runSearch();
     }
   });
@@ -1296,10 +1346,19 @@
   async function suggest(q) {
     const seq = ++sugSeq;
     const intent = parseIntent(q);
-    let d;
-    try { d = await searchTitles(q); } catch (e) { return handleErr(e); }
+    let d, people = [];
+    try {
+      const [titulos, gente] = await Promise.all([searchTitles(q), q.length >= 3 ? api('/search/person', { query: q, include_adult: false }).catch(() => null) : null]);
+      d = titulos;
+      // personas con foto cuyo nombre coincide con lo escrito; TMDB las da de más a menos conocida,
+      // así que de cada nombre queda la primera (no se llena de homónimos)
+      const nombres = new Set();
+      people = (gente?.results || []).filter(x => x.profile_path && (x.known_for_department === 'Acting' || x.known_for_department === 'Directing')
+        && norm(x.name).includes(norm(q)) && !nombres.has(norm(x.name)) && nombres.add(norm(x.name))).slice(0, 2);
+    } catch (e) { return handleErr(e); }
     if (seq !== sugSeq || els.q.value.trim() !== q) return; // llegó una respuesta vieja
-    sugItems = d.results.slice(0, intent ? 5 : 6);
+    sugItems = d.results.slice(0, (intent ? 5 : 6) - people.length);
+    people.slice().reverse().forEach(x => sugItems.unshift({ person: x }));
     if (intent) sugItems.unshift({ intent });
     sugActive = -1;
     if (!sugItems.length) {
@@ -1309,6 +1368,14 @@
         if (it.intent) return `<button class="sug cat-sug" role="option" data-i="${i}">
           <span class="ph">🎭</span><span class="st"><b>${esc(intentLabel(it.intent))}</b><span>Ver la categoría completa</span></span>
         </button>`;
+        if (it.person) {
+          const pe = it.person;
+          const known = (pe.known_for || []).map(k => k.title || k.name).filter(Boolean).slice(0, 2).join(', ');
+          return `<button class="sug person-sug" role="option" data-i="${i}">
+            <img src="${IMG}w185${pe.profile_path}" alt="">
+            <span class="st"><b>${esc(pe.name)}</b><span>${pe.known_for_department === 'Directing' ? 'Dirección' : 'Actuación'}${known ? ' · ' + esc(known) : ''}</span></span>
+          </button>`;
+        }
         const date = it.release_date || it.first_air_date || '';
         return `<button class="sug" role="option" data-i="${i}">
           ${it.poster_path ? `<img src="${IMG}w92${it.poster_path}" alt="">` : '<span class="ph"></span>'}
@@ -1329,9 +1396,36 @@
     const b = e.target.closest('.sug[data-i]'); if (!b) return;
     const it = sugItems[+b.dataset.i];
     if (it.intent) return applyIntent(it.intent);
+    if (it.person) return selectPerson(it.person);
     hideSuggest();
     openDetail(it.id, it.media_type);
   });
+  // ---------- Actores, actrices y directores ----------
+  function selectPerson(pe) {
+    hideSuggest();
+    if (els.modal.classList.contains('open')) closeModal();
+    els.q.value = ''; state.query = '';
+    state.cat = state.sub = state.provider = null; state.dur = null; pintarDur();
+    state.person = { id: pe.id, name: pe.name, dept: pe.known_for_department || pe.dept || 'Acting' };
+    setMode(); renderCats(); renderChips(); load();
+    els.listTitle.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  async function fetchPersonCredits(personId) {
+    const d = await api(`/person/${personId}/combined_credits`);
+    const dirige = r => r.job === 'Director' || r.job === 'Creator' || r.job === 'Showrunner';
+    const todos = [...(d.crew || []).filter(dirige), ...(d.cast || [])];
+    const porClave = new Map();
+    todos.forEach(r => {
+      if (r.media_type !== 'movie' && r.media_type !== 'tv') return;
+      if (state.type !== 'all' && r.media_type !== state.type) return;
+      // en series, las apariciones como invitada/o (talk shows, premios) no son su filmografía
+      if (r.media_type === 'tv' && r.character && /^(self|herself|himself|guest|ella misma|él mismo)\b/i.test(r.character)) return;
+      if (!porClave.has(r.media_type + r.id)) porClave.set(r.media_type + r.id, r);
+    });
+    const results = [...porClave.values()].sort((a, b) => (b.vote_count || 0) - (a.vote_count || 0)).slice(0, 60);
+    return { results, total_pages: 1 };
+  }
+
   function runSearch() {
     const q = els.q.value.trim();
     hideSuggest();
@@ -1401,15 +1495,19 @@
     const label = { all: 'películas y series', movie: 'películas', tv: 'series' }[state.type];
     if (!append) { els.grid.innerHTML = Array(12).fill('<div class="skeleton"></div>').join(''); $('#lockedSec').classList.add('hidden'); }
     $('#onlyAvail').parentElement.classList.toggle('hidden', state.mode !== 'discover' || !!state.provider || state.onlyMine);
-    $('#clearFilters').classList.toggle('hidden', !state.cat && !state.provider && !state.onlyAvail && !state.onlyMine && !state.dur && !state.showNew);
-    $('#onlyMineWrap').classList.toggle('hidden', !mine.size || !!state.provider || state.mode === 'search' || state.mode === 'new');
-    $('#durSeg').classList.toggle('hidden', state.type === 'tv' || state.mode === 'search' || state.mode === 'new');
+    $('#clearFilters').classList.toggle('hidden', !state.cat && !state.provider && !state.person && !state.onlyAvail && !state.onlyMine && !state.dur && !state.showNew);
+    $('#onlyMineWrap').classList.toggle('hidden', !mine.size || !!state.provider || state.mode === 'search' || state.mode === 'new' || state.mode === 'person');
+    $('#durSeg').classList.toggle('hidden', state.type === 'tv' || state.mode === 'search' || state.mode === 'new' || state.mode === 'person');
     let data;
     try {
       if (state.mode === 'search') {
         els.listTitle.textContent = `Resultados para “${state.query}”`;
         els.listHint.textContent = `${label} · tocá una para ver dónde está`;
         data = await searchTitles(state.query, state.page);
+      } else if (state.mode === 'person') {
+        els.listTitle.textContent = `${TYPE_PLURAL[state.type]} de ${state.person.name}`;
+        els.listHint.textContent = `como ${state.person.dept === 'Directing' ? 'director/a' : 'actor o actriz'} · primero lo que se puede ver en ${CN()}`;
+        data = await fetchPersonCredits(state.person.id);
       } else if (state.mode === 'new') {
         els.listTitle.textContent = `Estrenos recientes${mine.size ? ' en tus plataformas' : ' en ' + CN()}`;
         els.listHint.textContent = 'pelis de los últimos 6 meses y series con episodios nuevos, ya disponibles';
@@ -1578,14 +1676,14 @@
     return hit ? hit[1](t) : null;
   }
 
-  async function openDetail(id, type) {
+  async function openDetail(id, type, fromRandom = false) {
     const seq = ++detailSeq;
     els.sheet.innerHTML = SK_FICHA;
     openModal(`#${type}-${id}`);
     let d, p, cine = null;
     try {
       [d, p, cine] = await Promise.all([
-        api(`/${type}/${id}`, { append_to_response: 'videos,recommendations', include_video_language: 'es,en' }),
+        api(`/${type}/${id}`, { append_to_response: 'videos,recommendations,credits', include_video_language: 'es,en' }),
         watchProviders(type, id),
         type === 'movie' ? cinemaInfo().catch(() => null) : null
       ]);
@@ -1598,6 +1696,21 @@
     const runtime = d.runtime ? `${Math.floor(d.runtime / 60)}h ${d.runtime % 60}m` : d.number_of_seasons ? `${d.number_of_seasons} temporada${d.number_of_seasons > 1 ? 's' : ''}` : '';
     const genres = (d.genres || []).map(g => g.name).join(', ');
     const subs = dedupe(subsOf(p));
+    // Dirección (o creación, en series) y elenco principal: cada uno abre su filmografía
+    const directores = (d.credits?.crew || []).filter(c => c.job === 'Director').slice(0, 2).map(x => ({ ...x, _rol: 'Dirección', _dept: 'Directing' }));
+    const creadores = (d.created_by || []).slice(0, 2).map(x => ({ ...x, _rol: 'Creación', _dept: 'Directing' }));
+    const elenco = (d.credits?.cast || []).slice(0, 10).map(x => ({ ...x, _rol: x.character || 'Elenco', _dept: 'Acting' }));
+    const gente = [...(directores.length ? directores : creadores), ...elenco];
+    const creditsHtml = gente.length ? `
+        <div class="credits-box">
+          <h4>Dirección y elenco · tocá para ver sus pelis y series</h4>
+          <div class="cast-row">${gente.map(x => `
+            <button type="button" class="cast-pill" data-person-id="${x.id}" data-person-name="${esc(x.name)}" data-person-dept="${x._dept}">
+              ${x.profile_path ? `<img src="${IMG}w185${x.profile_path}" alt="" loading="lazy">` : '<span class="c-ph">👤</span>'}
+              <span>${esc(x.name)}<small>${esc(x._rol)}</small></span>
+            </button>`).join('')}
+          </div>
+        </div>` : '';
     const owned = subs.filter(s => mine.has(s.provider_id));
     const vids = d.videos?.results || [];
     const trailer = vids.find(v => v.site === 'YouTube' && v.type === 'Trailer' && v.iso_639_1 === 'es')
@@ -1650,6 +1763,7 @@
           <div class="facts"><span class="kind ${type}" style="padding:2px 6px;border-radius:6px;font-weight:700;font-size:.72rem;text-transform:uppercase">${TYPE_LABEL[type]}</span>${[year, runtime, genres, d.vote_average ? '★ ' + d.vote_average.toFixed(1) : ''].filter(Boolean).map(esc).map(x => `<span>${x}</span>`).join('')}</div>
           <a class="btn ghost trailer-btn" href="${trailer ? `https://www.youtube.com/watch?v=${encodeURIComponent(trailer.key)}` : `https://www.youtube.com/results?search_query=${encodeURIComponent(`${title} ${year || ''} tráiler`)}`}" target="_blank" rel="noopener">▶ ${trailer ? 'Ver tráiler' : 'Buscar el tráiler'}</a>
         </div>
+        ${fromRandom ? `<div class="rand-banner"><span>🎲 Elegida al azar para vos en ${esc(CN())}</span><button type="button" class="btn ghost" data-random-again>🔄 Probar otra</button></div>` : ''}
         ${verdict}
         <div class="awards hidden" id="awards"></div>
         ${openBtns ? `<div class="owned">${openBtns}</div>` : ''}
@@ -1661,6 +1775,7 @@
         </div>
         ${type === 'tv' && (d.seasons || []).filter(s => s.season_number > 0).length > 1 ? '<div class="seasons" id="seasons"><h4>Temporadas por plataforma</h4><div class="se-load">Buscando qué temporadas tiene cada plataforma…</div></div>' : ''}
         ${d.overview ? `<p class="overview">${esc(d.overview)}</p>` : ''}
+        ${creditsHtml}
         <div class="actions">
           <button class="btn ${inList(type, id) ? 'saved' : 'ghost'}" data-wl>${inList(type, id) ? '✓ En mi lista' : '🔖 Guardar en mi lista'}</button>
           <button class="btn ghost" data-share>↗ Compartir</button>
@@ -1982,6 +2097,9 @@
 
   // Botones de la ficha: lista, compartir, similares
   els.sheet.addEventListener('click', async e => {
+    const perBtn = e.target.closest('[data-person-id]');
+    if (perBtn) return selectPerson({ id: +perBtn.dataset.personId, name: perBtn.dataset.personName, dept: perBtn.dataset.personDept });
+    if (e.target.closest('[data-random-again]')) return pickRandom();
     if (e.target.closest('[data-wl]')) {
       const it = JSON.parse(els.sheet.dataset.item);
       toggleList(it);
@@ -2172,6 +2290,7 @@
   function toggleList(it) {
     watchlist = inList(it.media_type, it.id) ? watchlist.filter(w => !(w.media_type === it.media_type && w.id === it.id)) : [it, ...watchlist];
     safeSet(LIST_STORE, JSON.stringify(watchlist));
+    if (inList(it.media_type, it.id)) anotarDisponibilidad([it]); // para avisar cuando llegue a una plataforma
     renderListCount();
     // marcar o desmarcar las tarjetas ya visibles
     const on = inList(it.media_type, it.id);
@@ -2183,8 +2302,38 @@
     });
   }
   function renderListCount() { $('#listCount').textContent = watchlist.length || ''; }
-  function openList() {
+
+  // Disponibilidad de cada título guardado, por país: _disp = { AR: true, MX: false }.
+  // Si algo que no estaba en ninguna plataforma de este país ya llegó, se avisa una vez.
+  async function anotarDisponibilidad(items) {
+    const provs = await Promise.all(items.map(w => watchProviders(w.media_type, w.id)));
+    const llegaron = [];
+    items.forEach((w, i) => {
+      if (!provs[i]) return; // no se pudo consultar: no se toca
+      const subs = dedupe(subsOf(provs[i]));
+      const ahora = subs.length > 0;
+      const antes = w._disp?.[REGION];
+      if (antes === false && ahora) { llegaron.push({ w, subs }); w._nuevo = REGION; }
+      w._disp = { ...(w._disp || {}), [REGION]: ahora };
+    });
+    safeSet(LIST_STORE, JSON.stringify(watchlist));
+    return llegaron;
+  }
+  async function revisarMiLista() {
+    if (!watchlist.length) return;
+    const llegaron = await anotarDisponibilidad(watchlist);
+    if (!llegaron.length) return;
+    if (!$('#listBtn .dot-alert')) $('#listBtn').insertAdjacentHTML('beforeend', '<span class="dot-alert" aria-label="Hay novedades en Mi lista"></span>');
+    const { w, subs } = llegaron[0];
+    const otros = llegaron.length > 1 ? ` y ${llegaron.length - 1} más` : '';
+    toast(`🎉 «${w.title || w.name}»${otros} de tu lista ya se puede ver en ${subs[0]?.provider_name || CN()}`, true);
+  }
+
+  let wlFilter = 'all';
+  async function openList() {
     openModal();
+    $('#listBtn .dot-alert')?.remove();
+    wlFilter = 'all';
     els.sheet.innerHTML = `
       <button class="close" data-close aria-label="Cerrar">✕</button>
       <div class="mine-head">
@@ -2192,16 +2341,94 @@
         <p>Lo que guardaste para ver. Te muestro dónde está hoy en ${esc(CN())}. Se guarda en este dispositivo.</p>
         ${watchlist.length ? '<button class="btn ghost" data-share-list type="button">↗ Compartir mi lista</button><p class="hint" style="margin:6px 0 0;font-size:.8rem">Sirve para pasarla a otro celular o mandársela a alguien: al abrir el link, los títulos se suman a su lista.</p>' : ''}
       </div>
-      <div class="grid wl-grid" style="padding:0 22px 22px">${watchlist.length ? watchlist.map(card).join('') :
+      <div class="wl-summary" id="wlSummary"></div>
+      <div class="grid wl-grid" id="wlGrid" style="padding:0 22px 22px">${watchlist.length ? watchlist.map(card).join('') :
         '<div class="empty">Todavía no guardaste nada. Abrí una peli o serie y tocá “🔖 Guardar en mi lista”.</div>'}</div>`;
-    watchlist.forEach(decorate);
     focusSheet();
+    if (!watchlist.length) return;
+    watchlist.forEach(decorate);
+    const lista = watchlist.slice();
+    const provs = await Promise.all(lista.map(w => watchProviders(w.media_type, w.id)));
+    if (!$('#wlSummary')) return; // se cerró mientras cargaba
+    const subsDe = lista.map((w, i) => dedupe(subsOf(provs[i])));
+    const porPlat = new Map();
+    subsDe.forEach(subs => subs.forEach(s => {
+      if (!porPlat.has(s.provider_id)) porPlat.set(s.provider_id, { s, n: 0 });
+      porPlat.get(s.provider_id).n++;
+    }));
+    const ranking = [...porPlat.values()].sort((a, b) => b.n - a.n || rank(a.s) - rank(b.s));
+    const cuenta = f => lista.filter((w, i) => f(subsDe[i])).length;
+    const nDisp = cuenta(x => x.length), nMias = cuenta(x => x.some(s => mine.has(s.provider_id)));
+    function pasa(i) {
+      const subs = subsDe[i];
+      if (wlFilter === 'all') return true;
+      if (wlFilter === 'avail') return subs.length > 0;
+      if (wlFilter === 'mine') return subs.some(s => mine.has(s.provider_id));
+      if (wlFilter === 'locked') return !subs.length;
+      return subs.some(s => s.provider_id === wlFilter);
+    }
+    function dibujar() {
+      const chip = (val, txt, img) => `<button type="button" class="wl-chip ${wlFilter === val ? 'on' : ''}" data-wlf="${val}" aria-pressed="${wlFilter === val}">${img ? `<img src="${IMG}w92${img}" alt="">` : ''}${txt}</button>`;
+      $('#wlSummary').innerHTML = `<div class="wl-stats">
+        ${chip('all', `Todas (${lista.length})`)}
+        ${chip('avail', `✅ Se pueden ver en ${esc(CN())} (${nDisp})`)}
+        ${mine.size ? chip('mine', `⭐ En mis plataformas (${nMias})`) : ''}
+        ${lista.length - nDisp ? chip('locked', `🔒 No disponibles (${lista.length - nDisp})`) : ''}
+        ${ranking.map(x => chip(x.s.provider_id, `${esc(x.s.provider_name)} (${x.n})`, x.s.logo_path)).join('')}
+      </div>`;
+      const visibles = lista.filter((w, i) => pasa(i));
+      $('#wlGrid').innerHTML = visibles.length ? visibles.map(card).join('') : '<div class="empty">Nada de tu lista con este filtro.</div>';
+      visibles.forEach(decorate);
+      // marcar lo que llegó hace poco a una plataforma de este país
+      visibles.filter(w => w._nuevo === REGION).forEach(w => {
+        const c = $(`#wlGrid .card[data-id="${w.id}"][data-type="${w.media_type}"]`);
+        if (c && !c.querySelector('.wl-new')) c.insertAdjacentHTML('afterbegin', '<span class="wl-new">Nuevo</span>');
+      });
+    }
+    dibujar();
+    $('#wlSummary').addEventListener('click', e => {
+      const b = e.target.closest('[data-wlf]'); if (!b) return;
+      wlFilter = /^\d+$/.test(b.dataset.wlf) ? +b.dataset.wlf : b.dataset.wlf;
+      dibujar();
+    });
+    // al mirarla, lo «Nuevo» de este país deja de serlo
+    lista.forEach(w => { if (w._nuevo === REGION) delete w._nuevo; });
+    safeSet(LIST_STORE, JSON.stringify(watchlist));
   }
   els.sheet.addEventListener('click', e => {
     const c = e.target.closest('.wl-grid .card'); if (!c) return;
     openDetail(+c.dataset.id, c.dataset.type);
   });
   $('#listBtn').addEventListener('click', openList);
+
+  // ---------- Elegí por mí ----------
+  // Elige al azar algo que se pueda ver en el país, respetando los filtros puestos. Si en pantalla hay
+  // pocas opciones, busca en TMDB títulos con buena nota disponibles por suscripción o gratis.
+  let ultimoAlAzar = null;
+  async function pickRandom() {
+    const btn = $('#randomBtn');
+    btn.disabled = true;
+    try {
+      const enPantalla = [...els.grid.querySelectorAll('.card[data-id]:not(.locked):not(.cinema)')]
+        .map(c => ({ id: +c.dataset.id, media_type: c.dataset.type })).filter(x => x.media_type + x.id !== ultimoAlAzar);
+      let pool = enPantalla;
+      if (pool.length < 3) {
+        const t = state.type === 'all' ? (Math.random() < 0.5 ? 'movie' : 'tv') : state.type;
+        const base = state.mode === 'discover' ? await discoverParams(t) : null;
+        const params = { ...(base || { sort_by: 'popularity.desc', include_adult: false }) };
+        Object.assign(params, { watch_region: REGION, with_watch_monetization_types: 'flatrate|free|ads', 'vote_average.gte': 6.5, 'vote_count.gte': 40, page: 1 + Math.floor(Math.random() * 3) });
+        if (!state.provider && state.onlyMine && mine.size) params.with_watch_providers = [...mine].join('|');
+        const d = await api(`/discover/${t}`, params);
+        pool = (d.results || []).map(r => ({ id: r.id, media_type: t })).filter(x => x.media_type + x.id !== ultimoAlAzar);
+      }
+      if (!pool.length) return toast(`No encontré nada disponible en ${CN()} con esos filtros.`);
+      const elegida = pool[Math.floor(Math.random() * pool.length)];
+      ultimoAlAzar = elegida.media_type + elegida.id;
+      await openDetail(elegida.id, elegida.media_type, true);
+    } catch (e) { handleErr(e); }
+    finally { btn.disabled = false; }
+  }
+  $('#randomBtn').addEventListener('click', pickRandom);
 
   // ---------- Otras apps del creador ----------
   // Capturas reales de cada app (sacadas de su portada o de la app en modo local, con datos de ejemplo).

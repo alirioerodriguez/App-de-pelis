@@ -6,7 +6,7 @@
 const API = 'https://api.themoviedb.org/3';
 
 // Solo lo que usa la app, y solo lectura
-const RUTA_OK = /^\/(configuration|search\/(multi|movie|tv|keyword)|watch\/providers\/(regions|movie|tv)|tv\/\d+\/season\/\d+\/watch\/providers|(movie|tv)\/(\d+(\/watch\/providers)?|popular|top_rated|now_playing|upcoming|on_the_air|airing_today)|discover\/(movie|tv)|trending\/(all|movie|tv)\/(day|week))$/;
+const RUTA_OK = /^\/(configuration|search\/(multi|movie|tv|keyword|person)|person\/\d+\/combined_credits|watch\/providers\/(regions|movie|tv)|tv\/\d+\/season\/\d+\/watch\/providers|(movie|tv)\/(\d+(\/watch\/providers)?|popular|top_rated|now_playing|upcoming|on_the_air|airing_today)|discover\/(movie|tv)|trending\/(all|movie|tv)\/(day|week))$/;
 
 module.exports = async function handler(req, res) {
   // Solo para la propia página (misma dirección). No se mandan permisos CORS: la caché de Vercel
