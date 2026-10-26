@@ -132,7 +132,11 @@
   .se-num { font-weight: 700; font-size: 1.1rem; font-variant-numeric: tabular-nums; }
   .se-num small { color: var(--muted); font-weight: 500; font-size: .8rem; }
   .se-note { color: var(--muted); font-size: .82rem; margin: 8px 0 0; }
-  .plat-acc { display: inline-flex; align-items: baseline; gap: 10px; }
+  .plat-acc { display: inline-flex; align-items: center; gap: 10px; }
+  .plat-switch { color: var(--text); font-weight: 600; font-size: .9rem; white-space: nowrap; }
+  .switch.sm { width: 40px; height: 24px; }
+  .switch.sm::before { width: 20px; height: 20px; }
+  .switch.sm:checked::before { transform: translateX(16px); }
   /* Plataformas ocultas: también se esconde «Solo mis plataformas» */
   body.plat-oculto #chips, body.plat-oculto #chipsMore, body.plat-oculto #onlyMineWrap, body.plat-oculto .plat-hint { display: none !important; }
   .chips {
@@ -709,7 +713,7 @@
     <div class="section-title">
       <h2>Plataformas en <span class="cname">Argentina</span></h2>
       <span class="plat-acc"><span class="hint plat-hint">Tocá una para ver su catálogo</span>
-        <button class="see-all" id="platToggle" type="button" aria-controls="chips" aria-expanded="true">Ocultar</button></span>
+        <label class="toggle plat-switch" for="platToggle">Mostrar <input type="checkbox" role="switch" class="switch sm" id="platToggle" aria-controls="chips" checked></label></span>
     </div>
     <div class="prov-grid collapsed" id="chips"></div>
     <button class="see-more hidden" id="chipsMore" aria-controls="chips" aria-expanded="false">Ver todas</button>
@@ -1233,13 +1237,11 @@
   const PLAT_STORE = 'plataformas_ocultas';
   function aplicarPlat(oculto) {
     document.body.classList.toggle('plat-oculto', oculto);
-    const b = $('#platToggle');
-    b.textContent = oculto ? 'Mostrar' : 'Ocultar';
-    b.setAttribute('aria-expanded', String(!oculto));
+    $('#platToggle').checked = !oculto;
   }
   aplicarPlat(safeGet(PLAT_STORE) === '1');
-  $('#platToggle').addEventListener('click', () => {
-    const oculto = !document.body.classList.contains('plat-oculto');
+  $('#platToggle').addEventListener('change', e => {
+    const oculto = !e.target.checked;
     safeSet(PLAT_STORE, oculto ? '1' : null);
     aplicarPlat(oculto);
   });
