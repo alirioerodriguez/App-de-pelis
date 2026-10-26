@@ -847,8 +847,12 @@
   function dnewsQue(query) {
     if (!DNEWS_PAISES.has(REGION)) return [];
     const q = norm(query || '');
+    // «dnews» solo trae todo; «dnews central» busca «central» entre los programas de DNEWS
+    const pideDnews = /\bd ?news\b/.test(q);
+    const resto = q.replace(/\bd ?news\b/g, ' ').replace(/\s+/g, ' ').trim();
+    const coincide = x => norm(x.n).includes(resto) || norm(x.desc).includes(resto) || norm(x.gen || '').includes(resto);
     return DNEWS.filter(x => (state.type === 'all' || state.type === dnTipo(x))
-      && (!q || /\bd ?news\b/.test(q) || norm(x.n).includes(q) || norm(x.desc).includes(q))).map(dnItem);
+      && (!q || (pideDnews && !resto) || (resto && (coincide(x) || (pideDnews && norm(`dnews ${x.n}`).includes(q)))))).map(dnItem);
   }
   const dnUrl = x => x.u ? 'https://www.directvgo.com' + x.u : 'https://www.directvgo.com/home/lander/DNEWS';
   const TYPE_PLURAL = { all: 'Películas y series', movie: 'Películas', tv: 'Series' };
