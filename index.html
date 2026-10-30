@@ -321,6 +321,8 @@
   .sug .st { flex: 1; min-width: 0; }
   .sug .st b { display: block; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .sug .st span { color: var(--muted); font-size: .82rem; }
+  .dos-ficha { font-size: .85rem; color: var(--muted); margin: 2px 0 6px; }
+  .dos-ficha:empty { display: none; }
   .sug .st span.dos { display: block; font-size: .78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .sug-all { display: block; width: 100%; background: var(--card); border: 0; border-top: 1px solid var(--line); color: var(--accent); padding: 10px 12px; font-weight: 600; text-align: left; }
 
@@ -2121,6 +2123,7 @@
         ${d.poster_path ? `<img class="poster" src="${IMG}w342${d.poster_path}" alt="">` : '<div class="noposter">🎬</div>'}
         <div>
           <h3>${esc(title)}</h3>
+          <div class="dos-ficha" data-dos-ficha></div>
           <div class="facts"><span class="kind ${formato({ media_type: type }, d).cls}" style="padding:2px 6px;border-radius:6px;font-weight:700;font-size:.72rem;text-transform:uppercase">${formato({ media_type: type }, d).txt}</span>${[year, runtime, genres, d.vote_average ? '★ ' + d.vote_average.toFixed(1) : ''].filter(Boolean).map(esc).map(x => `<span>${x}</span>`).join('')}</div>
           <a class="btn ghost trailer-btn" href="${trailer ? `https://www.youtube.com/watch?v=${encodeURIComponent(trailer.key)}` : `https://www.youtube.com/results?search_query=${encodeURIComponent(`${title} ${year || ''} tráiler`)}`}" target="_blank" rel="noopener">▶ ${trailer ? 'Ver tráiler' : 'Buscar el tráiler'}</a>
         </div>
@@ -2168,6 +2171,12 @@
     loadAwards(type, id, seq);
     loadDeepLinks(type, id, seq);
     if (type === 'tv') loadSeasons(id, d, seq);
+    // los dos nombres (España y Latinoamérica) bajo el título, solo cuando difieren
+    completarNombres([{ id, media_type: type }]).then(() => {
+      const el = els.sheet.querySelector('[data-dos-ficha]');
+      const t = nombresCache.get(type + id);
+      if (seq === detailSeq && el && Corrector.tieneDosNombres(t)) el.innerHTML = `<div><b>España:</b> ${esc(t.es)}</div><div><b>Latinoamérica:</b> ${esc(t.latam)}</div>`;
+    });
   }
 
   // ---------- Tarjeta para historias (Instagram / WhatsApp) ----------
