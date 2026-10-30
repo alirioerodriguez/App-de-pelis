@@ -14,4 +14,4 @@ jobs:
         with:
           node-version: 22
       - name: Pruebas del corrector de búsqueda
-        run: node --test tests/
+        run: node --test tests/*.test.js
