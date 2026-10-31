@@ -321,6 +321,9 @@
   .sug .st { flex: 1; min-width: 0; }
   .sug .st b { display: block; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .sug .st span { color: var(--muted); font-size: .82rem; }
+  .dos-ficha { font-size: .85rem; color: var(--muted); margin: 2px 0 6px; }
+  .dos-ficha:empty { display: none; }
+  .sug .st span.dos { display: block; font-size: .78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .sug-all { display: block; width: 100%; background: var(--card); border: 0; border-top: 1px solid var(--line); color: var(--accent); padding: 10px 12px; font-weight: 600; text-align: left; }
 
   /* ---------- Etiqueta Película / Serie ---------- */
@@ -806,6 +809,7 @@
   </div>
 </footer>
 
+<script src="corrector.js"></script>
 <script>
 (() => {
   // País: el que la persona eligió la última vez; si nunca eligió, el de su conexión (api/pais.js); si no, Argentina.
@@ -899,6 +903,32 @@
   const parecidoTitulo = (r, q) => Math.max(contraTitulo(q, r.title || r.name || ''), contraTitulo(q, r.original_title || r.original_name || ''));
   // un título que coincide pero nadie mira («Avangers») no cuenta como «lo encontré»
   const conocido = r => r.media_type === 'dn' || (r.popularity || 0) >= 2 || (r.vote_count || 0) >= 10;
+  // Vocabulario del corrector local (corrector.js): una lista inicial de actores, directores y películas con sus
+  // dos nombres (España / Latinoamérica) + todo lo que la app va viendo en TMDB, que se recuerda en este dispositivo.
+  const VOCAB_STORE = 'dlv_vocab_v1';
+  let VOCAB = Corrector.VOCABULARIO_INICIAL;
+  try {
+    const guardado = JSON.parse(localStorage.getItem(VOCAB_STORE) || '[]');
+    if (Array.isArray(guardado)) VOCAB = Corrector.aprender(VOCAB, guardado);
+  } catch { /* sin almacenamiento: queda la lista inicial */ }
+  let vocabPendiente = [];
+  function aprenderVocab(vistos) {
+    const antes = VOCAB;
+    VOCAB = Corrector.aprender(VOCAB, vistos);
+    if (VOCAB === antes) return;
+    vocabPendiente.push(...vistos.filter(Boolean));
+    vocabPendiente = vocabPendiente.slice(-1500);
+    try { localStorage.setItem(VOCAB_STORE, JSON.stringify(vocabPendiente)); } catch { /* lleno o bloqueado: no pasa nada */ }
+  }
+  // lo que mostró TMDB, para que la próxima vez un error de escritura se corrija con eso
+  function recordarResultados(r) {
+    aprenderVocab([
+      ...(r?.titulos || []).map(x => ({ nombre: x.title || x.name, tipo: 'pelicula' })),
+      ...(r?.personas || []).map(x => ({ nombre: x.name, tipo: 'persona' })),
+    ].filter(x => x.nombre));
+  }
+  // nombres bien escritos que se parecen a lo escrito (el exacto no hace falta)
+  const corregidos = (q, tipo, max = 3) => (Corrector.esExacto(q, VOCAB) ? [] : Corrector.sugerir(q, { vocabulario: VOCAB, tipo, max, minimo: 0.7 }));
   const corrector = new Map();
   function sugerenciasWiki(q) {
     const k = norm(q);
@@ -1118,12 +1148,36 @@
     const d = await api(`/search/${state.type}`, { query: q, page: 1, region: REGION, include_adult: false });
     return (d.results || []).map(r => ({ ...r, media_type: state.type }));
   }
+  // ---------- Los dos nombres de cada película: España y Latinoamérica ----------
+  // Muchas películas se llaman distinto en España que en Latinoamérica («La jungla de cristal» / «Duro de matar»).
+  // Se pide el título en español de España (es-ES) y en español latino (es-MX) y se muestran los dos cuando difieren.
+  const nombresCache = new Map(); // 'movie562' → { es, latam, original }
+  async function dosNombresDeBusqueda(q) {
+    if (q.length < 3) return;
+    const [es, mx] = await Promise.all(['es-ES', 'es-MX'].map(language => api('/search/multi', { query: q, region: REGION, include_adult: false, language }).catch(() => null)));
+    Object.entries(Corrector.titulosPorPais(es?.results, mx?.results)).forEach(([k, v]) => nombresCache.set(k, v));
+  }
+  // lo que no salió en esa búsqueda (por ejemplo, lo que rescató el corrector) se completa con la ficha en los dos idiomas
+  async function completarNombres(items) {
+    const faltan = items.filter(it => (it.media_type === 'movie' || it.media_type === 'tv') && !nombresCache.has(it.media_type + it.id)).slice(0, 4);
+    await Promise.all(faltan.map(async it => {
+      const [es, mx] = await Promise.all(['es-ES', 'es-MX'].map(language => api(`/${it.media_type}/${it.id}`, { language }).catch(() => null)));
+      const m = Corrector.titulosPorPais(es ? [{ ...es, media_type: it.media_type }] : [], mx ? [{ ...mx, media_type: it.media_type }] : []);
+      if (m[it.media_type + it.id]) nombresCache.set(it.media_type + it.id, m[it.media_type + it.id]);
+    }));
+  }
+  const dosNombresHtml = it => {
+    const t = nombresCache.get(it.media_type + it.id);
+    return Corrector.tieneDosNombres(t) ? `<span class="dos">${esc(t.es)} (España) · ${esc(t.latam)} (Latinoamérica)</span>` : '';
+  };
   async function rescatar(query, actuales) {
     const wiki = await sugerenciasWiki(query);
     const desdeWiki = [];
     if (wiki?.sugerencia) desdeWiki.push(wiki.sugerencia);
     (wiki?.titulos || []).slice(0, 3).forEach(t => { if (parecido(query, t) >= 0.4) desdeWiki.push(t); });
-    const intentos = [...new Set([...desdeWiki, ...variantes(query), ...dobles(query, 4)].map(x => x.trim()).filter(x => x && norm(x) !== norm(query)))].slice(0, 9);
+    // el corrector local: una película mal escrita se busca con sus nombres de España y de Latinoamérica
+    const locales = corregidos(query, 'pelicula', 2).flatMap(x => [x.entrada.es, x.entrada.latam, x.entrada.orig]).filter(Boolean);
+    const intentos = [...new Set([...locales, ...desdeWiki, ...variantes(query), ...dobles(query, 4)].map(x => x.trim()).filter(x => x && norm(x) !== norm(query)))].slice(0, 9);
     if (!intentos.length) return actuales;
     const lotes = await Promise.all(intentos.map(v => buscarTMDB(v).catch(() => [])));
     // todo junto (lo que ya había y lo nuevo) y ordenado por cuánto se parece a lo escrito
@@ -1591,7 +1645,7 @@
     const intent = parseIntent(q);
     let d, people = [];
     try {
-      const [titulos, gente] = await Promise.all([searchTitles(q), q.length >= 3 ? api('/search/person', { query: q, include_adult: false }).catch(() => null) : null]);
+      const [titulos, gente] = await Promise.all([searchTitles(q), q.length >= 3 ? api('/search/person', { query: q, include_adult: false }).catch(() => null) : null, dosNombresDeBusqueda(q)]);
       d = titulos;
       // personas con foto cuyo nombre coincide con lo escrito; TMDB las da de más a menos conocida,
       // así que de cada nombre queda la primera (no se llena de homónimos)
@@ -1599,7 +1653,14 @@
       const elegir = (lista, contra) => (lista || []).filter(x => x.profile_path && (x.known_for_department === 'Acting' || x.known_for_department === 'Directing')
         && (norm(x.name).includes(norm(contra)) || parecido(contra, x.name) >= 0.6) && !nombres.has(norm(x.name)) && nombres.add(norm(x.name))).slice(0, 2);
       people = elegir(gente?.results, q);
-      // ¿nombre mal escrito? («scarlet johanson», «guillermo francela»)
+      // ¿nombre mal escrito? Primero el corrector local, que conoce los nombres y anda también con una sola palabra:
+      // «rober patinson» → Robert Pattinson, «francela» → Guillermo Francella
+      if (!people.length && q.length >= 4) {
+        const nombres = corregidos(q, 'persona', 3).map(x => x.nombre);
+        const lotes = await Promise.all(nombres.map(o => api('/search/person', { query: o, include_adult: false }).catch(() => null)));
+        lotes.forEach((l, i) => { if (people.length < 2) people.push(...elegir(l?.results, nombres[i]).slice(0, 2 - people.length)); });
+      }
+      // y si no, el de Wikipedia («scarlet johanson», «guillermo francela»)
       if (!people.length && q.length >= 5 && q.includes(' ')) {
         const w = await sugerenciasWiki(q);
         const otras = [...new Set([w?.sugerencia, ...(w?.titulos || []).filter(t => parecido(q, t) >= 0.5), ...dobles(q)].filter(Boolean))].slice(0, 7);
@@ -1609,6 +1670,9 @@
     } catch (e) { return handleErr(e); }
     if (seq !== sugSeq || els.q.value.trim() !== q) return; // llegó una respuesta vieja
     sugItems = d.results.slice(0, (intent ? 5 : 6) - people.length);
+    recordarResultados({ titulos: d.results.slice(0, 8), personas: people });
+    await completarNombres(sugItems); // los dos nombres de lo que se va a mostrar
+    if (seq !== sugSeq || els.q.value.trim() !== q) return;
     people.slice().reverse().forEach(x => sugItems.unshift({ person: x }));
     if (intent) sugItems.unshift({ intent });
     sugActive = -1;
@@ -1630,7 +1694,7 @@
         const date = it.release_date || it.first_air_date || '';
         return `<button class="sug" role="option" data-i="${i}">
           ${it.poster_path ? `<img src="${IMG}w92${it.poster_path}" alt="">` : '<span class="ph"></span>'}
-          <span class="st"><b>${esc(it.title || it.name)}</b><span>${formato(it).txt}${date ? ' · ' + date.slice(0, 4) : ''}</span></span>
+          <span class="st"><b>${esc(it.title || it.name)}</b><span>${formato(it).txt}${date ? ' · ' + date.slice(0, 4) : ''}</span>${dosNombresHtml(it)}</span>
         </button>`;
       }).join('') + `<button class="sug-all" data-all>Ver todos los resultados de “${esc(q)}” →</button>`;
     }
@@ -2059,6 +2123,7 @@
         ${d.poster_path ? `<img class="poster" src="${IMG}w342${d.poster_path}" alt="">` : '<div class="noposter">🎬</div>'}
         <div>
           <h3>${esc(title)}</h3>
+          <div class="dos-ficha" data-dos-ficha></div>
           <div class="facts"><span class="kind ${formato({ media_type: type }, d).cls}" style="padding:2px 6px;border-radius:6px;font-weight:700;font-size:.72rem;text-transform:uppercase">${formato({ media_type: type }, d).txt}</span>${[year, runtime, genres, d.vote_average ? '★ ' + d.vote_average.toFixed(1) : ''].filter(Boolean).map(esc).map(x => `<span>${x}</span>`).join('')}</div>
           <a class="btn ghost trailer-btn" href="${trailer ? `https://www.youtube.com/watch?v=${encodeURIComponent(trailer.key)}` : `https://www.youtube.com/results?search_query=${encodeURIComponent(`${title} ${year || ''} tráiler`)}`}" target="_blank" rel="noopener">▶ ${trailer ? 'Ver tráiler' : 'Buscar el tráiler'}</a>
         </div>
@@ -2106,6 +2171,12 @@
     loadAwards(type, id, seq);
     loadDeepLinks(type, id, seq);
     if (type === 'tv') loadSeasons(id, d, seq);
+    // los dos nombres (España y Latinoamérica) bajo el título, solo cuando difieren
+    completarNombres([{ id, media_type: type }]).then(() => {
+      const el = els.sheet.querySelector('[data-dos-ficha]');
+      const t = nombresCache.get(type + id);
+      if (seq === detailSeq && el && Corrector.tieneDosNombres(t)) el.innerHTML = `<div><b>España:</b> ${esc(t.es)}</div><div><b>Latinoamérica:</b> ${esc(t.latam)}</div>`;
+    });
   }
 
   // ---------- Tarjeta para historias (Instagram / WhatsApp) ----------
