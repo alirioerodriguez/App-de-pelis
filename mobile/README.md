@@ -17,11 +17,14 @@ Identificador: `com.alirio.dondelaveo` (Android e iPhone).
 Necesitás Node y una cuenta de Expo (la misma de Savia).
 
 ```bash
+npm install -g eas-cli # una sola vez por compu (en Mac, si da EACCES: sudo npm install -g eas-cli)
 cd mobile
 npm install
-npx eas login          # si no iniciaste sesión
-npx eas init           # la primera vez: crea el proyecto en Expo y guarda su ID en app.json
+eas login              # si no iniciaste sesión
+eas init               # la primera vez: crea el proyecto en Expo y guarda su ID en app.json
 ```
+
+`npx eas …` no funciona: el paquete se llama `eas-cli`, no `eas`.
 
 ### Android (gratis)
 
