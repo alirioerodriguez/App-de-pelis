@@ -1086,7 +1086,22 @@
   let loadSeq = 0, detailSeq = 0;
 
   function safeGet(k) { try { return localStorage.getItem(k); } catch { return null; } }
-  function safeSet(k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch {} }
+  function safeSet(k, v) {
+    try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch {}
+    if (k === 'mi_lista' || k === 'mis_plataformas' || k === 'pais_elegido') contarleALaApp();
+  }
+  // Dentro de la app del celular: le pasa «Mi lista», «Mis plataformas» y el país para que avise
+  // con una notificación cuando algo guardado llegue a una plataforma, aunque la app esté cerrada.
+  var avisoPendiente = 0; // var (no let): safeSet se usa antes de esta línea, al mudar datos de la dirección vieja
+  function contarleALaApp() {
+    if (!window.ReactNativeWebView || avisoPendiente) return;
+    avisoPendiente = setTimeout(() => {
+      avisoPendiente = 0;
+      const lista = watchlist.filter(w => w.media_type === 'movie' || w.media_type === 'tv')
+        .map(w => ({ id: w.id, media_type: w.media_type, title: w.title || w.name, _disp: w._disp }));
+      window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'lista', region: REGION, mine: [...mine], lista }));
+    }, 300);
+  }
   function safeJSON(v) { try { return JSON.parse(v); } catch { return null; } }
 
   // ---------- API ----------
@@ -1235,6 +1250,7 @@
     renderCats();
     renderListCount();
     renderNew();
+    contarleALaApp();
     const m = location.hash.match(/^#(movie|tv)-(\d+)$/);
     if (m) {
       // llegó por un enlace compartido: abrir esa ficha; al cerrarla queda en la portada

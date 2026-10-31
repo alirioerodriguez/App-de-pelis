@@ -8,6 +8,10 @@ Lo que agrega la app sobre la web:
 - **"▶ Ver en Netflix" (y Disney+, Prime Video, Max, Apple TV…)** se abre en la app de la plataforma si está instalada.
 - **Botón atrás de Android**: cierra la ficha abierta en vez de salir de la app.
 - **Compartir** usa el menú nativo del teléfono (WhatsApp, Instagram, etc.).
+- **Avisos de "Mi lista"**: con la app cerrada, el teléfono revisa cada tanto (mínimo cada 6 h; el sistema elige
+  el momento) si algo guardado llegó a una plataforma del país elegido y manda una notificación. Al tocarla se abre
+  esa ficha. La web le pasa la lista a la app con el mensaje `{ type: 'lista' }` (ver `miLista.ts`).
+  En Expo Go la revisión en segundo plano no corre: los avisos solo se prueban en una app compilada.
 - Pantalla de carga, ícono propio y aviso de "Sin conexión" con Reintentar.
 
 Identificador: `com.alirio.dondelaveo` (Android e iPhone).
