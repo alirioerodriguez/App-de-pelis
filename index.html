@@ -172,6 +172,8 @@
   .card .meta { padding: 10px 10px 12px; }
   .card .t { font-weight: 600; font-size: .92rem; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .card .y { color: var(--muted); font-size: .8rem; margin-top: 4px; }
+  .card .dos-c { color: var(--muted); font-size: .72rem; line-height: 1.3; margin-top: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .card .dos-c:empty { display: none; }
   .badge {
     position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,.72); color: var(--accent-2);
     font-weight: 700; font-size: .75rem; padding: 3px 7px; border-radius: 8px; backdrop-filter: blur(4px);
@@ -1166,6 +1168,17 @@
       if (m[it.media_type + it.id]) nombresCache.set(it.media_type + it.id, m[it.media_type + it.id]);
     }));
   }
+  // en la tarjeta de la grilla, más corto: «España: … · Latam: …» (solo si ya se conocen; no pide nada a TMDB)
+  const dosNombresCorto = it => {
+    const t = nombresCache.get(it.media_type + it.id);
+    return Corrector.tieneDosNombres(t) ? `España: ${esc(t.es)} · Latam: ${esc(t.latam)}` : '';
+  };
+  function pintarDosNombres() {
+    document.querySelectorAll('.card .dos-c[data-dn]:empty').forEach(el => {
+      const card = el.closest('.card');
+      if (card) el.innerHTML = dosNombresCorto({ media_type: card.dataset.type, id: card.dataset.id });
+    });
+  }
   const dosNombresHtml = it => {
     const t = nombresCache.get(it.media_type + it.id);
     return Corrector.tieneDosNombres(t) ? `<span class="dos">${esc(t.es)} (España) · ${esc(t.latam)} (Latinoamérica)</span>` : '';
@@ -1891,6 +1904,8 @@
     else els.grid.innerHTML = html || `<div class="empty">No encontré nada.${state.mode === 'discover' ? ' Probá con otra subcategoría o sacá algún filtro.' : state.type !== 'all' ? ' Probá con “Todo”: puede que sea ' + (state.type === 'movie' ? 'una serie' : 'una película') + '.' : ' Probá con el título original o en inglés.'}</div>`;
     els.more.classList.toggle('hidden', state.page >= state.totalPages);
     list.forEach(decorate);
+    // resultados de búsqueda: los dos nombres salen de 2 consultas por búsqueda (España y México), no 2 por tarjeta
+    if (state.mode === 'search') dosNombresDeBusqueda(state.query).then(() => { if (seq === loadSeq) pintarDosNombres(); });
   }
 
   // Populares, En cartelera y Próximamente. Pelis y series usan endpoints distintos; con "Todo" se mezclan.
@@ -1958,7 +1973,7 @@
         <span class="lock"><b>🔒</b>No disponible en ${esc(CN())}</span>
         ${it._soon && (it._soonDate || date) ? `<span class="cine-tag">📅 Estrena ${fmtDay(it._soonDate || date)}</span>` : it._cinema ? '<span class="cine-tag">🎬 En cines</span>' : ''}
         ${inList(it.media_type, it.id) && !it._cinema && !it._soon ? '<span class="wl-tag">🔖 En tu lista</span>' : ''}
-        <div class="meta"><div class="t">${esc(title)}</div><div class="y"><span class="kind ${formato(it).cls}">${formato(it).txt}</span>${it.media_type === 'dn' ? '<span class="canal-dn">DNEWS</span>' : ''}${date.slice(0, 4) || '—'}</div></div>
+        <div class="meta"><div class="t">${esc(title)}</div><div class="y"><span class="kind ${formato(it).cls}">${formato(it).txt}</span>${it.media_type === 'dn' ? '<span class="canal-dn">DNEWS</span>' : ''}${date.slice(0, 4) || '—'}</div><div class="dos-c" data-dn="${uid}">${dosNombresCorto(it)}</div></div>
       </button>`;
   }
 
