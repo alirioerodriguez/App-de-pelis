@@ -29,6 +29,13 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
+      "expo-background-task",
+      [
+        "expo-notifications",
+        {
+          "color": "#5E7FF0"
+        }
+      ],
       [
         "expo-splash-screen",
         {

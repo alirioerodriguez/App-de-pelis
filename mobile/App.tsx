@@ -4,6 +4,8 @@ import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { WebView, type WebViewProps } from 'react-native-webview';
+import * as Notifications from 'expo-notifications';
+import { SITE, activarRevision, recibirDeLaWeb } from './miLista';
 import type { ShouldStartLoadRequest, WebViewMessageEvent, WebViewNavigation, WebViewOpenWindowEvent } from 'react-native-webview/lib/WebViewTypes';
 
 // Los tipos de react-native-webview 14 declaran el componente con un parámetro que por defecto anula
@@ -11,8 +13,7 @@ import type { ShouldStartLoadRequest, WebViewMessageEvent, WebViewNavigation, We
 type WebViewHandle = WebView<{}>;
 const RNWebView = WebView as unknown as ComponentType<WebViewProps & { ref?: Ref<WebViewHandle> }>;
 
-// La app muestra la web publicada: cada cambio que se publica llega solo, sin volver a compilar.
-const SITE = 'https://donde-la-veo-app.vercel.app/';
+// La app muestra la web publicada (SITE, en miLista.ts): cada cambio que se publica llega solo, sin volver a compilar.
 // Dirección anterior: ahora redirige a SITE, así que también cuenta como propia
 const SITE_ANTERIOR = 'https://alirioerodriguez.github.io/App-de-pelis/';
 
@@ -37,8 +38,20 @@ function openOutside(url: string) {
   if (target) Linking.openURL(target).catch(() => {});
 }
 
+// Dirección que trae un aviso de «Mi lista» (abre la ficha de ese título); solo si es de la propia web
+function urlDelAviso(r: Notifications.NotificationResponse | null) {
+  const url = r?.notification.request.content.data?.url;
+  return typeof url === 'string' && url.startsWith(SITE) ? url : null;
+}
+
 export default function App() {
   const web = useRef<WebViewHandle>(null);
+  // Si la app se abrió tocando un aviso, arranca directo en esa ficha
+  const [inicio] = useState(() => {
+    const url = urlDelAviso(Notifications.getLastNotificationResponse());
+    Notifications.clearLastNotificationResponse(); // que no vuelva a abrir esa ficha la próxima vez
+    return url || SITE;
+  });
   const [canGoBack, setCanGoBack] = useState(false);
   const [failed, setFailed] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -47,6 +60,16 @@ export default function App() {
   useEffect(() => {
     const t = setTimeout(() => { setLoading(false); SplashScreen.hideAsync().catch(() => {}); }, 8000);
     return () => clearTimeout(t);
+  }, []);
+
+  // Revisión de «Mi lista» en segundo plano, y avisos tocados con la app ya abierta
+  useEffect(() => {
+    activarRevision();
+    const sub = Notifications.addNotificationResponseReceivedListener(r => {
+      const url = urlDelAviso(r);
+      if (url) web.current?.injectJavaScript(`location.replace(${JSON.stringify(url)}); location.reload(); true;`);
+    });
+    return () => sub.remove();
   }, []);
 
   // Botón "atrás" de Android: vuelve dentro de la app (cierra la ficha abierta) antes de salir
@@ -67,11 +90,12 @@ export default function App() {
 
   const onOpenWindow = useCallback((e: WebViewOpenWindowEvent) => openOutside(e.nativeEvent.targetUrl), []);
 
-  // La web pide cosas nativas por mensaje: por ahora, el menú de compartir del teléfono
+  // La web pide cosas nativas por mensaje: el menú de compartir del teléfono y los avisos de «Mi lista»
   const onMessage = useCallback((e: WebViewMessageEvent) => {
     try {
       const msg = JSON.parse(e.nativeEvent.data);
-      if (msg.type === 'share') Share.share({ title: msg.title, message: `${msg.text}\n${msg.url}`, url: msg.url }).catch(() => {});
+      if (msg.type === 'lista') recibirDeLaWeb(msg);
+      else if (msg.type === 'share') Share.share({ title: msg.title, message: `${msg.text}\n${msg.url}`, url: msg.url }).catch(() => {});
     } catch {}
   }, []);
 
@@ -83,7 +107,7 @@ export default function App() {
       <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
         <RNWebView
           ref={web}
-          source={{ uri: SITE }}
+          source={{ uri: inicio }}
           style={styles.web}
           applicationNameForUserAgent="DondeLaVeoApp/1.0"
           originWhitelist={['*']}
