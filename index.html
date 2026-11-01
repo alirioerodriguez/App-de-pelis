@@ -1411,7 +1411,7 @@
       watch_region: REGION, with_watch_monetization_types: 'flatrate|free|ads',
       sort_by: 'popularity.desc', page, include_adult: false, 'vote_count.gte': 5
     };
-    if (mine.size) params.with_watch_providers = [...mine].join('|');
+    if (mine.size) params.with_watch_providers = brandIds([...mine]);
     const today = isoDaysAgo(0);
     // pelis: estrenadas en los últimos 6 meses; series: con episodios emitidos en los últimos 2 meses
     if (type === 'movie') Object.assign(params, { 'primary_release_date.gte': isoDaysAgo(180), 'primary_release_date.lte': today });
@@ -1815,8 +1815,8 @@
   async function discoverParams(type) {
     if (state.dur && type === 'tv') return null; // la duración es de películas
     const params = { sort_by: 'popularity.desc', page: state.page, include_adult: false };
-    if (state.provider) Object.assign(params, { watch_region: REGION, with_watch_providers: state.provider.provider_id, with_watch_monetization_types: 'flatrate|free|ads' });
-    else if (state.onlyMine && mine.size) Object.assign(params, { watch_region: REGION, with_watch_providers: [...mine].join('|'), with_watch_monetization_types: 'flatrate|free|ads' });
+    if (state.provider) Object.assign(params, { watch_region: REGION, with_watch_providers: brandIds([state.provider.provider_id]), with_watch_monetization_types: 'flatrate|free|ads' });
+    else if (state.onlyMine && mine.size) Object.assign(params, { watch_region: REGION, with_watch_providers: brandIds([...mine]), with_watch_monetization_types: 'flatrate|free|ads' });
     else if (state.onlyAvail) Object.assign(params, { watch_region: REGION, with_watch_monetization_types: 'flatrate|free|ads|rent|buy' });
     else params['vote_count.gte'] = 30; // sin filtro de plataforma, evitar títulos desconocidos
     if (state.dur && type === 'movie') Object.assign(params, { 'with_runtime.lte': state.dur, 'with_runtime.gte': 40 });
@@ -1835,22 +1835,34 @@
     }
     return params;
   }
+  // JustWatch registra parte del catálogo bajo variantes de la misma marca (Star+ dentro de Disney+,
+  // planes con anuncios, canales de Amazon…). Al filtrar por una plataforma se incluyen todas sus variantes.
+  function brandIds(ids) {
+    const all = [...(state.providers.movie || []), ...(state.providers.tv || []), ...(state.providers.all || [])];
+    const keys = new Set(all.filter(p => ids.includes(p.provider_id)).map(p => provKey(p.provider_name)).filter(Boolean));
+    const out = new Set(ids);
+    all.forEach(p => { if (keys.has(provKey(p.provider_name))) out.add(p.provider_id); });
+    return [...out].join('|');
+  }
   async function discover() {
     const types = state.type === 'all' ? ['movie', 'tv'] : [state.type];
     const res = await Promise.all(types.map(async type => {
       const params = await discoverParams(type);
       if (!params) return { results: [], total_pages: 0 };
       const d = await api(`/discover/${type}`, params);
-      return { results: (d.results || []).map(r => ({ ...r, media_type: type })), total_pages: d.total_pages || 0 };
+      return { results: (d.results || []).map(r => ({ ...r, media_type: type })), total_pages: d.total_pages || 0, total_results: d.total_results || 0 };
     }));
     const results = res.flatMap(r => r.results).sort((a, b) => b.popularity - a.popularity);
+    let total_results = res.reduce((n, r) => n + (r.total_results || 0), 0);
     if (state.provider?.provider_id === DGO_ID && state.page === 1 && !state.cat && !state.dur) results.push(...dnewsQue(''));
     // en un género, los de DNEWS se reparten de a 8 por página, intercalados con los de TMDB
     const dn = dnewsGenero(), POR_PAG = 8;
     const tanda = dn.slice((state.page - 1) * POR_PAG, state.page * POR_PAG);
     tanda.forEach((x, i) => results.splice(Math.min(results.length, 2 + i * 3), 0, x));
     const pagsDn = Math.ceil(dn.length / POR_PAG);
-    return { results, total_pages: Math.max(pagsDn, ...res.map(r => r.total_pages)) };
+    if (state.provider?.provider_id === DGO_ID && !state.cat && !state.dur) total_results += dnewsQue('').length;
+    else total_results += dn.length;
+    return { results, total_pages: Math.max(pagsDn, ...res.map(r => r.total_pages)), total_results };
   }
 
   async function load(append = false) {
@@ -1881,8 +1893,9 @@
         const enDocs = state.type === 'all' && state.cat?.id === 'documental' && !state.dur;
         const what = enDocs ? `Documentales${state.sub ? ' › ' + state.sub[0] : ''}` : state.cat ? `${base} · ${state.cat.name}${state.sub ? ' › ' + state.sub[0] : ''}` : base;
         els.listTitle.textContent = state.provider ? `${what} en ${state.provider.provider_name}` : state.onlyMine && mine.size ? `${what} en tus plataformas` : what;
-        els.listHint.textContent = state.provider ? 'incluidas en la suscripción, por popularidad' : 'por popularidad';
         data = await discover();
+        const total = data.total_results ? `${data.total_results.toLocaleString('es-AR')} títulos · ` : '';
+        els.listHint.textContent = total + (state.provider ? 'incluidas en la suscripción, por popularidad' : 'por popularidad');
       } else if (state.feed !== 'trending') {
         data = await loadFeed(state.feed, state.page);
       } else {
@@ -2372,7 +2385,7 @@
     const n = name.toLowerCase();
     // las marcas van antes que Prime Video: "MUBI Amazon Channel" es MUBI, no Prime
     if (n.includes('netflix')) return 'netflix';
-    if (n.includes('disney')) return 'disney';
+    if (n.includes('disney') || n.includes('star plus') || n.includes('star+')) return 'disney'; // Star+ se fusionó con Disney+
     if (n.includes('mubi')) return 'mubi';
     if (n.includes('paramount')) return 'paramount';
     if (n.includes('crunchyroll')) return 'crunchyroll';
@@ -3018,7 +3031,7 @@
         const base = state.mode === 'discover' ? await discoverParams(t) : null;
         const params = { ...(base || { sort_by: 'popularity.desc', include_adult: false }) };
         Object.assign(params, { watch_region: REGION, with_watch_monetization_types: 'flatrate|free|ads', 'vote_average.gte': 6.5, 'vote_count.gte': 40, page: 1 + Math.floor(Math.random() * 3) });
-        if (!state.provider && state.onlyMine && mine.size) params.with_watch_providers = [...mine].join('|');
+        if (!state.provider && state.onlyMine && mine.size) params.with_watch_providers = brandIds([...mine]);
         const d = await api(`/discover/${t}`, params);
         pool = (d.results || []).map(r => ({ id: r.id, media_type: t })).filter(x => x.media_type + x.id !== ultimoAlAzar);
       }
