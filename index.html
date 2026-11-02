@@ -606,6 +606,13 @@
   .sp-plat img { width: 18px; height: 18px; border-radius: 4px; }
   .sp-plat.mine { border-color: var(--ok); }
   .sp-plat small { color: var(--muted); }
+  .sp-dgo { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 14px; padding: 10px 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--card); font-size: .88rem; }
+  .sp-dgo b { color: var(--text); }
+  .sp-dgo .vivo { color: #ff453a; font-weight: 700; }
+  .sp-dgo button { margin-left: auto; background: transparent; border: 1px solid var(--line); color: var(--text); border-radius: 980px; padding: 4px 12px; font: inherit; font-size: .8rem; cursor: pointer; }
+  .sp-dgo button.on { border-color: var(--accent); color: var(--accent); }
+  .m-dgo { justify-self: start; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 8px; padding: 3px 9px; font-size: .8rem; font-weight: 600; color: var(--text); text-decoration: none; }
+  .m-dgo.vivo { border-color: rgba(255, 69, 58, .6); color: #ff6961; }
   .sp-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 10px; }
   .match { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; display: grid; gap: 8px; }
   .match.live { border-color: rgba(255, 69, 58, .6); }
@@ -2873,7 +2880,9 @@
     { id: 'rugby', n: 'Rugby', ic: '🏉', ligas: [['rugby.test', 'Test Matches · Los Pumas'], ['rugby.6n', 'Seis Naciones'], ['rugby.mundial', 'Mundial'], ['rugby.super', 'Super Rugby'], ['rugby.urc', 'URC'], ['rugby.prem', 'Premiership']] },
     { id: 'hockey', n: 'Hockey (NHL)', ic: '🏒', ligas: [['nhl', 'NHL']] },
   ];
-  const sp = { dep: 'futbol', dia: 0, liga: null, seq: 0, timer: null, logos: {} };
+  const sp = { dep: 'futbol', dia: 0, liga: null, soloDgo: false, seq: 0, timer: null, logos: {} };
+  // competencias que en el país elegido se ven en DGO (según la tabla DERECHOS)
+  const enDgo = clave => (DERECHOS[clave]?.[REGION] || []).includes('dgo');
 
   function marcarSeg(tipo) { document.querySelectorAll('.seg button').forEach(x => { const on = x.dataset.type === tipo; x.classList.toggle('on', on); x.setAttribute('aria-selected', on); }); }
   function abrirDeportes() {
@@ -2937,6 +2946,9 @@
     const dep = DEPORTES.find(d => d.id === sp.dep);
     let ligas = dep.ligas.slice().sort((a, b) => (b[2] === REGION) - (a[2] === REGION));
     if (sp.liga) ligas = ligas.filter(l => l[0] === sp.liga);
+    const hayDgo = dep.ligas.some(l => enDgo(l[0]));
+    if (!hayDgo) sp.soloDgo = false;
+    if (sp.soloDgo) ligas = ligas.filter(l => enDgo(l[0]));
     const dia = diaDe(sp.dia);
     $('#spList').innerHTML = '<div class="sp-list">' + Array(4).fill('<div class="skeleton" style="height:120px;border-radius:16px"></div>').join('') + '</div>';
     const res = await Promise.all(ligas.map(async l => {
@@ -2948,6 +2960,7 @@
     }));
     if (seq !== sp.seq) return;
     let hayVivo = false, logosNuevos = false;
+    const dgo = { total: 0, vivo: 0 }; // partidos del día que se ven en DGO
     const bloques = res.map(({ l, d }) => {
       if (!d) return `<div class="sp-block"><div class="sp-head"><h3>${esc(l[1])}</h3></div><p class="sp-empty">No se pudo cargar. Probá de nuevo en un rato.</p></div>`;
       if (d.liga.logo && !sp.logos[l[0]]) { sp.logos[l[0]] = d.liga.logo; logosNuevos = true; }
@@ -2963,9 +2976,14 @@
       const evs = d.eventos.filter(e => mismoDia(e.fecha, dia) || (sp.dia === 0 && e.estado === 'in'));
       if (!evs.length) return '';
       if (evs.some(e => e.estado === 'in')) hayVivo = true;
-      return `<div class="sp-block">${head()}<div class="sp-list">${evs.map(tarjetaPartido).join('')}</div></div>`;
+      const conDgo = enDgo(l[0]);
+      if (conDgo) evs.forEach(e => { if (e.estado !== 'post') { dgo.total++; if (e.estado === 'in') dgo.vivo++; } });
+      return `<div class="sp-block">${head()}<div class="sp-list">${evs.map(e => tarjetaPartido(e, conDgo)).join('')}</div></div>`;
     }).join('');
-    $('#spList').innerHTML = bloques || `<p class="sp-empty">No hay partidos ${sp.liga ? 'de esta competencia ' : ''}${sp.dia === 0 ? 'hoy' : 'ese día'}. Probá con otro día${sp.liga ? ' u otra competencia' : ''}.</p>`;
+    const resumenDgo = !hayDgo || sp.dep === 'f1' ? '' : `<div class="sp-dgo">📺 ${dgo.total
+      ? `<span><b>${dgo.total} ${dgo.total === 1 ? 'partido' : 'partidos'}</b> ${sp.dia === 0 ? 'de hoy' : 'de ese día'} en DGO${dgo.vivo ? ` · <span class="vivo">${dgo.vivo} en vivo</span>` : ''}</span>`
+      : `<span>Ningún partido ${sp.dia === 0 ? 'de hoy' : 'de ese día'} en DGO</span>`}<button type="button" data-solo-dgo class="${sp.soloDgo ? 'on' : ''}" aria-pressed="${sp.soloDgo}">${sp.soloDgo ? 'Ver todos' : 'Solo DGO'}</button></div>`;
+    $('#spList').innerHTML = resumenDgo + (bloques || `<p class="sp-empty">No hay partidos ${sp.liga ? 'de esta competencia ' : ''}${sp.dia === 0 ? 'hoy' : 'ese día'}. Probá con otro día${sp.liga ? ' u otra competencia' : ''}.</p>`);
     if (logosNuevos && DEPORTES.find(x => x.id === sp.dep).ligas.length > 1) {
       $('#spLeagues').querySelectorAll('[data-liga]').forEach(b => { const lg = sp.logos[b.dataset.liga]; if (lg && !b.querySelector('img')) b.insertAdjacentHTML('afterbegin', `<img src="${esc(lg)}" alt="">`); });
     }
@@ -2982,13 +3000,15 @@
     if (e.estado === 'post') return `<span>${esc(e.detalle || 'Final')}</span>`;
     return `<span>${hora(e.fecha)}</span>`;
   }
-  function tarjetaPartido(e) {
+  function tarjetaPartido(e, conDgo) {
     const vivo = e.estado === 'in', termino = e.estado === 'post';
+    const enlaceDgo = conDgo && !termino
+      ? `<a class="m-dgo ${vivo ? 'vivo' : ''}" href="${PLAT.dgo.url()}" target="_blank" rel="noopener">${vivo ? '▶ En vivo en DGO' : 'Ver en DGO'}${mine.has(DGO_ID) ? ' ⭐' : ''} ↗</a>` : '';
     const sinTantos = e.estado === 'pre';
     const loc = { ...e.local, tanto: sinTantos ? null : e.local.tanto }, vis = { ...e.visita, tanto: sinTantos ? null : e.visita.tanto };
     return `<div class="match ${vivo ? 'live' : ''}">
       <div class="m-top"><span class="sede">${esc(e.sede)}</span>${estadoHtml(e)}</div>
-      ${filaEquipo(loc, vis, termino)}${filaEquipo(vis, loc, termino)}
+      ${filaEquipo(loc, vis, termino)}${filaEquipo(vis, loc, termino)}${enlaceDgo}
     </div>`;
   }
   function tarjetaTenis(m) {
@@ -3013,6 +3033,7 @@
   window.addEventListener('hashchange', () => { if (location.hash === '#deportes' && !document.body.classList.contains('en-deporte')) abrirDeportes(); });
   $('#spTabs').addEventListener('click', e => { const b = e.target.closest('[data-dep]'); if (!b || b.dataset.dep === sp.dep) return; sp.dep = b.dataset.dep; sp.liga = null; pintarDeportes(); });
   $('#spDays').addEventListener('click', e => { const b = e.target.closest('[data-dia]'); if (!b) return; sp.dia = +b.dataset.dia; $('#spDays').querySelectorAll('.sp-day').forEach(x => { const on = x === b; x.classList.toggle('on', on); x.setAttribute('aria-pressed', on); }); cargarDeportes(); });
+  $('#spList').addEventListener('click', e => { if (!e.target.closest('[data-solo-dgo]')) return; sp.soloDgo = !sp.soloDgo; cargarDeportes(); });
   $('#spLeagues').addEventListener('click', e => { const b = e.target.closest('[data-liga]'); if (!b) return; sp.liga = b.dataset.liga || null; $('#spLeagues').querySelectorAll('.sp-lg').forEach(x => x.classList.toggle('on', x === b)); cargarDeportes(); });
 
   // ---------- Elegí por mí ----------
