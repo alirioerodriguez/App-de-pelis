@@ -375,6 +375,22 @@
   .card.locked .lock { display: flex; }
   .card.locked .mini-prov { display: none; }
   .rent-tag { background: rgba(0,0,0,.72); color: var(--rent); font-size: .72rem; font-weight: 700; padding: 3px 7px; border-radius: 8px; }
+  .verdict.sub { background: rgba(255,196,77,.12); border: 1px solid rgba(255,196,77,.45); color: #ffd98a; }
+  .verdict.pay { background: rgba(255,122,89,.10); border: 1px solid rgba(255,122,89,.4); color: #ffb9a6; }
+  .grupo h3 { margin: 0 0 4px; } .grupo p.sub { color: var(--muted); margin: 0 0 12px; font-size: .92rem; }
+  .grupo .gsec { font-weight: 700; margin: 16px 0 8px; }
+  .grupo .gchips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .grupo .gchip { border: 1px solid var(--line); background: transparent; color: inherit; border-radius: 999px; padding: 8px 12px; font: inherit; font-size: .9rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+  .grupo .gchip img { width: 22px; height: 22px; border-radius: 6px; }
+  .grupo .gchip[aria-pressed=true] { background: #2f6bff; border-color: transparent; color: #fff; }
+  .grupo .gacc { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .grupo .gbtn { border: 0; border-radius: 12px; padding: 12px 16px; font: inherit; font-weight: 700; cursor: pointer; background: #2f6bff; color: #fff; }
+  .grupo .gbtn.sec { background: transparent; color: inherit; border: 1px solid var(--line); }
+  .grupo .gres { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; margin-top: 12px; }
+  .grupo .gres button { background: none; border: 0; padding: 0; color: inherit; text-align: left; cursor: pointer; font: inherit; }
+  .grupo .gres img { width: 100%; aspect-ratio: 2/3; object-fit: cover; border-radius: 10px; background: var(--card); }
+  .grupo .gres small { color: var(--muted); display: block; font-size: .78rem; }
+  .grupo .gres .badge { display: inline-block; font-size: .72rem; background: rgba(61,220,132,.15); color: #9ff0c1; border-radius: 6px; padding: 1px 6px; margin-top: 2px; }
   .verdict.lockd { background: rgba(154,154,176,.10); border: 1px solid var(--line); color: var(--muted); }
 
   /* ---------- Categorías ---------- */
@@ -682,6 +698,7 @@
   <div class="wrap bar">
     <a class="brand" href="./" aria-label="¿Dónde la veo? Inicio"><svg class="logo" viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#64d2ff"/><stop offset="1" stop-color="#5e5ce6"/></linearGradient></defs><rect width="32" height="32" rx="9" fill="url(#lg)"/><path d="M16 6.5c-4.4 0-8 3.4-8 7.7 0 5.6 6.7 10.9 7.3 11.3.4.3 1 .3 1.4 0 .6-.4 7.3-5.7 7.3-11.3 0-4.3-3.6-7.7-8-7.7z" fill="#fff"/><path d="M14.3 11.2v6l5-3z" fill="#5e5ce6"/></svg><span>¿Dónde la veo?</span></a>
     <div class="hdr-actions">
+      <button class="icon-btn" id="grupoBtn" title="¿Qué vemos hoy? Elegí con otra persona">👥<span class="lbl"> ¿Qué vemos?</span></button>
       <button class="icon-btn" id="listBtn" title="Lo que guardaste para ver">🔖<span class="lbl"> Mi lista</span><span class="count" id="listCount"></span></button>
       <button class="icon-btn" id="mineBtn" title="Elegí las plataformas que tenés">⭐<span class="lbl"> Mis plataformas</span></button>
       <button class="icon-btn country-btn" id="countryBtn" title="Cambiar país" aria-label="País: Argentina. Cambiar país"><img id="countryFlag" src="https://flagcdn.com/w40/ar.png" alt=""><span id="countryCode">AR</span><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5l3 3 3-3" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg></button>
@@ -820,6 +837,7 @@
 </footer>
 
 <script src="corrector.js"></script>
+<script src="queVemosHoy.js"></script>
 <script>
 (() => {
   // País: el que la persona eligió la última vez; si nunca eligió, el de su conexión (api/pais.js); si no, Argentina.
@@ -1269,6 +1287,12 @@
     load();
     revisarMiLista();
     if (location.hash === '#deportes') abrirDeportes();
+    const qvh = new URLSearchParams(location.search).get('qvh');
+    if (qvh) {
+      history.replaceState(null, '', location.pathname);
+      const inv = QueVemosHoy.decodificar(qvh);
+      if (inv) openGrupo(inv); else toast('El link de «¿Qué vemos hoy?» no se pudo leer');
+    }
   }
 
   $('#retry').addEventListener('click', async () => {
@@ -2149,11 +2173,13 @@
       }).join('')}</div>` : '';
 
     let verdict;
-    if (owned.length) verdict = `<div class="verdict yes">⭐ ¡La tenés! Está en ${owned.map(s => esc(s.provider_name)).join(', ')}, que ya pagás.</div>`;
-    else if (subs.length) verdict = `<div class="verdict yes">✅ Disponible en ${esc(CN())} con suscripción en: ${subs.map(s => esc(s.provider_name)).join(', ')}${mine.size ? ' (ninguna de las tuyas)' : ''}${subs.every(s => canalDe(s.provider_name)) ? `<br><small>Ojo: solo está en canales que se pagan aparte, además de ${esc(canalDe(subs[0].provider_name))}.</small>` : ''}</div>`;
-    else if (p && (p.rent || p.buy)) verdict = `<div class="verdict no">💸 No está incluida en ninguna suscripción en ${esc(CN())}, pero se puede alquilar o comprar.</div>`;
-    else if (p && cine?.now.has(id) && type === 'movie') verdict = `<div class="verdict yes">🎬 Está en cines en ${esc(CN())}. Todavía no llegó a ninguna plataforma.</div>`;
-    else if (p && cine?.soon.has(id) && type === 'movie') verdict = `<div class="verdict yes">📅 Se estrena en cines de ${esc(CN())} el ${fmtDay(cine.soon.get(id))}. Todavía no está en ninguna plataforma.</div>`;
+    // Semáforo: verde si está en tus plataformas, ámbar si está con una suscripción que no tenés, naranja si solo se
+    // alquila, se compra o está en cines. Sin plataformas elegidas, la suscripción es lo mejor posible: queda en verde.
+    if (owned.length) verdict = `<div class="verdict yes">✅ Incluida en tus plataformas: ${owned.map(s => esc(s.provider_name)).join(', ')}. ¡La tenés!</div>`;
+    else if (subs.length) verdict = `<div class="verdict ${mine.size ? 'sub' : 'yes'}">${mine.size ? '💳' : '✅'} Disponible en ${esc(CN())} con suscripción en: ${subs.map(s => esc(s.provider_name)).join(', ')}${mine.size ? ' (ninguna de las tuyas)' : ''}${subs.every(s => canalDe(s.provider_name)) ? `<br><small>Ojo: solo está en canales que se pagan aparte, además de ${esc(canalDe(subs[0].provider_name))}.</small>` : ''}</div>`;
+    else if (p && (p.rent || p.buy)) verdict = `<div class="verdict pay">🎟️ No está incluida en ninguna suscripción en ${esc(CN())}, pero se puede alquilar o comprar.</div>`;
+    else if (p && cine?.now.has(id) && type === 'movie') verdict = `<div class="verdict pay">🎬 Está en cines en ${esc(CN())}. Todavía no llegó a ninguna plataforma.</div>`;
+    else if (p && cine?.soon.has(id) && type === 'movie') verdict = `<div class="verdict pay">📅 Se estrena en cines de ${esc(CN())} el ${fmtDay(cine.soon.get(id))}. Todavía no está en ninguna plataforma.</div>`;
     else if (p) verdict = `<div class="verdict lockd">🔒 Bloqueada: no está en ninguna plataforma de ${esc(CN())} por ahora.</div>`;
     else verdict = '<div class="verdict no">No pude consultar la disponibilidad. Probá de nuevo en un rato.</div>';
 
@@ -2711,6 +2737,92 @@
     safeSet(MINE_STORE, JSON.stringify([...mine]));
   });
   $('#mineBtn').addEventListener('click', openMine);
+
+  // ---------- ¿Qué vemos hoy? (modo grupal) ----------
+  // La persona 1 elige sus plataformas y géneros y manda un link (?qvh=…). La persona 2 lo abre, marca las suyas y
+  // ve las películas que pueden ver: primero lo que está en «Mi lista» de alguna, después lo más popular.
+  // La lógica está en queVemosHoy.js; acá se piden los títulos a TMDB por plataforma y se dibuja.
+  const GRUPO_GENEROS = CATS.filter(c => c.movie).map(c => ({ id: Number(String(c.movie).split('|')[0]), name: c.name }));
+  let grupo = null; // { invitacion, provs, plataformas, generos, corta, juntos, resultados }
+  const idsLista = () => watchlist.filter(w => w.media_type === 'movie').map(w => w.id);
+
+  async function openGrupo(invitacion = null) {
+    els.sheet.innerHTML = SK_FICHA;
+    openModal();
+    let provs;
+    try { provs = (await providersFor('all')).filter(p => rank(p) < 999 || prio(p) < 60); } catch (e) { closeModal(); return handleErr(e); }
+    grupo = { invitacion, provs, plataformas: new Set(mine), generos: new Set(invitacion?.generos || []), corta: !!invitacion?.menosDeDosHoras, juntos: false, resultados: null };
+    pintarGrupo();
+  }
+
+  function pintarGrupo() {
+    const g = grupo, inv = g.invitacion;
+    const chip = (attr, id, on, inner) => `<button class="gchip" data-${attr}="${id}" aria-pressed="${on}">${inner}</button>`;
+    let h = `<button class="close" data-close aria-label="Cerrar">✕</button><div class="grupo">
+      <h3>${inv ? 'Te invitaron a elegir qué ver' : '¿Qué vemos hoy?'}</h3>
+      <p class="sub">${inv ? `La otra persona ya marcó sus plataformas${inv.generos.length ? ' y lo que tiene ganas de ver' : ''}. Marcá las tuyas y vean qué tienen en común.` : 'Marcá tus plataformas y lo que tienen ganas de ver, y mandale el link a la otra persona. Ella marca las suyas y aparecen las películas que pueden ver.'}</p>
+      <div class="gsec">Tus plataformas</div><div class="gchips">${g.provs.map(p => chip('gp', p.provider_id, g.plataformas.has(p.provider_id), `<img src="${IMG}w92${p.logo_path}" alt="">${esc(p.provider_name)}`)).join('')}</div>`;
+    if (!inv) h += `<div class="gsec">¿Qué tienen ganas de ver? <small>(opcional)</small></div><div class="gchips">${GRUPO_GENEROS.map(x => chip('gg', x.id, g.generos.has(x.id), esc(x.name))).join('')}</div>`;
+    h += `<div class="gsec">Opciones</div><div class="gchips">${chip('gopt', 'corta', g.corta, '⏱️ Menos de 2 horas')}${inv ? chip('gopt', 'juntos', g.juntos, '🛋️ Miramos juntos en el mismo sillón') : ''}</div>`;
+    h += inv
+      ? '<div class="gacc"><button class="gbtn" data-gact="ver">Ver coincidencias</button></div>'
+      : '<div class="gacc"><button class="gbtn" data-gact="whatsapp">Mandar por WhatsApp</button><button class="gbtn sec" data-gact="copiar">Copiar link</button></div>';
+    if (g.resultados) {
+      const r = g.resultados;
+      h += r.error ? `<p class="sub" style="margin-top:14px">${esc(r.error)}</p>`
+        : `${r.sinPlataformaEnComun ? '<p class="sub" style="margin-top:14px">No tienen ninguna plataforma en común: les mostramos lo de las dos.</p>' : ''}
+        ${r.titulos.length ? `<div class="gres">${r.titulos.slice(0, 24).map(t => `<button data-gtitulo="${t.id}"><img src="${t.poster_path ? IMG + 'w185' + t.poster_path : ''}" alt="" loading="lazy"><b>${esc(t.title)}</b><small>${esc(t.plataformasNombres.join(', '))}</small>${t.enLas2Listas ? '<span class="badge">En las dos listas</span>' : t.enAlgunaLista ? '<span class="badge">En una lista</span>' : ''}</button>`).join('')}</div>` : '<p class="sub" style="margin-top:14px">No encontramos películas con esas condiciones. Prueben sin géneros o sin el límite de 2 horas.</p>'}`;
+    }
+    els.sheet.innerHTML = h + '</div>';
+  }
+
+  function tokenGrupo() {
+    return QueVemosHoy.codificar({ pais: REGION, plataformas: [...grupo.plataformas], generos: [...grupo.generos], menosDeDosHoras: grupo.corta, miLista: idsLista() });
+  }
+
+  async function verCoincidencias() {
+    const inv = grupo.invitacion;
+    const mias = [...grupo.plataformas];
+    const comunes = grupo.juntos ? [...new Set([...inv.plataformas, ...mias])] : inv.plataformas.filter(x => mias.includes(x));
+    const pedir = (comunes.length ? comunes : [...new Set([...inv.plataformas, ...mias])]).slice(0, 8);
+    if (!pedir.length) { grupo.resultados = { error: 'Marquen al menos una plataforma.' }; return pintarGrupo(); }
+    const boton = els.sheet.querySelector('[data-gact="ver"]');
+    if (boton) boton.textContent = 'Buscando…';
+    const nombre = id => grupo.provs.find(p => p.provider_id === id)?.provider_name || '';
+    const porId = new Map();
+    await Promise.all(pedir.map(async pid => {
+      const params = { with_watch_providers: pid, watch_region: inv.pais || REGION, with_watch_monetization_types: 'flatrate|free|ads', sort_by: 'popularity.desc', page: 1 };
+      if (inv.generos.length) params.with_genres = inv.generos.join('|');
+      if (grupo.corta) params['with_runtime.lte'] = 120;
+      try {
+        const d = await api('/discover/movie', params);
+        for (const t of d.results || []) {
+          const prev = porId.get(t.id) || { ...t, plataformas: [] };
+          prev.plataformas.push(pid);
+          porId.set(t.id, prev);
+        }
+      } catch { /* una plataforma que falla no corta las otras */ }
+    }));
+    const r = QueVemosHoy.coincidencias({ titulos: [...porId.values()], p1: inv.plataformas, p2: mias, juntos: grupo.juntos, generos: inv.generos, menosDeDosHoras: grupo.corta, lista1: inv.miLista, lista2: idsLista() });
+    r.titulos.forEach(t => { t.plataformasNombres = t.plataformas.map(nombre).filter(Boolean); });
+    grupo.resultados = r;
+    pintarGrupo();
+  }
+
+  els.sheet.addEventListener('click', async e => {
+    if (!grupo || !els.sheet.querySelector('.grupo')) return;
+    const t = e.target.closest('[data-gp],[data-gg],[data-gopt],[data-gact],[data-gtitulo]');
+    if (!t) return;
+    if (t.dataset.gp) { const id = +t.dataset.gp; grupo.plataformas.has(id) ? grupo.plataformas.delete(id) : grupo.plataformas.add(id); t.setAttribute('aria-pressed', grupo.plataformas.has(id)); return; }
+    if (t.dataset.gg) { const id = +t.dataset.gg; grupo.generos.has(id) ? grupo.generos.delete(id) : grupo.generos.add(id); t.setAttribute('aria-pressed', grupo.generos.has(id)); return; }
+    if (t.dataset.gopt) { grupo[t.dataset.gopt] = !grupo[t.dataset.gopt]; t.setAttribute('aria-pressed', grupo[t.dataset.gopt]); return; }
+    if (t.dataset.gtitulo) { grupo = null; openDetail(+t.dataset.gtitulo, 'movie'); return; }
+    const url = `${location.origin}${location.pathname}?qvh=${tokenGrupo()}`;
+    if (t.dataset.gact === 'whatsapp') window.open(`https://wa.me/?text=${encodeURIComponent('¿Qué vemos hoy? Marcá tus plataformas y vemos qué tenemos en común: ' + url)}`, '_blank', 'noopener');
+    if (t.dataset.gact === 'copiar') { try { await navigator.clipboard.writeText(url); toast('Link copiado'); } catch { toast('No se pudo copiar'); } }
+    if (t.dataset.gact === 'ver') verCoincidencias();
+  });
+  $('#grupoBtn').addEventListener('click', () => openGrupo());
 
   // ---------- Mi lista ----------
   function inList(type, id) { return watchlist.some(w => w.media_type === type && w.id === id); }
