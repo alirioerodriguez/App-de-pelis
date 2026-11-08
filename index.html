@@ -377,7 +377,8 @@
   .rent-tag { background: rgba(0,0,0,.72); color: var(--rent); font-size: .72rem; font-weight: 700; padding: 3px 7px; border-radius: 8px; }
   .verdict.sub { background: rgba(255,196,77,.12); border: 1px solid rgba(255,196,77,.45); color: #ffd98a; }
   .verdict.pay { background: rgba(255,122,89,.10); border: 1px solid rgba(255,122,89,.4); color: #ffb9a6; }
-  .grupo h3 { margin: 0 0 4px; } .grupo p.sub { color: var(--muted); margin: 0 0 12px; font-size: .92rem; }
+  .grupo { padding: 22px 18px 28px; }
+  .grupo h3 { margin: 0 0 4px; padding-right: 48px; } .grupo p.sub { color: var(--muted); margin: 0 0 12px; font-size: .92rem; }
   .grupo .gsec { font-weight: 700; margin: 16px 0 8px; }
   .grupo .gchips { display: flex; flex-wrap: wrap; gap: 8px; }
   .grupo .gchip { border: 1px solid var(--line); background: transparent; color: inherit; border-radius: 999px; padding: 8px 12px; font: inherit; font-size: .9rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
@@ -2751,7 +2752,7 @@
     openModal();
     let provs;
     try { provs = (await providersFor('all')).filter(p => rank(p) < 999 || prio(p) < 60); } catch (e) { closeModal(); return handleErr(e); }
-    grupo = { invitacion, provs, plataformas: new Set(mine), generos: new Set(invitacion?.generos || []), corta: !!invitacion?.menosDeDosHoras, juntos: false, resultados: null };
+    grupo = { invitacion, provs, plataformas: new Set(mine), generos: new Set(invitacion?.generos || []), corta: !!invitacion?.menosDeDosHoras, juntos: false, resultados: null, todas: false };
     pintarGrupo();
   }
 
@@ -2761,7 +2762,7 @@
     let h = `<button class="close" data-close aria-label="Cerrar">✕</button><div class="grupo">
       <h3>${inv ? 'Te invitaron a elegir qué ver' : '¿Qué vemos hoy?'}</h3>
       <p class="sub">${inv ? `La otra persona ya marcó sus plataformas${inv.generos.length ? ' y lo que tiene ganas de ver' : ''}. Marcá las tuyas y vean qué tienen en común.` : 'Marcá tus plataformas y lo que tienen ganas de ver, y mandale el link a la otra persona. Ella marca las suyas y aparecen las películas que pueden ver.'}</p>
-      <div class="gsec">Tus plataformas</div><div class="gchips">${g.provs.map(p => chip('gp', p.provider_id, g.plataformas.has(p.provider_id), `<img src="${IMG}w92${p.logo_path}" alt="">${esc(p.provider_name)}`)).join('')}</div>`;
+      <div class="gsec">Tus plataformas</div><div class="gchips">${(g.todas ? g.provs : g.provs.filter((p, i) => i < 12 || g.plataformas.has(p.provider_id))).map(p => chip('gp', p.provider_id, g.plataformas.has(p.provider_id), `<img src="${IMG}w92${p.logo_path}" alt="">${esc(p.provider_name)}`)).join('')}${!g.todas && g.provs.length > 12 ? '<button class="gchip" data-gact="todas">Ver todas</button>' : ''}</div>`;
     if (!inv) h += `<div class="gsec">¿Qué tienen ganas de ver? <small>(opcional)</small></div><div class="gchips">${GRUPO_GENEROS.map(x => chip('gg', x.id, g.generos.has(x.id), esc(x.name))).join('')}</div>`;
     h += `<div class="gsec">Opciones</div><div class="gchips">${chip('gopt', 'corta', g.corta, '⏱️ Menos de 2 horas')}${inv ? chip('gopt', 'juntos', g.juntos, '🛋️ Miramos juntos en el mismo sillón') : ''}</div>`;
     h += inv
@@ -2807,6 +2808,7 @@
     r.titulos.forEach(t => { t.plataformasNombres = t.plataformas.map(nombre).filter(Boolean); });
     grupo.resultados = r;
     pintarGrupo();
+    els.sheet.querySelector('.gres, .grupo p.sub:last-child')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   els.sheet.addEventListener('click', async e => {
@@ -2821,6 +2823,7 @@
     if (t.dataset.gact === 'whatsapp') window.open(`https://wa.me/?text=${encodeURIComponent('¿Qué vemos hoy? Marcá tus plataformas y vemos qué tenemos en común: ' + url)}`, '_blank', 'noopener');
     if (t.dataset.gact === 'copiar') { try { await navigator.clipboard.writeText(url); toast('Link copiado'); } catch { toast('No se pudo copiar'); } }
     if (t.dataset.gact === 'ver') verCoincidencias();
+    if (t.dataset.gact === 'todas') { grupo.todas = true; pintarGrupo(); }
   });
   $('#grupoBtn').addEventListener('click', () => openGrupo());
 
