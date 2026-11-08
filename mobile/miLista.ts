@@ -28,6 +28,21 @@ async function leer(): Promise<Estado | null> {
 }
 const guardar = (e: Estado) => AsyncStorage.setItem(GUARDADO, JSON.stringify(e)).catch(() => {});
 
+/**
+ * Si el teléfono borró los datos de la web (limpieza de caché o de almacenamiento), la app se los devuelve antes
+ * de que cargue la página: «Mi lista» (sin pósters, se completan al abrir cada ficha), «Mis plataformas» y el país.
+ * Solo escribe si la web no tiene nada guardado, así nunca pisa algo más nuevo.
+ */
+export async function scriptDeRestauracion(): Promise<string> {
+  const e = await leer();
+  if (!e || (!e.items.length && !e.mine.length)) return 'true;';
+  const lista = e.items.map(t => ({ id: t.id, media_type: t.media_type, title: t.title }));
+  return `(function(){try{var ls=window.localStorage;if(ls.getItem('mi_lista')||ls.getItem('mis_plataformas'))return;
+ls.setItem('mi_lista',${JSON.stringify(JSON.stringify(lista))});
+ls.setItem('mis_plataformas',${JSON.stringify(JSON.stringify(e.mine))});
+if(!ls.getItem('pais_elegido'))ls.setItem('pais_elegido',${JSON.stringify(e.region)});}catch(_){}})();true;`;
+}
+
 // Lo que manda la web cada vez que cambia «Mi lista», «Mis plataformas» o el país
 export async function recibirDeLaWeb(msg: any) {
   if (!msg || typeof msg.region !== 'string' || !Array.isArray(msg.lista)) return;

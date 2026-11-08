@@ -5,7 +5,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { WebView, type WebViewProps } from 'react-native-webview';
 import * as Notifications from 'expo-notifications';
-import { SITE, activarRevision, recibirDeLaWeb } from './miLista';
+import { SITE, activarRevision, recibirDeLaWeb, scriptDeRestauracion } from './miLista';
 import type { ShouldStartLoadRequest, WebViewMessageEvent, WebViewNavigation, WebViewOpenWindowEvent } from 'react-native-webview/lib/WebViewTypes';
 
 // Los tipos de react-native-webview 14 declaran el componente con un parámetro que por defecto anula
@@ -55,6 +55,9 @@ export default function App() {
   const [canGoBack, setCanGoBack] = useState(false);
   const [failed, setFailed] = useState(false);
   const [loading, setLoading] = useState(true);
+  // Lo guardado en el teléfono, para devolvérselo a la web si se borró (null = todavía leyendo)
+  const [restaurar, setRestaurar] = useState<string | null>(null);
+  useEffect(() => { scriptDeRestauracion().then(setRestaurar, () => setRestaurar('true;')); }, []);
 
   // Respaldo: si la web tarda o falla sin avisar, la pantalla de carga no se queda para siempre
   useEffect(() => {
@@ -105,8 +108,9 @@ export default function App() {
     <SafeAreaProvider>
       <StatusBar style="light" />
       <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
-        <RNWebView
+        {restaurar !== null && <RNWebView
           ref={web}
+          injectedJavaScriptBeforeContentLoaded={restaurar}
           source={{ uri: inicio }}
           style={styles.web}
           applicationNameForUserAgent="DondeLaVeoApp/1.0"
@@ -127,7 +131,7 @@ export default function App() {
           allowsInlineMediaPlayback
           decelerationRate="normal"
           overScrollMode="never"
-        />
+        />}
         {loading && !failed && (
           <View style={styles.cover} pointerEvents="none"><ActivityIndicator color="#ffffff" /></View>
         )}

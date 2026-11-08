@@ -348,6 +348,12 @@
   .mine-head { padding: 22px 60px 12px 22px; }
   .mine-head h3 { margin: 0 0 4px; }
   .mine-head p { margin: 0; color: var(--muted); font-size: .9rem; }
+  .lbx { margin-top: 12px; }
+  .lbx summary { cursor: pointer; font-weight: 600; font-size: .92rem; min-height: 44px; display: flex; align-items: center; }
+  .lbx-form label { display: block; font-size: .85rem; color: var(--muted); margin: 4px 0 6px; }
+  .lbx-fila { display: flex; gap: 8px; }
+  .lbx-fila input { flex: 1; min-width: 0; min-height: 44px; border-radius: 12px; border: 1px solid var(--line); background: transparent; color: inherit; font: inherit; font-size: 16px; padding: 0 12px; }
+  .lbx-form .hint { font-size: .8rem; margin: 6px 0 0; }
   .mine-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; padding: 0 22px 8px; }
   @media (max-width: 640px) { .mine-head { padding: 18px 56px 12px 16px; } .mine-grid { padding: 0 16px 8px; grid-template-columns: repeat(2, 1fr); } }
   .mine-opt { display: flex; align-items: center; gap: 10px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 8px; color: var(--text); text-align: left; font-size: .88rem; }
@@ -2883,6 +2889,14 @@
         <h3>Mi lista</h3>
         <p>Lo que guardaste para ver. Te muestro dónde está hoy en ${esc(CN())}. Se guarda en este dispositivo.</p>
         ${watchlist.length ? '<button class="btn ghost" data-share-list type="button">↗ Compartir mi lista</button><p class="hint" style="margin:6px 0 0;font-size:.8rem">Sirve para pasarla a otro celular o mandársela a alguien: al abrir el link, los títulos se suman a su lista.</p>' : ''}
+        <details class="lbx"><summary>Traer pelis de Letterboxd</summary>
+          <form data-lbx class="lbx-form">
+            <label for="lbxUser">Usuario de Letterboxd (perfil público)</label>
+            <div class="lbx-fila"><input id="lbxUser" name="u" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="ej.: davidehrlich" required>
+            <button class="btn" type="submit">Traer</button></div>
+            <p class="hint">Se suman las películas de su actividad reciente (diario y reseñas, unas 50). La watchlist completa de Letterboxd no es pública.</p>
+          </form>
+        </details>
       </div>
       <div class="wl-summary" id="wlSummary"></div>
       <div class="grid wl-grid" id="wlGrid" style="padding:0 22px 22px">${watchlist.length ? watchlist.map(card).join('') :
@@ -2943,6 +2957,40 @@
     openDetail(+c.dataset.id, c.dataset.type);
   });
   $('#listBtn').addEventListener('click', openList);
+
+  // Letterboxd: api/letterboxd.js lee el RSS público del perfil (trae el id de TMDB de cada película).
+  // Se suman al final de Mi lista las que no estaban, con su póster y fecha de TMDB.
+  els.sheet.addEventListener('submit', async e => {
+    const f = e.target.closest('[data-lbx]'); if (!f) return;
+    e.preventDefault();
+    const usuario = f.u.value.trim().replace(/^@/, '');
+    const btn = f.querySelector('button'); btn.disabled = true; btn.textContent = 'Trayendo…';
+    try {
+      const r = await fetch('/api/letterboxd?user=' + encodeURIComponent(usuario));
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.error || 'No pudimos leer Letterboxd ahora.');
+      const nuevas = (d.peliculas || []).filter(x => !inList('movie', x.tmdbId));
+      if (!nuevas.length) { toast(d.peliculas?.length ? 'Ya tenías todas esas películas en tu lista' : `@${usuario} no tiene películas en su actividad reciente`); return; }
+      const items = [];
+      for (let i = 0; i < nuevas.length; i += 6) {
+        const tanda = await Promise.all(nuevas.slice(i, i + 6).map(x => api(`/movie/${x.tmdbId}`).catch(() => null)));
+        tanda.forEach((m, j) => {
+          const x = nuevas[i + j];
+          items.push({ id: x.tmdbId, media_type: 'movie', title: m?.title || x.titulo, poster_path: m?.poster_path || null, release_date: m?.release_date || (x.anio ? `${x.anio}-01-01` : '') });
+        });
+      }
+      watchlist = [...watchlist, ...items];
+      safeSet(LIST_STORE, JSON.stringify(watchlist));
+      renderListCount();
+      await anotarDisponibilidad(items);
+      toast(`Se sumaron ${items.length} ${items.length === 1 ? 'película' : 'películas'} de @${usuario}`, true);
+      openList();
+    } catch (err) {
+      toast(err.message || 'No pudimos leer Letterboxd ahora.');
+    } finally {
+      if (btn.isConnected) { btn.disabled = false; btn.textContent = 'Traer'; }
+    }
+  });
 
   // ---------- Deportes ----------
   // Sección aparte: calendario y resultados de ESPN (api/deporte.js) y, por país, en qué plataforma se ve
