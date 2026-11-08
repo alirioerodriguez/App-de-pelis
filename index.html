@@ -1433,7 +1433,7 @@
   }
   let newSeq = 0;
   function slide(it, i, n) {
-    const title = it.title || it.name;
+    const title = Corrector.tituloParaPais(nombresCache.get(it.media_type + it.id), REGION, it.title || it.name);
     const date = it.release_date || it.first_air_date || '';
     const img = it.backdrop_path ? `${IMG}w1280${it.backdrop_path}` : it.poster_path ? `${IMG}w780${it.poster_path}` : '';
     const over = (it.overview || '').trim();
@@ -1706,6 +1706,7 @@
       }
     } catch (e) { return handleErr(e); }
     if (seq !== sugSeq || els.q.value.trim() !== q) return; // llegó una respuesta vieja
+    d.results = Corrector.ordenarPorNombreExacto(d.results, q, r => nombresCache.get(r.media_type + r.id));
     sugItems = d.results.slice(0, (intent ? 5 : 6) - people.length);
     recordarResultados({ titulos: d.results.slice(0, 8), personas: people });
     await completarNombres(sugItems); // los dos nombres de lo que se va a mostrar
@@ -1731,7 +1732,7 @@
         const date = it.release_date || it.first_air_date || '';
         return `<button class="sug" role="option" data-i="${i}">
           ${it.poster_path ? `<img src="${IMG}w92${it.poster_path}" alt="">` : '<span class="ph"></span>'}
-          <span class="st"><b>${esc(it.title || it.name)}</b><span>${formato(it).txt}${date ? ' · ' + date.slice(0, 4) : ''}</span>${dosNombresHtml(it)}</span>
+          <span class="st"><b>${esc(Corrector.tituloParaPais(nombresCache.get(it.media_type + it.id), REGION, it.title || it.name))}</b><span>${formato(it).txt}${date ? ' · ' + date.slice(0, 4) : ''}</span>${dosNombresHtml(it)}</span>
         </button>`;
       }).join('') + `<button class="sug-all" data-all>Ver todos los resultados de “${esc(q)}” →</button>`;
     }
@@ -1887,6 +1888,10 @@
         els.listTitle.textContent = `Resultados para “${state.query}”`;
         els.listHint.textContent = `${label} · tocá una para ver dónde está`;
         data = await searchTitles(state.query, state.page);
+        if (state.page === 1) {
+          await dosNombresDeBusqueda(state.query).catch(() => {});
+          data.results = Corrector.ordenarPorNombreExacto(data.results, state.query, r => nombresCache.get(r.media_type + r.id));
+        }
       } else if (state.mode === 'person') {
         els.listTitle.textContent = `${TYPE_PLURAL[state.type]} de ${state.person.name}`;
         els.listHint.textContent = `como ${state.person.dept === 'Directing' ? 'director/a' : 'actor o actriz'} · primero lo que se puede ver en ${CN()}`;
@@ -1998,7 +2003,7 @@
   }
 
   function card(it) {
-    const title = it.title || it.name;
+    const title = Corrector.tituloParaPais(nombresCache.get(it.media_type + it.id), REGION, it.title || it.name);
     const date = it.release_date || it.first_air_date || '';
     const vote = it.vote_average ? it.vote_average.toFixed(1) : '';
     const uid = it.media_type + it.id;
@@ -2106,7 +2111,7 @@
     catch (e) { if (seq === detailSeq) { closeModal(); handleErr(e); } return; }
     if (seq !== detailSeq) return; // se abrió otra ficha mientras cargaba
 
-    const title = d.title || d.name;
+    const title = Corrector.tituloParaPais(nombresCache.get(type + id), REGION, d.title || d.name);
     const year = (d.release_date || d.first_air_date || '').slice(0, 4);
     const runtime = d.runtime ? `${Math.floor(d.runtime / 60)}h ${d.runtime % 60}m` : d.number_of_seasons ? `${d.number_of_seasons} temporada${d.number_of_seasons > 1 ? 's' : ''}` : '';
     const genres = (d.genres || []).map(g => g.name).join(', ');
