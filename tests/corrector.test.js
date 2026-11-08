@@ -242,3 +242,26 @@ test('etiquetaTitulo: los dos nombres cuando son distintos, uno solo cuando son 
   assert.equal(C.tieneDosNombres({ es: 'Matrix', latam: 'Matrix' }), false);
   assert.equal(C.tieneDosNombres({ es: 'Matrix' }), false);
 });
+
+// ---- Orden por nombre exacto y nombre según el país ------------------------------------
+test('ordenarPorNombreExacto: «duro de matar» trae primero la de Bruce Willis', () => {
+  const jackie = { id: 9404, media_type: 'movie', title: 'Duro de matar', popularity: 4 };
+  const muyDuro = { id: 1, media_type: 'movie', title: 'Muy duro de matar', popularity: 9 };
+  const dieHard = { id: 562, media_type: 'movie', title: 'Jungla de cristal', original_title: 'Die Hard', popularity: 40 };
+  const nombres = { movie562: { es: 'Jungla de cristal', latam: 'Duro de matar', original: 'Die Hard' } };
+  const r = C.ordenarPorNombreExacto([jackie, muyDuro, dieHard], 'duro de matar', (x) => nombres[x.media_type + x.id]);
+  assert.deepEqual(r.map((x) => x.id), [562, 9404, 1]);
+});
+
+test('ordenarPorNombreExacto: sin coincidencias exactas deja el orden de TMDB', () => {
+  const lista = [{ id: 1, title: 'A', popularity: 1 }, { id: 2, title: 'B', popularity: 99 }];
+  assert.deepEqual(C.ordenarPorNombreExacto(lista, 'zzz').map((x) => x.id), [1, 2]);
+  assert.deepEqual(C.ordenarPorNombreExacto(lista, '').map((x) => x.id), [1, 2]);
+});
+
+test('tituloParaPais: latino fuera de España, el de España en España', () => {
+  const t = { es: 'Jungla de cristal', latam: 'Duro de matar', original: 'Die Hard' };
+  assert.equal(C.tituloParaPais(t, 'AR', 'Jungla de cristal'), 'Duro de matar');
+  assert.equal(C.tituloParaPais(t, 'ES', 'Duro de matar'), 'Jungla de cristal');
+  assert.equal(C.tituloParaPais(null, 'AR', 'Otro'), 'Otro');
+});

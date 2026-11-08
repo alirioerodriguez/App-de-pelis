@@ -256,5 +256,31 @@
   /** ¿Los dos nombres son distintos? (para mostrar la segunda línea solo cuando hace falta) */
   const tieneDosNombres = (t) => !!(t && t.es && t.latam && norm(t.es) !== norm(t.latam));
 
-  return { norm, distancia, parecidoPalabra, parecidoTexto, sugerir, esExacto, aprender, titulosPorPais, etiquetaTitulo, tieneDosNombres, VOCABULARIO_INICIAL };
+  /**
+   * Sube al principio lo que se llama exactamente como lo escrito en alguno de sus nombres (título, original,
+   * España o Latinoamérica), y entre esos va primero el más conocido. El resto queda en el orden de TMDB.
+   * Así «duro de matar» trae primero la de Bruce Willis (en Latinoamérica se llama así) y no la de Jackie Chan.
+   * `nombresDe(r)` devuelve { es, latam, original } o nada.
+   */
+  function ordenarPorNombreExacto(resultados, consulta, nombresDe = () => null) {
+    const q = norm(consulta);
+    if (!q || !Array.isArray(resultados)) return resultados;
+    const exacto = (r) => {
+      const t = nombresDe(r) || {};
+      return [r.title, r.name, r.original_title, r.original_name, t.es, t.latam, t.original].some((n) => n && norm(n) === q);
+    };
+    const si = [], no = [];
+    resultados.forEach((r, i) => (exacto(r) ? si : no).push({ r, i }));
+    si.sort((a, b) => (b.r.popularity || 0) - (a.r.popularity || 0) || a.i - b.i);
+    return [...si, ...no].map((x) => x.r);
+  }
+
+  /** El nombre principal según el país: en España el de España; en el resto, el latino si se conoce. */
+  function tituloParaPais(t, region, porDefecto) {
+    if (t && region !== 'ES' && t.latam) return t.latam;
+    if (t && region === 'ES' && t.es) return t.es;
+    return porDefecto;
+  }
+
+  return { norm, distancia, parecidoPalabra, parecidoTexto, sugerir, esExacto, aprender, titulosPorPais, etiquetaTitulo, tieneDosNombres, ordenarPorNombreExacto, tituloParaPais, VOCABULARIO_INICIAL };
 });
