@@ -1,4 +1,4 @@
-// Corrector de búsqueda de ¿Dónde la veo?: sugiere el nombre bien escrito de un actor, un director o una película
+// Corrector de búsqueda de VeoMás: sugiere el nombre bien escrito de un actor, un director o una película
 // cuando lo que escribió la persona tiene errores («rober patinson» → «Robert Pattinson», «scarlet johanson» →
 // «Scarlett Johansson», «jurasic park» → «Parque Jurásico»), y junta los dos nombres de cada película: el de España y
 // el de Latinoamérica («La jungla de cristal» / «Duro de matar»).

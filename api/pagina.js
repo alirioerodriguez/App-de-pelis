@@ -58,11 +58,11 @@ module.exports = async function handler(req, res) {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dónde ver ${esc(titulo)}${anio ? ` (${anio})` : ''} en ${esc(nombrePais)} · ¿Dónde la veo?</title>
+<title>Dónde ver ${esc(titulo)}${anio ? ` (${anio})` : ''} en ${esc(nombrePais)} · VeoMás</title>
 <meta name="description" content="${esc(descripcion)}">
 <link rel="canonical" href="${esc(canonica)}">
 <meta property="og:type" content="${tipo === 'movie' ? 'video.movie' : 'video.tv_show'}">
-<meta property="og:site_name" content="¿Dónde la veo?">
+<meta property="og:site_name" content="VeoMás">
 <meta property="og:title" content="Dónde ver ${esc(titulo)} en ${esc(nombrePais)}">
 <meta property="og:description" content="${esc(descripcion)}">
 <meta property="og:url" content="${esc(canonica)}">
@@ -96,7 +96,7 @@ ${esBot ? '' : `<script>location.replace(${JSON.stringify(app)});</script>`}
       ${!subs.length && alquiler.length ? `<ul>${fila(alquiler)}</ul>` : ''}
     </div>
     ${d.overview ? `<p>${esc(d.overview)}</p>` : ''}
-    <a class="btn" href="${esc(app)}">Abrir en ¿Dónde la veo?</a>
+    <a class="btn" href="${esc(app)}">Abrir en VeoMás</a>
     <p><small>Disponibilidad en ${esc(nombrePais)} provista por JustWatch vía TMDB. Este producto usa la API de TMDB pero no está respaldado ni certificado por TMDB.</small></p>
   </div>
 </main>

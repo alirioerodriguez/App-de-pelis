@@ -1,11 +1,11 @@
-# Ficha de Google Play — ¿Dónde la veo?
+# Ficha de Google Play — VeoMás
 
 Textos para pegar en Play Console (**Crecer → Presencia en la tienda → Ficha principal**). Escritos el 07/11/2026 a partir de lo que la app hace hoy. Límites de Google: título 30 caracteres, descripción breve 80, descripción completa 4.000. La app es una TWA (`ar.alirio.dondelaveo`): los cambios de la web llegan solos.
 
-**El nombre está pendiente:** ya existe otra app «Donde La Veo». El nombre visible se puede cambiar después de subirla; el paquete no.
+**Nombre:** VeoMás (desde el 09/11/2026; antes «VeoMás»). El paquete `ar.alirio.dondelaveo` no cambia.
 
 ## Título (30)
-¿Dónde la veo? Pelis y series
+VeoMás Pelis y series
 
 ## Descripción breve (80)
 Busca una película o serie y mira en qué plataforma está en tu país.

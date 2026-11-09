@@ -1,4 +1,4 @@
-// Service worker de "¿Dónde la veo?".
+// Service worker de "VeoMás".
 // - La página siempre se pide primero a la red (así cada publicación se ve enseguida);
 //   si no hay conexión, se usa la última copia guardada.
 // - Pósters y logos de TMDB se guardan a medida que se ven, para que carguen más rápido.

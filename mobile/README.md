@@ -1,4 +1,4 @@
-# ¿Dónde la veo? · app para Android y iPhone
+# VeoMás · app para Android y iPhone
 
 App nativa hecha con Expo 58 (la misma base que Savia). Muestra la web publicada en
 `https://donde-la-veo-app.vercel.app/`, así cada cambio que se publica en la web

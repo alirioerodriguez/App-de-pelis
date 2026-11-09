@@ -1,4 +1,4 @@
-// Corrector de búsqueda para ¿Dónde la veo?: cuando lo que escribió la persona no aparece en TMDB (faltas de
+// Corrector de búsqueda para VeoMás: cuando lo que escribió la persona no aparece en TMDB (faltas de
 // ortografía, nombres mal escritos), se le pregunta a la búsqueda de Wikipedia en español, que sugiere la
 // palabra bien escrita («stranger tings» → «stranger things») y devuelve los artículos que más se parecen.
 // Pasa por acá (y no desde el navegador) para que las búsquedas de la gente no salgan a otro sitio, y queda

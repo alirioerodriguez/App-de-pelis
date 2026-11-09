@@ -1,4 +1,4 @@
-// Revisión semanal de ¿Dónde la veo?
+// Revisión semanal de VeoMás
 // Consulta 30 títulos de prueba en 4 países a través del intermediario publicado (api/tmdb) y avisa
 // si el servicio no responde o si demasiados títulos quedaron sin ninguna plataforma.
 // Se corre sola los lunes (GitHub Actions) o a mano: node scripts/revision-semanal.mjs

@@ -1,6 +1,6 @@
 {
-  "name": "¿Dónde la veo?",
-  "short_name": "Dónde la veo",
+  "name": "VeoMás",
+  "short_name": "VeoMás",
   "description": "Buscá una película o serie y mirá en qué plataforma de streaming está en tu país de Latinoamérica.",
   "lang": "es-419",
   "start_url": "./",

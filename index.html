@@ -4,20 +4,20 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0a0a0c">
-<title>¿Dónde la veo?</title>
+<title>VeoMás</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Dónde la veo">
+<meta name="apple-mobile-web-app-title" content="VeoMás">
 <link rel="icon" href="favicon.ico" sizes="48x48">
 <link rel="icon" type="image/svg+xml" href="icons/favicon.svg">
 <meta name="description" content="Buscá una película o serie y mirá en qué plataforma de streaming está disponible en tu país de Latinoamérica.">
 <link rel="canonical" href="https://donde-la-veo-app.vercel.app/">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="¿Dónde la veo?">
-<meta property="og:title" content="¿Dónde la veo? · En qué plataforma está cada peli y serie">
+<meta property="og:site_name" content="VeoMás">
+<meta property="og:title" content="VeoMás · En qué plataforma está cada peli y serie">
 <meta property="og:description" content="Buscá una película o serie y mirá en qué plataforma de streaming está en tu país de Latinoamérica. Gratis y sin cuenta.">
 <meta property="og:url" content="https://donde-la-veo-app.vercel.app/">
 <meta property="og:image" content="https://donde-la-veo-app.vercel.app/icons/icon-512.png">
@@ -84,6 +84,9 @@
     border-radius: 50%; background: var(--accent-2);
   }
   .brand small { color: var(--muted); font-weight: 500; font-size: .8rem; }
+  /* logotipo de la marca: DM Serif Display, «Más» en rosa */
+  .brand .logotipo { font-family: "DM Serif Display", Georgia, serif; font-weight: 400; font-size: 22px; letter-spacing: -.015em; line-height: 1; }
+  .brand .logotipo span { color: var(--accent-fill); }
   .icon-btn {
     margin-left: auto; background: var(--bg-2); border: 1px solid var(--line); color: var(--text);
     border-radius: 10px; padding: 8px 12px; font-size: .9rem;
@@ -710,7 +713,7 @@
 
 <header>
   <div class="wrap bar">
-    <a class="brand" href="./" aria-label="¿Dónde la veo? Inicio"><svg class="logo" viewBox="0 0 100 100" width="32" height="32" aria-hidden="true"><rect width="100" height="100" rx="22.5" fill="#E11D48"/><g transform="translate(50 50) scale(0.8) translate(-50 -50)"><path transform="rotate(-10 50 50)" fill="#FFFFFF" fill-rule="evenodd" d="M17,26 H83 A7,7 0 0 1 90,33 V43 A7,7 0 0 0 90,57 V67 A7,7 0 0 1 83,74 H17 A7,7 0 0 1 10,67 V57 A7,7 0 0 0 10,43 V33 A7,7 0 0 1 17,26 Z M63.8,33 A2.2,2.2 0 1 0 68.2,33 A2.2,2.2 0 1 0 63.8,33 Z M63.8,41.5 A2.2,2.2 0 1 0 68.2,41.5 A2.2,2.2 0 1 0 63.8,41.5 Z M63.8,50 A2.2,2.2 0 1 0 68.2,50 A2.2,2.2 0 1 0 63.8,50 Z M63.8,58.5 A2.2,2.2 0 1 0 68.2,58.5 A2.2,2.2 0 1 0 63.8,58.5 Z M63.8,67 A2.2,2.2 0 1 0 68.2,67 A2.2,2.2 0 1 0 63.8,67 Z M25,47 A13,13 0 1 0 51,47 A13,13 0 1 0 25,47 Z M30.5,47 A7.5,7.5 0 1 0 45.5,47 A7.5,7.5 0 1 0 30.5,47 Z M47.05,59.59 L56.23,68.77 A2.5,2.5 0 0 0 59.77,65.23 L50.59,56.05 A15.5,15.5 0 0 1 47.05,59.59 Z"/></g></svg><span>¿Dónde la veo?</span></a>
+    <a class="brand" href="./" aria-label="VeoMás Inicio"><svg class="logo" viewBox="0 0 100 100" width="32" height="32" aria-hidden="true"><rect width="100" height="100" rx="22.5" fill="#E11D48"/><g transform="translate(50 50) scale(0.8) translate(-50 -50)"><path transform="rotate(-10 50 50)" fill="#FFFFFF" fill-rule="evenodd" d="M17,26 H83 A7,7 0 0 1 90,33 V43 A7,7 0 0 0 90,57 V67 A7,7 0 0 1 83,74 H17 A7,7 0 0 1 10,67 V57 A7,7 0 0 0 10,43 V33 A7,7 0 0 1 17,26 Z M63.8,33 A2.2,2.2 0 1 0 68.2,33 A2.2,2.2 0 1 0 63.8,33 Z M63.8,41.5 A2.2,2.2 0 1 0 68.2,41.5 A2.2,2.2 0 1 0 63.8,41.5 Z M63.8,50 A2.2,2.2 0 1 0 68.2,50 A2.2,2.2 0 1 0 63.8,50 Z M63.8,58.5 A2.2,2.2 0 1 0 68.2,58.5 A2.2,2.2 0 1 0 63.8,58.5 Z M63.8,67 A2.2,2.2 0 1 0 68.2,67 A2.2,2.2 0 1 0 63.8,67 Z M25,47 A13,13 0 1 0 51,47 A13,13 0 1 0 25,47 Z M30.5,47 A7.5,7.5 0 1 0 45.5,47 A7.5,7.5 0 1 0 30.5,47 Z M47.05,59.59 L56.23,68.77 A2.5,2.5 0 0 0 59.77,65.23 L50.59,56.05 A15.5,15.5 0 0 1 47.05,59.59 Z"/></g></svg><span class="logotipo">Veo<span>Más</span></span></a>
     <div class="hdr-actions">
       <button class="icon-btn" id="grupoBtn" title="¿Qué vemos hoy? Elegí con otra persona">👥<span class="lbl"> ¿Qué vemos?</span></button>
       <button class="icon-btn" id="listBtn" title="Lo que guardaste para ver">🔖<span class="lbl"> Mi lista</span><span class="count" id="listCount"></span></button>
@@ -2354,7 +2357,7 @@
         ctx.fillText(lineas(ctx, s.n.replace(/\s+(Amazon|Apple TV) [Cc]hannel$/, ''), L + gap - 6, 1)[0], x0 + L / 2, yy + L + 40);
       });
     }
-    ctx.font = `700 40px ${fuente}`; ctx.fillStyle = '#fff'; ctx.fillText('¿Dónde la veo?', W / 2, H - 120);
+    ctx.font = `700 40px ${fuente}`; ctx.fillStyle = '#fff'; ctx.fillText('VeoMás', W / 2, H - 120);
     ctx.font = `400 32px ${fuente}`; ctx.fillStyle = 'rgba(255,255,255,.6)'; ctx.fillText(location.host, W / 2, H - 70);
 
     const blob = await new Promise(ok => cv.toBlob(ok, 'image/png'));
@@ -2610,7 +2613,7 @@
       const lista = watchlist.map(x => ({ id: x.id, media_type: x.media_type, title: x.title, poster_path: x.poster_path, release_date: x.release_date }));
       const b = btoa(unescape(encodeURIComponent(JSON.stringify({ lista })))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
       const url = location.origin + location.pathname + '#importar=' + b;
-      const text = `Mi lista de pelis y series (${watchlist.length}) en ¿Dónde la veo?`;
+      const text = `Mi lista de pelis y series (${watchlist.length}) en VeoMás`;
       if (window.ReactNativeWebView) window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'share', title: 'Mi lista', text, url }));
       else if (navigator.share) { try { await navigator.share({ title: 'Mi lista', text, url }); } catch {} }
       else navigator.clipboard?.writeText(url).then(() => toast('Link de tu lista copiado', true)).catch(() => toast('No se pudo copiar el link'));

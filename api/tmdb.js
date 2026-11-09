@@ -1,4 +1,4 @@
-// Intermediario de TMDB para ¿Dónde la veo?
+// Intermediario de TMDB para VeoMás
 // La app consulta /api/tmdb?p=/search/multi&query=… y esta función agrega la clave (variable de entorno
 // TMDB_TOKEN en Vercel, nunca en el código) y deja la respuesta en la caché de Vercel. Así nadie tiene que
 // sacar su propia clave y miles de consultas iguales cuentan como una sola para la cuota de TMDB.

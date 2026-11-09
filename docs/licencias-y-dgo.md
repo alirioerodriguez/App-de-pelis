@@ -8,7 +8,7 @@ Asunto: Commercial API license inquiry — streaming guide for Latin America
 
 > Hello TMDB team,
 >
-> I'm Alirio Rodríguez, an independent developer. I run «¿Dónde la veo?» (https://donde-la-veo-app.vercel.app), a Spanish-language guide that tells people in Argentina, Mexico, Chile, Colombia, Peru, Uruguay and Venezuela where to watch a movie or series.
+> I'm Alirio Rodríguez, an independent developer. I run «VeoMás» (https://donde-la-veo-app.vercel.app), a Spanish-language guide that tells people in Argentina, Mexico, Chile, Colombia, Peru, Uruguay and Venezuela where to watch a movie or series.
 >
 > Today the app is non-commercial: no ads and no paid plans, with TMDB and JustWatch attribution on every title page and in the footer, and a 24-hour cache so user traffic makes very few API calls.
 >
@@ -23,7 +23,7 @@ Asunto: Data partnership inquiry — Latin America
 
 > Hello JustWatch team,
 >
-> I'm the developer of «¿Dónde la veo?», a streaming and live sports guide for Latin America. The streaming availability we show comes from TMDB, which credits JustWatch, and we display that attribution on every title page.
+> I'm the developer of «VeoMás», a streaming and live sports guide for Latin America. The streaming availability we show comes from TMDB, which credits JustWatch, and we display that attribution on every title page.
 >
 > We'd like to know how to join your data or affiliate partner program for Latin America before adding any commercial feature.
 >
@@ -36,7 +36,7 @@ Asunto: Catálogo de DGO y DNEWS en un buscador de streaming y deportes
 
 > Hola, equipo de DGO:
 >
-> Hacemos «¿Dónde la veo?», un buscador gratuito que dice en qué plataforma se ve cada película, serie o partido en 7 países de Latinoamérica. Ya tiene:
+> Hacemos «VeoMás», un buscador gratuito que dice en qué plataforma se ve cada película, serie o partido en 7 países de Latinoamérica. Ya tiene:
 > 1. DGO con su nombre y un botón «Abrir DGO» por país en películas, series y canales en vivo.
 > 2. Los 38 programas de DNEWS, que no están en las bases internacionales como TMDB, buscables por tema.
 > 3. El filtro «Solo DGO» en la agenda de deportes, para ver los partidos que van por DSports.
