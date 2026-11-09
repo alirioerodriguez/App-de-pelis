@@ -70,7 +70,7 @@ module.exports = async function handler(req, res) {
 
   const l = String(req.query.l || '');
   const d = String(req.query.d || '');
-  if (!LIGAS[l]) return res.status(400).json({ error: 'Competencia no permitida' });
+  if (!Object.hasOwn(LIGAS, l)) return res.status(400).json({ error: 'Competencia no permitida' }); // no «constructor» ni «__proto__»
   // un día (AAAAMMDD) o dos (AAAAMMDD-AAAAMMDD). ESPN agrupa por día de EE. UU. y no acepta rangos en
   // todos los deportes, así que se pide cada día por separado y se juntan; la página filtra por hora local.
   if (d && !/^\d{8}(-\d{8})?$/.test(d)) return res.status(400).json({ error: 'Fecha inválida' });

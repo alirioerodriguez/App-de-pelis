@@ -1097,6 +1097,20 @@
   const provCache = new Map();
 
   // Mudanza desde alirioerodriguez.github.io/App-de-pelis: esa página redirige acá con
+  // Un título de «Mi lista» puede venir de un link (#importar=…), así que antes de guardarlo o dibujarlo se
+  // revisa: id numérico, tipo conocido y rutas de imagen y fechas con su forma. Si no, alguien podría armar
+  // un link que meta código en la página de quien lo abre (las tarjetas usan esos campos tal cual).
+  function itemSeguro(x) {
+    if (!x || typeof x !== 'object' || !Number.isInteger(x.id) || x.id <= 0 || !['movie', 'tv', 'dn'].includes(x.media_type)) return null;
+    const it = { ...x };
+    for (const k of ['poster_path', 'backdrop_path']) if (it[k] != null && !/^\/[A-Za-z0-9._-]+$/.test(it[k])) delete it[k];
+    for (const k of ['release_date', 'first_air_date']) if (it[k] != null && !/^\d{4}(-\d{2}-\d{2})?$/.test(it[k])) delete it[k];
+    if (it.vote_average != null && typeof it.vote_average !== 'number') delete it.vote_average;
+    for (const k of ['title', 'name', 'overview']) if (it[k] != null && typeof it[k] !== 'string') delete it[k];
+    return it;
+  }
+  const listaSegura = (l) => (Array.isArray(l) ? l.map(itemSeguro).filter(Boolean) : []);
+
   // #importar=<datos> para que «Mis plataformas» y «Mi lista» no se pierdan al cambiar de dirección.
   (function importarDeLaDireccionVieja() {
     const m = location.hash.match(/^#importar=([A-Za-z0-9_-]+)(?:&((?:movie|tv)-\d+))?$/);
@@ -1105,14 +1119,14 @@
       const d = JSON.parse(decodeURIComponent(escape(atob(m[1].replace(/-/g, '+').replace(/_/g, '/')))));
       if (Array.isArray(d.mine)) {
         const cur = new Set(safeJSON(safeGet(MINE_STORE)) || []);
-        d.mine.forEach(x => cur.add(x));
+        d.mine.forEach(x => { if (Number.isInteger(x) && x > 0) cur.add(x); }); // ids de plataformas de TMDB
         safeSet(MINE_STORE, JSON.stringify([...cur]));
       }
       if (Array.isArray(d.lista)) {
-        const cur = safeJSON(safeGet(LIST_STORE)) || [];
+        const cur = listaSegura(safeJSON(safeGet(LIST_STORE)));
         const ids = new Set(cur.map(x => x.media_type + x.id));
         let n = 0;
-        d.lista.forEach(x => { if (x && x.id && !ids.has(x.media_type + x.id)) { cur.push(x); n++; } });
+        listaSegura(d.lista).forEach(x => { if (!ids.has(x.media_type + x.id)) { cur.push(x); ids.add(x.media_type + x.id); n++; } });
         safeSet(LIST_STORE, JSON.stringify(cur));
         if (n) setTimeout(() => toast(`Se sumaron ${n} título${n > 1 ? 's' : ''} a Mi lista`, true), 900);
       }
@@ -1124,7 +1138,7 @@
   const COUNTRY_STORE = 'pais_elegido';
   let mine =new Set(safeJSON(safeGet(MINE_STORE)) || []);
   // Mi lista: [{id, media_type, title, poster_path, release_date}] guardada en este dispositivo
-  let watchlist = safeJSON(safeGet(LIST_STORE)) || [];
+  let watchlist = listaSegura(safeJSON(safeGet(LIST_STORE)));
   let loadSeq = 0, detailSeq = 0;
 
   function safeGet(k) { try { return localStorage.getItem(k); } catch { return null; } }
