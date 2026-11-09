@@ -3,7 +3,7 @@
 //   si no hay conexión, se usa la última copia guardada.
 // - Pósters y logos de TMDB se guardan a medida que se ven, para que carguen más rápido.
 // - Las consultas a las APIs (TMDB, Wikidata) nunca se guardan: la disponibilidad tiene que estar al día.
-const VERSION = 'v3';
+const VERSION = 'v4';
 const SHELL = `shell-${VERSION}`;
 const IMAGES = `img-${VERSION}`;
 const SHELL_FILES = ['./', './index.html', './corrector.js', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#000000">
+<meta name="theme-color" content="#0a0a0c">
 <title>¿Dónde la veo?</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -11,7 +11,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Dónde la veo">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%2364d2ff'/%3E%3Cstop offset='1' stop-color='%235e5ce6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='9' fill='url(%23g)'/%3E%3Cpath d='M16 6.5c-4.4 0-8 3.4-8 7.7 0 5.6 6.7 10.9 7.3 11.3.4.3 1 .3 1.4 0 .6-.4 7.3-5.7 7.3-11.3 0-4.3-3.6-7.7-8-7.7z' fill='%23fff'/%3E%3Cpath d='M14.3 11.2v6l5-3z' fill='%235e5ce6'/%3E%3C/svg%3E">
+<link rel="icon" href="favicon.ico" sizes="48x48">
+<link rel="icon" type="image/svg+xml" href="icons/favicon.svg">
 <meta name="description" content="Buscá una película o serie y mirá en qué plataforma de streaming está disponible en tu país de Latinoamérica.">
 <link rel="canonical" href="https://donde-la-veo-app.vercel.app/">
 <meta property="og:type" content="website">
@@ -23,22 +24,26 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <!-- La fuente no frena el primer pintado: se ve con la del sistema y cambia a Inter cuando llega -->
-<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"></noscript>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"></noscript>
 <style>
-  /* Estilo inspirado en las apps de Apple: negro puro, superficies elevadas grises, vidrio esmerilado */
+  /* Marca VeoMás (11/2026): fondo Noche, tarjetas Butaca, bordes Pasillo y el rosa de boletería.
+     --accent es Rosa Luz (texto y detalles rosas sobre oscuro, 7,35:1); --accent-fill es Rosa Boletería
+     (botones con texto blanco, 4,70:1). El semáforo usa verde, ámbar y coral: el rosa nunca es semáforo. */
   :root {
-    --bg: #000000;
-    --bg-2: #161618;
-    --card: #1c1c1e;
-    --line: rgba(255,255,255,.09);
-    --text: #f5f5f7;
-    --muted: #98989d;
-    --accent: #0a84ff;
-    --accent-2: #ffd60a;
-    --ok: #30d158;
-    --rent: #ffd60a;
-    --buy: #ff9f0a;
+    --bg: #0a0a0c;
+    --bg-2: #141419;
+    --card: #141419;
+    --line: #262630;
+    --text: #f4f4f6;
+    --muted: #a1a1aa;
+    --accent: #fb7185;
+    --accent-fill: #e11d48;
+    --accent-press: #9f1239;
+    --accent-2: #fbbf24;
+    --ok: #34d399;
+    --rent: #fbbf24;
+    --buy: #ff6b4a;
     --radius: 18px;
     --shadow: 0 20px 40px rgba(0,0,0,.5);
     color-scheme: dark;
@@ -46,7 +51,7 @@
   * { box-sizing: border-box; }
   html, body { margin: 0; }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, "Segoe UI", Roboto, sans-serif;
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     background: var(--bg);
     color: var(--text);
     min-height: 100vh;
@@ -105,14 +110,14 @@
   .seg button {
     background: transparent; border: 0; color: var(--muted); padding: 8px 12px; border-radius: 9px; font-weight: 600; font-size: .9rem;
   }
-  .seg button.on { background: var(--accent); color: #08131f; }
+  .seg button.on { background: var(--accent-fill); color: #fff; }
 
   /* ---------- Provider chips ---------- */
   .section-title { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin: 26px 0 12px; }
   .section-title h2 { font-size: 1.15rem; margin: 0; }
   .section-title .hint { color: var(--muted); font-size: .85rem; }
   .extra { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 980px; font-size: .72rem; font-weight: 600;
-    color: #ff9f0a; background: rgba(255,159,10,.14); white-space: nowrap; vertical-align: middle; }
+    color: #ff6b4a; background: rgba(255,107,74,.14); white-space: nowrap; vertical-align: middle; }
   .se-txt .extra { margin: 2px 0; align-self: flex-start; }
   .report { margin: 14px 0 0; }
   .linkbtn { background: none; border: 0; padding: 4px 0; color: var(--muted); font: inherit; font-size: .85rem; text-decoration: underline; cursor: pointer; }
@@ -151,7 +156,7 @@
   }
   .chip img { width: 28px; height: 28px; border-radius: 8px; }
   .chip:hover { transform: translateY(-2px); border-color: var(--accent); }
-  .chip.on { background: rgba(117,170,219,.18); border-color: var(--accent); }
+  .chip.on { background: rgba(225,29,72,.2); border-color: var(--accent); }
 
   /* ---------- Grid ---------- */
   .grid {
@@ -167,8 +172,8 @@
     animation: pop .35s ease both;
   }
   .card:hover, .card:focus-visible { transform: translateY(-4px); box-shadow: var(--shadow); border-color: var(--accent); outline: none; }
-  .poster { aspect-ratio: 2/3; background: linear-gradient(135deg, #222235, #15151f); width: 100%; object-fit: cover; }
-  .noposter { aspect-ratio: 2/3; display: grid; place-items: center; color: var(--muted); font-size: 2rem; background: linear-gradient(135deg, #222235, #15151f); }
+  .poster { aspect-ratio: 2/3; background: linear-gradient(135deg, #1f1f27, #141419); width: 100%; object-fit: cover; }
+  .noposter { aspect-ratio: 2/3; display: grid; place-items: center; color: var(--muted); font-size: 2rem; background: linear-gradient(135deg, #1f1f27, #141419); }
   .card .meta { padding: 10px 10px 12px; }
   .card .t { font-weight: 600; font-size: .92rem; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .card .y { color: var(--muted); font-size: .8rem; margin-top: 4px; }
@@ -182,9 +187,9 @@
   .mini-prov img { width: 24px; height: 24px; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,.5); }
   @keyframes pop { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: none; } }
 
-  .skeleton { border-radius: var(--radius); aspect-ratio: 2/3.6; background: linear-gradient(90deg, #171724 25%, #222234 50%, #171724 75%); background-size: 200% 100%; animation: shimmer 1.2s infinite; }
+  .skeleton { border-radius: var(--radius); aspect-ratio: 2/3.6; background: linear-gradient(90deg, #141419 25%, #1f1f27 50%, #141419 75%); background-size: 200% 100%; animation: shimmer 1.2s infinite; }
   @keyframes shimmer { to { background-position: -200% 0; } }
-  .sk { background: linear-gradient(90deg, #171724 25%, #222234 50%, #171724 75%); background-size: 200% 100%; animation: shimmer 1.2s infinite; border-radius: 10px; }
+  .sk { background: linear-gradient(90deg, #141419 25%, #1f1f27 50%, #141419 75%); background-size: 200% 100%; animation: shimmer 1.2s infinite; border-radius: 10px; }
   .sk-sheet .sk-hero { height: 220px; border-radius: 0; }
   .sk-sheet .sk-body { display: grid; grid-template-columns: 110px 1fr; gap: 16px; padding: 18px 22px; }
   .sk-sheet .sk-poster { aspect-ratio: 2/3; }
@@ -235,8 +240,8 @@
   .prov { display: flex; align-items: center; gap: 8px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 6px 12px 6px 6px; font-size: .88rem; }
   .prov img { width: 36px; height: 36px; border-radius: 9px; }
   .verdict { grid-column: 1/-1; border-radius: 14px; padding: 14px 16px; font-weight: 600; display: flex; gap: 10px; align-items: center; }
-  .verdict.yes { background: rgba(61,220,132,.12); border: 1px solid rgba(61,220,132,.4); color: #9ff0c1; }
-  .verdict.no { background: rgba(255,122,89,.10); border: 1px solid rgba(255,122,89,.4); color: #ffb9a6; }
+  .verdict.yes { background: rgba(52,211,153,.12); border: 1px solid rgba(52,211,153,.4); color: #34d399; }
+  .verdict.no { background: rgba(255,107,74,.10); border: 1px solid rgba(255,107,74,.4); color: #ff6b4a; }
   .actions { grid-column: 1/-1; display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
   .btn { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; background: var(--accent); color: #08131f; font-weight: 700; padding: 10px 16px; border-radius: 12px; border: 0; }
   .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
@@ -330,7 +335,7 @@
 
   /* ---------- Etiqueta Película / Serie ---------- */
   .card .kind { display: inline-block; font-size: .7rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: 2px 6px; border-radius: 6px; margin-right: 6px; }
-  .kind.movie { background: rgba(117,170,219,.18); color: var(--accent); }
+  .kind.movie { background: rgba(225,29,72,.2); color: var(--accent); }
   .kind.tv { background: rgba(246,180,14,.16); color: var(--accent-2); }
   .kind.dn { background: rgba(255,69,58,.16); color: #ff6961; }
   .kind.doc { background: rgba(48,209,88,.15); color: #4cd964; }
@@ -381,8 +386,8 @@
   .card.locked .lock { display: flex; }
   .card.locked .mini-prov { display: none; }
   .rent-tag { background: rgba(0,0,0,.72); color: var(--rent); font-size: .72rem; font-weight: 700; padding: 3px 7px; border-radius: 8px; }
-  .verdict.sub { background: rgba(255,196,77,.12); border: 1px solid rgba(255,196,77,.45); color: #ffd98a; }
-  .verdict.pay { background: rgba(255,122,89,.10); border: 1px solid rgba(255,122,89,.4); color: #ffb9a6; }
+  .verdict.sub { background: rgba(251,191,36,.12); border: 1px solid rgba(251,191,36,.45); color: #fbbf24; }
+  .verdict.pay { background: rgba(255,107,74,.10); border: 1px solid rgba(255,107,74,.4); color: #ff6b4a; }
   .grupo { padding: 22px 18px 28px; }
   .grupo h3 { margin: 0 0 4px; padding-right: 48px; } .grupo p.sub { color: var(--muted); margin: 0 0 12px; font-size: .92rem; }
   .grupo .gsec { font-weight: 700; margin: 16px 0 8px; }
@@ -408,7 +413,7 @@
     padding: 8px 14px; font-size: .88rem; font-weight: 500; transition: border-color .15s, background .15s;
   }
   .cat:hover { border-color: var(--accent); }
-  .cat.on { background: var(--accent); border-color: var(--accent); color: #08131f; font-weight: 700; }
+  .cat.on { background: var(--accent-fill); border-color: var(--accent-fill); color: #fff; font-weight: 700; }
   .subcats { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; padding-left: 12px; border-left: 2px solid var(--accent); }
   .subcats .cat { padding: 6px 12px; font-size: .82rem; }
   .subcats .cat.on { background: rgba(117,170,219,.2); color: var(--text); }
@@ -510,27 +515,28 @@
   .subcats .cat.on { background: rgba(255,255,255,.2); color: var(--text); }
 
   .hero { padding: 34px 0 10px; text-align: center; }
-  .hero h1 { font-size: clamp(1.9rem, 5.2vw, 3.1rem); font-weight: 700; letter-spacing: -.035em; line-height: 1.05; margin: 0 0 10px; }
+  .hero h1 { font-family: "DM Serif Display", Georgia, serif; font-size: clamp(2rem, 5.2vw, 3.2rem); font-weight: 400; letter-spacing: -.015em; line-height: 1.05; margin: 0 0 10px; }
   .hero p { color: var(--muted); font-size: 1.05rem; margin: 0 auto 22px; max-width: 560px; }
   .search-box { max-width: 720px; margin: 0 auto; text-align: left; }
   .search { background: rgba(255,255,255,.08); border: 1px solid transparent; border-radius: 14px; box-shadow: none; padding: 4px 14px; }
   .search:focus-within { border-color: var(--accent); background: rgba(255,255,255,.11); }
   .search input { padding: 12px 4px; }
-  .suggest { background: #1c1c1e; border-radius: 16px; }
+  .suggest { background: var(--card); border-radius: 16px; }
 
   .section-title h2 { font-size: 1.3rem; font-weight: 700; letter-spacing: -.02em; }
   .chip { background: rgba(255,255,255,.07); border: 1px solid transparent; }
   .chip:hover { transform: none; background: rgba(255,255,255,.13); border-color: transparent; }
-  .chip.on { background: rgba(10,132,255,.22); border-color: var(--accent); }
+  .chip.on { background: rgba(225,29,72,.22); border-color: var(--accent); }
   .card { border: 0; border-radius: 16px; }
   .card:hover, .card:focus-visible { transform: scale(1.03); border-color: transparent; }
   .feeds { margin-top: 30px; }
   .feeds button { font-weight: 600; }
   .feeds button.on { border-bottom-color: var(--text); }
-  .btn { background: var(--accent); color: #fff; border-radius: 980px; }
+  .btn { background: var(--accent-fill); color: #fff; border-radius: 980px; }
+  .btn:active { background: var(--accent-press); }
   .btn.ghost { background: rgba(255,255,255,.1); border: 0; color: var(--text); }
   .more { border-radius: 980px; background: rgba(255,255,255,.1); border: 0; }
-  .sheet { background: #1c1c1e; border-radius: 22px; }
+  .sheet { background: var(--card); border-radius: 22px; }
   .sug.active, .sug:hover { background: rgba(255,255,255,.08); }
 
   /* Carrusel de estrenos: se mueve solo, sin barra de desplazamiento */
@@ -538,7 +544,7 @@
   .bb-track { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; }
   .bb-track::-webkit-scrollbar { display: none; }
   .slide { position: relative; flex: 0 0 100%; scroll-snap-align: start; aspect-ratio: 21/9; min-height: 260px; cursor: pointer; overflow: hidden; }
-  .slide.ghost-slide { cursor: default; background: linear-gradient(90deg, #161618 25%, #222224 50%, #161618 75%); background-size: 200% 100%; animation: shimmer 1.2s infinite; }
+  .slide.ghost-slide { cursor: default; background: linear-gradient(90deg, #141419 25%, #1f1f27 50%, #141419 75%); background-size: 200% 100%; animation: shimmer 1.2s infinite; }
   @media (max-width: 640px) { .slide { aspect-ratio: 4/5; max-height: 72vh; } }
   .bb-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scale(1.02); transition: transform 6s ease; }
   .slide.current .bb-img { transform: scale(1.08); }
@@ -594,7 +600,7 @@
   .wl-stats { display: flex; flex-wrap: wrap; gap: 8px; }
   .wl-chip { display: inline-flex; align-items: center; gap: 6px; background: var(--card); border: 1px solid var(--line); color: var(--text); border-radius: 980px; padding: 6px 12px; font: inherit; font-size: .82rem; cursor: pointer; }
   .wl-chip img { width: 20px; height: 20px; border-radius: 5px; }
-  .wl-chip.on { background: var(--accent); color: #08131f; border-color: var(--accent); font-weight: 700; }
+  .wl-chip.on { background: var(--accent-fill); color: #fff; border-color: var(--accent-fill); font-weight: 700; }
   .wl-new { position: absolute; top: 8px; left: 8px; z-index: 2; background: var(--ok); color: #04210f; font-size: .7rem; font-weight: 700; border-radius: 6px; padding: 2px 6px; }
   #listBtn .dot-alert { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); display: inline-block; margin-left: 4px; vertical-align: middle; }
   /* ---------- Deportes: sección aparte, con look de marcador ---------- */
@@ -694,7 +700,7 @@
   .country-opt span { flex: 1; min-width: 0; }
   .country-opt small { color: var(--muted); font-size: .72rem; }
   .country-opt:hover { background: rgba(255,255,255,.11); }
-  .country-opt.on { border-color: var(--accent); background: rgba(10,132,255,.16); }
+  .country-opt.on { border-color: var(--accent); background: rgba(225,29,72,.16); }
   .country-opt:disabled { opacity: .45; cursor: not-allowed; }
 
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
@@ -704,7 +710,7 @@
 
 <header>
   <div class="wrap bar">
-    <a class="brand" href="./" aria-label="¿Dónde la veo? Inicio"><svg class="logo" viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#64d2ff"/><stop offset="1" stop-color="#5e5ce6"/></linearGradient></defs><rect width="32" height="32" rx="9" fill="url(#lg)"/><path d="M16 6.5c-4.4 0-8 3.4-8 7.7 0 5.6 6.7 10.9 7.3 11.3.4.3 1 .3 1.4 0 .6-.4 7.3-5.7 7.3-11.3 0-4.3-3.6-7.7-8-7.7z" fill="#fff"/><path d="M14.3 11.2v6l5-3z" fill="#5e5ce6"/></svg><span>¿Dónde la veo?</span></a>
+    <a class="brand" href="./" aria-label="¿Dónde la veo? Inicio"><svg class="logo" viewBox="0 0 100 100" width="32" height="32" aria-hidden="true"><rect width="100" height="100" rx="22.5" fill="#E11D48"/><g transform="translate(50 50) scale(0.8) translate(-50 -50)"><path transform="rotate(-10 50 50)" fill="#FFFFFF" fill-rule="evenodd" d="M17,26 H83 A7,7 0 0 1 90,33 V43 A7,7 0 0 0 90,57 V67 A7,7 0 0 1 83,74 H17 A7,7 0 0 1 10,67 V57 A7,7 0 0 0 10,43 V33 A7,7 0 0 1 17,26 Z M25,47 A13,13 0 1 0 51,47 A13,13 0 1 0 25,47 Z M45.76,60.42 L55.67,70.33 A4,4 0 0 0 61.33,64.67 L51.42,54.76 A15.5,15.5 0 0 1 45.76,60.42 Z"/></g></svg><span>¿Dónde la veo?</span></a>
     <div class="hdr-actions">
       <button class="icon-btn" id="grupoBtn" title="¿Qué vemos hoy? Elegí con otra persona">👥<span class="lbl"> ¿Qué vemos?</span></button>
       <button class="icon-btn" id="listBtn" title="Lo que guardaste para ver">🔖<span class="lbl"> Mi lista</span><span class="count" id="listCount"></span></button>

@@ -68,21 +68,21 @@ module.exports = async function handler(req, res) {
 <meta property="og:url" content="${esc(canonica)}">
 ${fondo ? `<meta property="og:image" content="${esc(fondo)}">` : ''}
 <meta name="twitter:card" content="summary_large_image">
-<meta name="theme-color" content="#000000">
-<link rel="icon" href="/icons/icon-192.png">
+<meta name="theme-color" content="#0a0a0c">
+<link rel="icon" type="image/svg+xml" href="/icons/favicon.svg">
 <script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>
 ${esBot ? '' : `<script>location.replace(${JSON.stringify(app)});</script>`}
 <style>
-  body { margin: 0; background: #000; color: #f5f5f7; font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  body { margin: 0; background: #0a0a0c; color: #f4f4f6; font: 16px/1.5 Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
   main { max-width: 760px; margin: 0 auto; padding: 32px 20px; display: grid; gap: 20px; grid-template-columns: 160px 1fr; }
   img.p { width: 160px; border-radius: 12px; }
   h1 { margin: 0 0 6px; font-size: 1.6rem; }
-  .v { background: #1c1c1e; border-radius: 12px; padding: 12px 14px; }
+  .v { background: #141419; border-radius: 12px; padding: 12px 14px; }
   ul { list-style: none; padding: 0; margin: 10px 0 0; display: flex; flex-wrap: wrap; gap: 10px; }
-  li { display: flex; align-items: center; gap: 8px; background: #2c2c2e; border-radius: 10px; padding: 6px 10px; font-size: .9rem; }
+  li { display: flex; align-items: center; gap: 8px; background: #262630; border-radius: 10px; padding: 6px 10px; font-size: .9rem; }
   li img { width: 28px; height: 28px; border-radius: 7px; }
-  a.btn { display: inline-block; margin-top: 16px; background: #0a84ff; color: #fff; text-decoration: none; padding: 10px 18px; border-radius: 980px; font-weight: 600; }
-  small { color: #8e8e93; }
+  a.btn { display: inline-block; margin-top: 16px; background: #e11d48; color: #fff; text-decoration: none; padding: 10px 18px; border-radius: 980px; font-weight: 600; }
+  small { color: #a1a1aa; }
   @media (max-width: 560px) { main { grid-template-columns: 1fr; } img.p { width: 140px; } }
 </style>
 </head>

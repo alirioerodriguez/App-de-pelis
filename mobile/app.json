@@ -7,7 +7,7 @@
     "icon": "./assets/icon.png",
     "scheme": "dondelaveo",
     "userInterfaceStyle": "dark",
-    "backgroundColor": "#000000",
+    "backgroundColor": "#0a0a0c",
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.alirio.dondelaveo",
@@ -18,7 +18,7 @@
     "android": {
       "package": "com.alirio.dondelaveo",
       "adaptiveIcon": {
-        "backgroundColor": "#5E7FF0",
+        "backgroundColor": "#E11D48",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -33,7 +33,7 @@
       [
         "expo-notifications",
         {
-          "color": "#5E7FF0"
+          "color": "#E11D48"
         }
       ],
       [
@@ -42,7 +42,7 @@
           "image": "./assets/splash-icon.png",
           "imageWidth": 140,
           "resizeMode": "contain",
-          "backgroundColor": "#000000"
+          "backgroundColor": "#0a0a0c"
         }
       ]
     ]

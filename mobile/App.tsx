@@ -148,11 +148,11 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#000000' },
-  web: { flex: 1, backgroundColor: '#000000' },
-  cover: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: '#000000', alignItems: 'center', justifyContent: 'center', padding: 24 },
+  root: { flex: 1, backgroundColor: '#0a0a0c' },
+  web: { flex: 1, backgroundColor: '#0a0a0c' },
+  cover: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: '#0a0a0c', alignItems: 'center', justifyContent: 'center', padding: 24 },
   title: { color: '#f5f5f7', fontSize: 22, fontWeight: '700', marginBottom: 8 },
   text: { color: '#98989d', fontSize: 15, textAlign: 'center', marginBottom: 20 },
-  btn: { backgroundColor: '#0a84ff', borderRadius: 999, paddingHorizontal: 22, paddingVertical: 12 },
+  btn: { backgroundColor: '#e11d48', borderRadius: 999, paddingHorizontal: 22, paddingVertical: 12 },
   btnText: { color: '#ffffff', fontWeight: '700', fontSize: 15 },
 });
