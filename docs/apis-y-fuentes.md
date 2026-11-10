@@ -46,3 +46,9 @@ Lo que sigue sale de las páginas oficiales de cada servicio cuando pude abrirla
 - Una API **pública y gratuita de derechos de TV deportivos por país**: no apareció ninguna.
 - Los precios y la cobertura de Latinoamérica de **Streaming Availability**.
 - Los términos comerciales de **MDBList**, **OMDb** y **TVmaze** en sus propios sitios.
+
+## 6. Nombre, dominios y licencia de TMDB (10/11/2026)
+
+- **Dominios** (consulta RDAP del 10/11/2026): `veomas.ar` y `veomas.app` **no figuran registrados**; `veomas.com.ar` **está registrado** (vence el 22/06/2027 según la consulta del 07/11). Si cambia el nombre: `modover.ar` y `miratodo.ar` tampoco figuran registrados. Que no figure no garantiza que esté libre: confirmalo en el registrador (NIC Argentina para `.ar`).
+- **Nombre «VeoMás» en las tiendas:** una búsqueda web no mostró ninguna app con ese nombre en Google Play ni en la App Store. **No alcanza como prueba**: falta buscar adentro de cada tienda, en Instagram y en TikTok, y en la base de marcas del INPI (con búsqueda fonética).
+- **Licencia comercial de TMDB:** los [términos oficiales](https://themoviedb.org:443/api-terms-of-use) dicen que cualquier uso comercial (la publicidad cuenta) necesita un **acuerdo escrito** con TMDB, que puede tener costo, y que TMDB decide qué es comercial. No encontré un formulario ni un precio oficial: un foro de TMDB muestra a alguien pidiéndola por mail a sales@themoviedb.org, y un directorio de terceros habla de US$ 149 por mes para empresas de menos de US$ 1 millón (**sin verificar**). Mientras la app sea gratis y sin publicidad, no hace falta.
