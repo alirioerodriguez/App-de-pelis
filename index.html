@@ -1318,6 +1318,9 @@
     load();
     revisarMiLista();
     if (location.hash === '#deportes') abrirDeportes();
+    // Atajos del ícono en Android: «Buscar» y «Mi lista»
+    if (location.hash === '#buscar') { history.replaceState(null, '', location.pathname); setTimeout(() => $('#q').focus(), 300); }
+    if (location.hash === '#milista') { history.replaceState(null, '', location.pathname); openList(); }
     const qvh = new URLSearchParams(location.search).get('qvh');
     if (qvh) {
       history.replaceState(null, '', location.pathname);
