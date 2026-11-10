@@ -7,6 +7,8 @@ const vm = require('node:vm');
 
 const T = require('../tmdbDatos.js');
 const ahoraFijo = Date.UTC(2026, 10, 10);
+// La versión sale de sw.js: al subirla (cada cambio de la web) las pruebas no se rompen.
+const V = /const VERSION = '([^']+)'/.exec(fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8'))[1];
 
 function cargar({ cachesExistentes = [], fetchFn, hoy = ahoraFijo } = {}) {
   const manejadores = {};
@@ -51,13 +53,13 @@ test('sw: la API de TMDB y de otros nunca pasa por el caché', async () => {
 test('sw: las imágenes de TMDB se guardan en el caché de la tanda actual', async () => {
   const { pedir, almacen } = cargar();
   await pedir('https://image.tmdb.org/t/p/w342/a.jpg');
-  const actual = T.cacheImagenes('v7', ahoraFijo);
+  const actual = T.cacheImagenes(V, ahoraFijo);
   assert.deepEqual([...almacen.keys()], [actual]);
   assert.equal(almacen.get(actual).size, 1);
 });
 
 test('sw: una imagen guardada en la tanda anterior se sigue usando sin pedirla de nuevo', async () => {
-  const previa = T.cacheImagenes('v7', ahoraFijo - T.TANDA_MS);
+  const previa = T.cacheImagenes(V, ahoraFijo - T.TANDA_MS);
   let pedidos = 0;
   const { pedir, almacen } = cargar({ cachesExistentes: [previa], fetchFn: async () => { pedidos++; return { ok: true, clone() { return this; } }; } });
   const guardada = { ok: true, tag: 'vieja' };
@@ -68,16 +70,16 @@ test('sw: una imagen guardada en la tanda anterior se sigue usando sin pedirla d
 });
 
 test('sw: al activarse borra los cachés de imágenes de hace más de 2 tandas y los de versiones viejas', async () => {
-  const actual = T.cacheImagenes('v7', ahoraFijo);
-  const previa = T.cacheImagenes('v7', ahoraFijo - T.TANDA_MS);
-  const viejo = T.cacheImagenes('v7', ahoraFijo - 4 * T.TANDA_MS);
-  const { activar, almacen } = cargar({ cachesExistentes: [actual, previa, viejo, 'img-v6', 'shell-v6', 'shell-v7'] });
+  const actual = T.cacheImagenes(V, ahoraFijo);
+  const previa = T.cacheImagenes(V, ahoraFijo - T.TANDA_MS);
+  const viejo = T.cacheImagenes(V, ahoraFijo - 4 * T.TANDA_MS);
+  const { activar, almacen } = cargar({ cachesExistentes: [actual, previa, viejo, 'img-v0', 'shell-v0', `shell-${V}`] });
   await activar();
-  assert.deepEqual([...almacen.keys()].sort(), [actual, previa, 'shell-v7'].sort());
+  assert.deepEqual([...almacen.keys()].sort(), [actual, previa, `shell-${V}`].sort());
 });
 
 test('sw: si el service worker sigue vivo meses sin reactivarse, igual limpia al primer pedido de imagen', async () => {
-  const viejo = T.cacheImagenes('v7', ahoraFijo - 5 * T.TANDA_MS);
+  const viejo = T.cacheImagenes(V, ahoraFijo - 5 * T.TANDA_MS);
   const { pedir, almacen } = cargar({ cachesExistentes: [viejo] });
   const { esperas } = await pedir('https://image.tmdb.org/t/p/w92/b.jpg');
   assert.equal(esperas.length, 1);
