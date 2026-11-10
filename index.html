@@ -122,6 +122,20 @@
   .extra { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 980px; font-size: .72rem; font-weight: 600;
     color: #ff6b4a; background: rgba(255,107,74,.14); white-space: nowrap; vertical-align: middle; }
   .se-txt .extra { margin: 2px 0; align-self: flex-start; }
+  /* «Queremos escucharte»: sugerencias que llegan al panel del creador */
+  .escucharte { max-width: 640px; margin: 0 auto 28px; padding: 20px; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); }
+  .escucharte h2 { margin: 0 0 6px; font-family: "DM Serif Display", Georgia, serif; font-weight: 400; font-size: 1.6rem; }
+  .escucharte p { margin: 0 0 12px; color: var(--muted); font-size: .95rem; }
+  .escucharte .tipos { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .escucharte .tipos button { font: inherit; font-size: .9rem; border: 1px solid var(--line); background: transparent; color: var(--text); border-radius: 980px; padding: 8px 14px; cursor: pointer; min-height: 40px; }
+  .escucharte .tipos button[aria-pressed="true"] { background: var(--accent-fill); border-color: var(--accent-fill); color: #fff; }
+  .escucharte label { display: block; font-size: .85rem; color: var(--muted); margin: 0 0 6px; }
+  .escucharte textarea, .escucharte input[type=email] { width: 100%; font: inherit; font-size: 1rem; color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; }
+  .escucharte textarea { min-height: 120px; resize: vertical; }
+  .escucharte textarea:focus, .escucharte input[type=email]:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .escucharte .trampa { position: absolute; left: -9999px; width: 1px; height: 1px; }
+  .escucharte .estado { min-height: 1.4em; margin: 10px 0 0; font-size: .9rem; }
+  .escucharte .estado.ok { color: var(--ok); } .escucharte .estado.mal { color: var(--buy); }
   .report { margin: 14px 0 0; }
   .linkbtn { background: none; border: 0; padding: 4px 0; color: var(--muted); font: inherit; font-size: .85rem; text-decoration: underline; cursor: pointer; }
   .report-opts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
@@ -837,6 +851,22 @@
       <button class="btn" id="installBtn">Instalar</button>
     </div>
   </section>
+  <section class="escucharte" aria-labelledby="escTitulo">
+    <h2 id="escTitulo">Queremos escucharte</h2>
+    <p>¿Una idea, algo que no anda o una plataforma que falta? Contanos: lo leemos todo.</p>
+    <div class="tipos" role="group" aria-label="Qué nos querés contar">
+      <button type="button" data-esc-tipo="idea" aria-pressed="true">Una idea</button>
+      <button type="button" data-esc-tipo="problema" aria-pressed="false">Algo no anda</button>
+      <button type="button" data-esc-tipo="otra" aria-pressed="false">Otra cosa</button>
+    </div>
+    <label for="escTexto">Tu mensaje</label>
+    <textarea id="escTexto" maxlength="2000" placeholder="Por ejemplo: me gustaría que avise cuando una serie vuelve a una plataforma"></textarea>
+    <label for="escMail">Tu mail, si querés que te respondamos (opcional)</label>
+    <input id="escMail" type="email" inputmode="email" autocomplete="email" maxlength="120" placeholder="nombre@ejemplo.com">
+    <input class="trampa" id="escWeb" type="text" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <button class="btn" type="button" id="escEnviar">Enviar</button>
+    <p class="estado" id="escEstado" role="status" aria-live="polite"></p>
+  </section>
   <section class="more-apps" aria-labelledby="moreAppsTitle">
     <h2 id="moreAppsTitle">Otras apps del creador</h2>
     <p>Hechas por la misma persona que hizo esta.</p>
@@ -853,6 +883,35 @@
   </div>
 </footer>
 
+<script>
+// «Queremos escucharte»: la sugerencia llega al panel del creador (App de apps). Solo viaja lo que se escribe y el mail si se deja.
+(() => {
+  const URL_SUGERIR = 'https://app-de-apps-alirio.vercel.app/api/sugerir';
+  let tipo = 'idea';
+  const $e = (id) => document.getElementById(id);
+  const estado = (txt, clase) => { const e = $e('escEstado'); e.textContent = txt; e.className = 'estado ' + (clase || ''); };
+  document.querySelectorAll('[data-esc-tipo]').forEach((b) => b.addEventListener('click', () => {
+    tipo = b.dataset.escTipo;
+    document.querySelectorAll('[data-esc-tipo]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+  }));
+  $e('escEnviar').addEventListener('click', async () => {
+    const texto = $e('escTexto').value.trim(), mail = $e('escMail').value.trim();
+    if (texto.length < 3) { estado('Escribí un poco más, así entendemos qué nos querés contar.', 'mal'); $e('escTexto').focus(); return; }
+    if (mail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) { estado('Revisá el mail: tiene que ser como nombre@ejemplo.com.', 'mal'); $e('escMail').focus(); return; }
+    const btn = $e('escEnviar'); btn.disabled = true; estado('Enviando…');
+    try {
+      const r = await fetch(URL_SUGERIR, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ app: 'app-de-pelis', tipo, texto, mail, web: $e('escWeb').value, version: 'web' }) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error || 'No se pudo enviar');
+      $e('escTexto').value = ''; $e('escMail').value = '';
+      estado('¡Gracias! Ya nos llegó. Lo vamos a leer con atención.', 'ok');
+    } catch (err) {
+      estado(navigator.onLine === false ? 'Estás sin conexión: probá cuando vuelva.' : 'No se pudo enviar: ' + err.message, 'mal');
+    } finally { btn.disabled = false; }
+  });
+})();
+</script>
 <script src="corrector.js"></script>
 <script src="queVemosHoy.js"></script>
 <script>
