@@ -914,6 +914,7 @@
 </script>
 <script src="corrector.js"></script>
 <script src="queVemosHoy.js"></script>
+<script src="tmdbDatos.js"></script>
 <script>
 (() => {
   // País: el que la persona eligió la última vez; si nunca eligió, el de su conexión (api/pais.js); si no, Argentina.
@@ -1011,16 +1012,21 @@
   // dos nombres (España / Latinoamérica) + todo lo que la app va viendo en TMDB, que se recuerda en este dispositivo.
   const VOCAB_STORE = 'dlv_vocab_v1';
   let VOCAB = Corrector.VOCABULARIO_INICIAL;
+  let vocabGuardado = [];
   try {
-    const guardado = JSON.parse(localStorage.getItem(VOCAB_STORE) || '[]');
-    if (Array.isArray(guardado)) VOCAB = Corrector.aprender(VOCAB, guardado);
+    // Lo que se aprendió de TMDB se guarda con su fecha y vence a los 150 días (TMDB no permite más de 6 meses)
+    const { lista, cambio } = TmdbDatos.sellarYFiltrar(JSON.parse(localStorage.getItem(VOCAB_STORE) || '[]'), Date.now());
+    vocabGuardado = lista;
+    if (cambio) localStorage.setItem(VOCAB_STORE, JSON.stringify(lista));
+    VOCAB = Corrector.aprender(VOCAB, lista);
   } catch { /* sin almacenamiento: queda la lista inicial */ }
-  let vocabPendiente = [];
+  let vocabPendiente = vocabGuardado;
   function aprenderVocab(vistos) {
     const antes = VOCAB;
     VOCAB = Corrector.aprender(VOCAB, vistos);
     if (VOCAB === antes) return;
-    vocabPendiente.push(...vistos.filter(Boolean));
+    const ahora = Date.now();
+    vocabPendiente.push(...vistos.filter(Boolean).map(v => ({ ...v, en: ahora })));
     vocabPendiente = vocabPendiente.slice(-1500);
     try { localStorage.setItem(VOCAB_STORE, JSON.stringify(vocabPendiente)); } catch { /* lleno o bloqueado: no pasa nada */ }
   }
@@ -2286,8 +2292,9 @@
       const url = openUrl(s.provider_name, title);
       const label = rentOnly ? `Alquilar o comprar en ${esc(s.provider_name)}` : `Abrir ${esc(s.provider_name)}`;
       return `<a class="btn ghost ${url ? '' : 'hidden'}" data-prov="${esc(provKey(s.provider_name) || '')}" data-name="${esc(s.provider_name)}" href="${url || '#'}" target="_blank" rel="noopener" data-copy="${esc(title)}">${label} ↗</a>`;
-    }).join('') + (p?.link && (subs.length || p.rent || p.buy)
-      ? `<a class="btn ghost" href="${p.link}" target="_blank" rel="noopener">Ver todas las opciones ↗</a>` : '')
+    }).join('') + (p && (subs.length || p.rent || p.buy) && (p.link || TmdbDatos.enlaceTmdbPorPais(type, id, REGION))
+      // El enlace de TMDB de ese país; si no vino, la página «Dónde ver» de TMDB para el país (/watch?locale=XX)
+      ? `<a class="btn ghost" href="${p.link || TmdbDatos.enlaceTmdbPorPais(type, id, REGION)}" target="_blank" rel="noopener">Ver todas las opciones ↗</a>` : '')
       + (type === 'movie' && cine?.now.has(id)
       ? `<a class="btn" href="https://www.google.com/search?q=${encodeURIComponent(`${title} cartelera cines ${CN()}`)}" target="_blank" rel="noopener">🎬 Ver horarios ↗</a>` : '');
 
