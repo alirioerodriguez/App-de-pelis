@@ -920,6 +920,7 @@
 <script src="tmdbDatos.js"></script>
 <script src="derechos.js"></script>
 <script src="avisosWeb.js"></script>
+<script src="azar.js"></script>
 <script>
 (() => {
   // País: el que la persona eligió la última vez; si nunca eligió, el de su conexión (api/pais.js); si no, Argentina.
@@ -3346,29 +3347,33 @@
   $('#spLeagues').addEventListener('click', e => { const b = e.target.closest('[data-liga]'); if (!b) return; sp.liga = b.dataset.liga || null; $('#spLeagues').querySelectorAll('.sp-lg').forEach(x => x.classList.toggle('on', x === b)); cargarDeportes(); });
 
   // ---------- Elegí por mí ----------
-  // Elige al azar algo que se pueda ver en el país, respetando los filtros puestos. Si en pantalla hay
-  // pocas opciones, busca en TMDB títulos con buena nota disponibles por suscripción o gratis.
-  let ultimoAlAzar = null;
+  // Elige al azar algo que se pueda ver en el país, respetando los filtros puestos, y SIN repetir: azar.js se acuerda de los
+  // últimos 60 títulos que salieron (también al recargar) y pide a TMDB páginas distintas cada vez (de la 1 a la 15), así el
+  // universo es de cientos de títulos y no de unos 60. Si lo que hay en pantalla casi ya salió, completa con TMDB.
+  const almacenAzar = { getItem: safeGet, setItem: (k, v) => safeSet(k, v) };
+  const azarVeo = AzarVeo.crear({ estado: AzarVeo.cargar(almacenAzar) });
   async function pickRandom() {
     const btn = $('#randomBtn');
     btn.disabled = true;
     try {
-      const enPantalla = [...els.grid.querySelectorAll('.card[data-id]:not(.locked):not(.cinema)')]
-        .map(c => ({ id: +c.dataset.id, media_type: c.dataset.type })).filter(x => x.media_type + x.id !== ultimoAlAzar);
-      let pool = enPantalla;
-      if (pool.length < 3) {
+      const candidatos = [...els.grid.querySelectorAll('.card[data-id]:not(.locked):not(.cinema)')]
+        .map(c => ({ id: +c.dataset.id, media_type: c.dataset.type }));
+      const conocidos = new Set(candidatos.map(AzarVeo.clave));
+      for (let intento = 0; intento < 3 && azarVeo.libres(candidatos).length < 8; intento++) {
         const t = state.type === 'all' ? (Math.random() < 0.5 ? 'movie' : 'tv') : state.type;
         const base = state.mode === 'discover' ? await discoverParams(t) : null;
         const params = { ...(base || { sort_by: 'popularity.desc', include_adult: false }) };
-        Object.assign(params, { watch_region: REGION, with_watch_monetization_types: 'flatrate|free|ads', 'vote_average.gte': 6.5, 'vote_count.gte': 40, page: 1 + Math.floor(Math.random() * 3) });
+        Object.assign(params, { watch_region: REGION, with_watch_monetization_types: 'flatrate|free|ads', 'vote_average.gte': 6.5, 'vote_count.gte': 40 });
         if (!state.provider && state.onlyMine && mine.size) params.with_watch_providers = brandIds([...mine]);
+        delete params.page;
+        params.page = azarVeo.paginaNueva(JSON.stringify([t, params])); // página que todavía no se usó con estos filtros
         const d = await api(`/discover/${t}`, params);
-        pool = (d.results || []).map(r => ({ id: r.id, media_type: t })).filter(x => x.media_type + x.id !== ultimoAlAzar);
+        for (const r of d.results || []) { const x = { id: r.id, media_type: t }; if (!conocidos.has(AzarVeo.clave(x))) { conocidos.add(AzarVeo.clave(x)); candidatos.push(x); } }
       }
-      if (!pool.length) return toast(`No encontré nada disponible en ${CN()} con esos filtros.`);
-      const elegida = pool[Math.floor(Math.random() * pool.length)];
-      ultimoAlAzar = elegida.media_type + elegida.id;
-      await openDetail(elegida.id, elegida.media_type, true);
+      const r = azarVeo.elegir(candidatos);
+      if (!r) return toast(`No encontré nada disponible en ${CN()} con esos filtros.`);
+      AzarVeo.guardar(almacenAzar, azarVeo.estado());
+      await openDetail(r.elegida.id, r.elegida.media_type, true);
     } catch (e) { handleErr(e); }
     finally { btn.disabled = false; }
   }
