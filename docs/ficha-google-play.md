@@ -2,10 +2,10 @@
 
 Textos para pegar en Play Console (**Crecer → Presencia en la tienda → Ficha principal**). Escritos el 07/11/2026 a partir de lo que la app hace hoy. Límites de Google: título 30 caracteres, descripción breve 80, descripción completa 4.000. La app es una TWA (`ar.alirio.dondelaveo`): los cambios de la web llegan solos.
 
-**Nombre:** VeoMás (desde el 09/11/2026; antes «VeoMás»). El paquete `ar.alirio.dondelaveo` no cambia.
+**Nombre:** VeoMás (desde el 09/11/2026; antes «¿Dónde la veo?»). El paquete `ar.alirio.dondelaveo` no cambia.
 
 ## Título (30)
-VeoMás Pelis y series
+VeoMás: pelis, series y fútbol
 
 ## Descripción breve (80)
 Busca una película o serie y mira en qué plataforma está en tu país.
@@ -28,6 +28,7 @@ Busca una película o serie y mira en qué plataforma está en tu país.
 • «Elige por mí» cuando no sabes qué ver.
 • Tráiler en la ficha y tarjeta para compartir por WhatsApp o en historias.
 • Deportes: qué partidos se ven en vivo y dónde.
+• Mantén presionado el ícono para buscar, ver los deportes o abrir tu lista directo.
 
 **Sin vueltas**
 • No necesitas cuenta. Lo que eliges queda en tu teléfono.
@@ -49,6 +50,7 @@ Datos de películas de TMDB. Datos de disponibilidad de JustWatch. Esta app usa 
 - **Notificaciones:** los avisos de «Mi lista» son de la app nativa; en la TWA de Play no están (en `twa-manifest.json`, `enableNotifications` es falso).
 
 ## Antes de pegar
+- Capturas nuevas (diseño VeoMás, 1080 × 2160) en `Documents\Android-apps\dondelaveoicha\`: inicio, búsqueda, ficha con el semáforo, deportes y serie. El gráfico de 1024 × 500 también es nuevo.
 - **Decidir el nombre** antes de publicar para todos (para la prueba cerrada no hace falta).
 - **Licencias:** TMDB permite su API gratis en apps no comerciales. Si algún día hay publicidad o cobro, hace falta su licencia comercial y revisar las condiciones de JustWatch (sin verificar).
 - Cada punto tiene que estar en la versión publicada. Si algo se saca de la app, se saca de acá.
