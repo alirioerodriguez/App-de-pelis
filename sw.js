@@ -5,10 +5,10 @@
 //   no pueden quedar más de 6 meses: se guardan por tandas de 60 días y solo viven la actual y la anterior (tmdbDatos.js).
 // - Las consultas a las APIs (TMDB, Wikidata) nunca se guardan: la disponibilidad tiene que estar al día.
 importScripts('./tmdbDatos.js');
-const VERSION = 'v10';
+const VERSION = 'v11';
 const SHELL = `shell-${VERSION}`;
 const imagenes = () => TmdbDatos.cacheImagenes(VERSION, Date.now()); // caché de imágenes de la tanda actual
-const SHELL_FILES = ['./', './index.html', './corrector.js', './tmdbDatos.js', './derechos.js', './avisosWeb.js', './azar.js', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
+const SHELL_FILES = ['./', './index.html', './corrector.js', './tmdbDatos.js', './derechos.js', './avisosWeb.js', './azar.js', './rotacion.js', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(SHELL).then(c => c.addAll(SHELL_FILES)).then(() => self.skipWaiting()));

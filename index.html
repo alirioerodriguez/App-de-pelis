@@ -921,6 +921,7 @@
 <script src="derechos.js"></script>
 <script src="avisosWeb.js"></script>
 <script src="azar.js"></script>
+<script src="rotacion.js"></script>
 <script>
 (() => {
   // País: el que la persona eligió la última vez; si nunca eligió, el de su conexión (api/pais.js); si no, Argentina.
@@ -1560,6 +1561,15 @@
       .then(d => ({ results: (d.results || []).map(r => ({ ...r, media_type: type })), total_pages: d.total_pages || 0 }))));
     return { results: res.flatMap(r => r.results).sort((a, b) => b.popularity - a.popularity), total_pages: Math.max(...res.map(r => r.total_pages)) };
   }
+  // Para rotar los estrenos hace falta más que la primera página: 3 por tipo (TMDB las guarda en su caché, son las mismas consultas
+  // que ya se piden al abrir «ver todos»). Si una página falla, se sigue con las que llegaron.
+  async function fetchNewPool() {
+    const types = state.type === 'all' ? ['movie', 'tv'] : [state.type];
+    const pedidos = types.flatMap(type => [1, 2, 3].map(page => api(`/discover/${type}`, newParams(type, page))
+      .then(d => (d.results || []).map(r => ({ ...r, media_type: type }))).catch(() => [])));
+    return (await Promise.all(pedidos)).flat();
+  }
+  const almacenEstrenos = { getItem: safeGet, setItem: (k, v) => safeSet(k, v) };
   let newSeq = 0;
   function slide(it, i, n) {
     const title = Corrector.tituloParaPais(nombresCache.get(it.media_type + it.id), REGION, it.title || it.name);
@@ -1585,12 +1595,14 @@
     $('#newSec').classList.toggle('hidden', state.mode !== 'trending');
     row.innerHTML = '<div class="slide ghost-slide"></div>';
     $('#bbDots').innerHTML = '';
-    let d;
-    try { d = await fetchNew(1); } catch { if (seq === newSeq) { row.innerHTML = ''; $('#newSec').classList.add('hidden'); } return; }
+    let pool;
+    try { pool = await fetchNewPool(); } catch { pool = []; }
     if (seq !== newSeq) return;
-    // con imagen de fondo se ve mejor: primero las que la tienen
-    const list = d.results.filter(r => r.backdrop_path).concat(d.results.filter(r => !r.backdrop_path)).slice(0, 8);
+    // Se eligen 8 con un sorteo que favorece lo popular pero rota entre visitas (rotacion.js): antes eran siempre los mismos.
+    const vistos = Rotacion.cargar(almacenEstrenos);
+    const list = Rotacion.elegirEstrenos({ candidatos: pool, vistos });
     if (!list.length) { row.innerHTML = ''; $('#newSec').classList.add('hidden'); return; }
+    Rotacion.guardar(almacenEstrenos, Rotacion.anotar(vistos, list));
     row.innerHTML = list.map((it, i) => slide(it, i, list.length)).join('');
     $('#bbDots').innerHTML = list.map((it, i) => `<button aria-label="Ir a ${i + 1}" data-i="${i}"></button>`).join('');
     row.scrollLeft = 0;
