@@ -3162,6 +3162,7 @@
     fox: { n: 'FOX', nota: 'FOX One' },
     foxar: { n: 'Fox Sports' },
     telefe: { n: 'Telefe', nota: '1 partido por semana, gratis' },
+    canal13: { n: 'Canal 13', nota: '1 partido por fecha, gratis' },
     tntcl: { n: 'TNT Sports Premium' },
     win: { n: 'Win+ Fútbol', nota: 'Win Play' },
     l1max: { n: 'L1 MAX' },
@@ -3227,7 +3228,8 @@
     }).join('');
     const sinDato = (clave === 'atp' || clave === 'wta') ? 'según el torneo: buscalo en la guía de tu cable o en ESPN' : `no encontramos dónde se ve en ${esc(CN())}`;
     const f = FUENTES[clave];
-    const pie = f && chips ? ` <small>· verificado el ${esc(f.fecha.split('-').reverse().join('/'))}: <a href="${esc(f.url)}" target="_blank" rel="noopener">fuente ↗</a>${f.nota ? ' · ' + esc(f.nota) : ''}</small>` : '';
+    // Con fuente: fecha y link. «Por confirmar»: se dice. Sin fuente anotada (lo de antes): también se dice, para no dar un dato por seguro.
+    const pie = !chips ? '' : f ? ` <small>· ${f.porConfirmar ? 'por confirmar, ' : ''}verificado el ${esc(f.fecha.split('-').reverse().join('/'))}: <a href="${esc(f.url)}" target="_blank" rel="noopener">fuente ↗</a>${f.nota ? ' · ' + esc(f.nota) : ''}</small>` : ' <small>· sin fuente anotada: confirmalo antes de verlo</small>';
     return `<div class="sp-where">📺 En ${esc(CN())}: ${chips || `<span>${sinDato}</span>`}${pie}</div>`;
   }
 

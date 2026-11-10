@@ -52,3 +52,23 @@ Lo que sigue sale de las páginas oficiales de cada servicio cuando pude abrirla
 - **Dominios** (consulta RDAP del 10/11/2026): `veomas.ar` y `veomas.app` **no figuran registrados**; `veomas.com.ar` **está registrado** (vence el 22/06/2027 según la consulta del 07/11). Si cambia el nombre: `modover.ar` y `miratodo.ar` tampoco figuran registrados. Que no figure no garantiza que esté libre: confirmalo en el registrador (NIC Argentina para `.ar`).
 - **Nombre «VeoMás» en las tiendas:** una búsqueda web no mostró ninguna app con ese nombre en Google Play ni en la App Store. **No alcanza como prueba**: falta buscar adentro de cada tienda, en Instagram y en TikTok, y en la base de marcas del INPI (con búsqueda fonética).
 - **Licencia comercial de TMDB:** los [términos oficiales](https://themoviedb.org:443/api-terms-of-use) dicen que cualquier uso comercial (la publicidad cuenta) necesita un **acuerdo escrito** con TMDB, que puede tener costo, y que TMDB decide qué es comercial. No encontré un formulario ni un precio oficial: un foro de TMDB muestra a alguien pidiéndola por mail a sales@themoviedb.org, y un directorio de terceros habla de US$ 149 por mes para empresas de menos de US$ 1 millón (**sin verificar**). Mientras la app sea gratis y sin publicidad, no hace falta.
+
+## 7. Tabla de derechos: qué se verificó el 10/11/2026
+
+Se revisó contra notas de medios de 2026 cada entrada que no tenía fuente. **Cambió lo siguiente** (cada entrada tiene ahora link y fecha en `derechos.js`; las que dicen «por confirmar» tienen fuentes que no coinciden o de una sola nota):
+
+| Competencia | Antes | Ahora | Por qué |
+|---|---|---|---|
+| F1 en Argentina | Disney+, Fox Sports, F1 TV | ESPN, Disney+, F1 TV | Las guías de 2026 dicen ESPN y Disney+ Premium; Fox Sports no aparece |
+| F1 en México | Sky, F1 TV | FOX, Sky, F1 TV | Las fuentes no coinciden: por confirmar |
+| Libertadores (Sudamérica) | Disney+ | ESPN, Disney+ | Fuente: Vanguardia |
+| Champions (Latinoamérica) | Disney+ | ESPN, Disney+ | México: FOX y HBO Max (última temporada del acuerdo); desde 2027-28 se suma Paramount+ |
+| Premier League (Latinoamérica) | Disney+ | ESPN, Disney+ | ESPN tiene la licencia hasta 2027-28 |
+| LaLiga (Sudamérica) | Disney+, DGO | ESPN, Disney+, DSports, DGO | ESPN y DSports se reparten los 380 partidos |
+| NBA en México | Disney+, League Pass | ESPN, Disney+, Prime Video, League Pass | Cada partido sale por una señal distinta |
+| Chile | TNT Sports, HBO Max | + Canal 13 | Un partido por fecha, gratis |
+| Tenis (Latinoamérica) | Disney+ | ESPN, Disney+ | Wimbledon y Roland Garros; del US Open no hay fuente de 2026 |
+
+Sin cambios pero **con fuente nueva**: Liga Profesional (ESPN Premium o TNT Sports según el partido), Liga BetPlay (Win Sports+ y Win Play), Liga 1 de Perú (L1 MAX) y Liga MX (ViX, FOX y TV abierta; Prime Video no apareció).
+
+**Siguen sin fuente anotada** y la página lo avisa («sin fuente anotada: confirmalo antes de verlo»): MLB, NHL, Campeonato Uruguayo y Copa Sudamericana. No encontré resultados fiables para el Uruguayo.

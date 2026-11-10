@@ -17,23 +17,36 @@
   const en = (paises, plats) => Object.fromEntries(paises.map((cc) => [cc, plats]));
 
   const DERECHOS = {
+    // Liga Profesional (Clausura 2026): ESPN Premium y TNT Sports (Premium), según el partido. «dgo» sin fuente.
     'arg.1': { AR: ['packfutbol', 'dgo'] },
-    'mex.1': { MX: ['vix', 'prime', 'fox'] },
+    // Liga MX (Apertura 2026): ViX Premium, FOX y Fox One, y algunos partidos por ESPN y Disney+, Canal 5 y TUDN (abierta). «prime»: no apareció en las fuentes.
+    'mex.1': { MX: ['vix', 'prime', 'fox', 'disney'] },
+    // Liga BetPlay: Win Sports+ en cable y Win Play en internet (con suscripción); algunos partidos, por YouTube.
     'col.1': { CO: ['win'] },
-    'chi.1': { CL: ['tntcl', 'max'] },
+    // Campeonato 2026: TNT Sports Premium en cable y TNT Sports en HBO Max; un partido por fecha en Canal 13 (abierta).
+    'chi.1': { CL: ['tntcl', 'max', 'canal13'] },
+    // Liga 1 2026: L1 MAX (de 1190 Sports) en Movistar y otros operadores; un partido por fecha en abierta (Nativa, fuente menor).
     'per.1': { PE: ['l1max'] },
     'uru.1': { UY: ['disney', 'antel'] },
-    'conmebol.libertadores': { ...en(SUD, ['disney']), AR: ['disney', 'foxar', 'telefe'], MX: ['bein'] },
+    // Libertadores 2026: ESPN y Disney+ en Sudamérica. En Argentina, «foxar» y «telefe»; en México, «bein»: sin fuente.
+    'conmebol.libertadores': { ...en(SUD, ['espn', 'disney']), AR: ['espn', 'disney', 'foxar', 'telefe'], MX: ['bein'] },
     'conmebol.sudamericana': { ...en(SUD, ['dgo', 'disney']) },
-    'uefa.champions': { ...en(LATAM, ['disney']), AR: ['disney', 'foxar'], MX: ['max'] },
-    'eng.1': { ...en(LATAM, ['disney']), MX: ['max', 'fox'] },
-    'esp.1': { ...en(SUD, ['disney', 'dgo']), MX: ['sky'] },
-    f1: { ...en(LATAM, ['disney', 'f1tv']), AR: ['disney', 'foxar', 'f1tv'], MX: ['sky', 'f1tv'] },
-    nba: { ...en([...LATAM, 'MX'], ['disney', 'leaguepass']) },
+    // Champions 2026-27: ESPN y Disney+ en Latinoamérica; en México, FOX y HBO Max (última temporada del acuerdo actual).
+    // Desde 2027-28 se reparte entre ESPN/Disney+ y Paramount+. «foxar» en Argentina: sin fuente.
+    'uefa.champions': { ...en(LATAM, ['espn', 'disney']), AR: ['espn', 'disney', 'foxar'], MX: ['fox', 'max'] },
+    // Premier League 2026-27: ESPN y Disney+ en Sudamérica (licencia hasta 2027-28). México: las fuentes no coinciden (TNT Sports y FOX, o Sky y Canal 5).
+    'eng.1': { ...en(LATAM, ['espn', 'disney']), MX: ['max', 'fox'] },
+    // LaLiga 2026-27: ESPN (también en Disney+ Premium) y DSports se reparten los 380 partidos en Sudamérica. México: Sky Sports.
+    'esp.1': { ...en(SUD, ['espn', 'disney', 'dsports', 'dgo']), MX: ['sky'] },
+    // F1 2026: ESPN y Disney+ Premium en Latinoamérica (sin México ni Brasil), más F1 TV Pro. México: FOX o Sky según la fuente.
+    f1: { ...en(LATAM, ['espn', 'disney', 'f1tv']), MX: ['fox', 'sky', 'f1tv'] },
+    // NBA 2026-27: en México, cada partido sale por ESPN y Disney+, Prime Video o NBA League Pass. Resto de Latinoamérica: sin datos de esta temporada.
+    nba: { ...en(LATAM, ['disney', 'leaguepass']), MX: ['espn', 'disney', 'prime', 'leaguepass'] },
     mlb: { ...en([...LATAM, 'MX'], ['disney', 'mlbtv']) },
     nhl: { ...en([...LATAM, 'MX'], ['disney']) },
     // tenis: los Grand Slams van por ESPN; el resto del circuito, según el torneo
-    tenis: { ...en([...LATAM, 'MX'], ['disney']) },
+    // Grand Slams 2026 en Latinoamérica: ESPN y Disney+ (Wimbledon y Roland Garros con fuente; US Open sin fuente de 2026).
+    tenis: { ...en(LATAM, ['espn', 'disney']), MX: ['disney'] },
 
     // ---- Desde el 10/11/2026, con fuente (ver FUENTES). Solo los países con dato. ----
     // Los Pumas en el Nations Championship: ESPN 2 y Disney+ Premium en Argentina. Otros países: sin datos.
@@ -48,6 +61,18 @@
 
   /** Fuente y fecha de verificación de cada entrada nueva: { fecha: 'AAAA-MM-DD', url, nota? }. */
   const FUENTES = {
+    'col.1': { fecha: '2026-11-10', url: 'https://www.publimetro.co/deportes/2026/07/24/regresa-el-fpc-partidos-horarios-y-donde-ver-la-fecha-1-de-la-liga-betplay/', nota: 'Win Sports+ en TV y Win Play en internet; la mayoría requiere suscripción. Cada partido puede cambiar de señal.' },
+    'chi.1': { fecha: '2026-11-10', url: 'https://www.eldinamo.cl/deportes/2026/01/22/el-futbol-chileno-ira-por-tv-abierta-los-detalles-del-acuerdo-entre-canal-13-y-tnt-sports-por-la-temporada-2026/', nota: 'TNT Sports tiene la cobertura completa; Canal 13 pasa un partido por fecha, gratis.' },
+    'per.1': { fecha: '2026-11-10', url: 'https://libero.pe/futbol-peruano/liga-1/2026/01/10/l1-max-cinco-operadores-transmitiran-todos-partidos-de-liga-1-2026-630360', nota: 'L1 MAX en Movistar, DirecTV, Claro, Win y otros operadores. La TV abierta (Nativa) viene de una fuente menor.' },
+    tenis: { fecha: '2026-11-10', url: 'https://www.puntodebreak.com/2026/06/23/ver-wimbledon-2026-tv-horarios-favoritos-grand-slam-hierba', nota: 'Wimbledon y Roland Garros por ESPN y Disney+. Del US Open no hay fuente de 2026. El resto del circuito va según el torneo.', porConfirmar: true },
+    'mex.1': { fecha: '2026-11-10', url: 'https://www.publimetro.com.mx/deportes/2026/07/16/donde-ver-todos-los-partidos-del-apertura-2026-en-la-liga-mx/', nota: 'Apertura 2026: cada jornada reparte partidos entre ViX, FOX y TV abierta. Prime Video no apareció en las fuentes.', porConfirmar: true },
+    'eng.1': { fecha: '2026-11-10', url: 'https://es.digitaltrends.com/deportes/derechos-transmision-ligas-europeas-2026-27-america-latina/', nota: 'Sudamérica: ESPN y Disney+. México: las fuentes no coinciden, confirmalo.', porConfirmar: true },
+    'esp.1': { fecha: '2026-11-10', url: 'https://www.insideworldfootball.com/2026/08/12/laliga-agrees-6-year-renewals-with-espn-and-dsports-in-south-america/', nota: 'Sudamérica: ESPN y DSports (renovado hasta 2031/32). México: Sky Sports, según una guía.' },
+    nba: { fecha: '2026-11-10', url: 'https://www.excelsior.com.mx/deportes/nba-donde-ver-inicio-temporada-2026-2027', nota: 'Solo México tiene dato de esta temporada: cada partido sale por ESPN y Disney+, Prime Video o League Pass. El resto, sin confirmar.', porConfirmar: true },
+    'arg.1': { fecha: '2026-11-10', url: 'https://www.canal26.com/futbol/liga-profesional-de-futbol/river-plate-vs-velez-dia-horario-canal-de-tv-y-como-ver-el-partido-del-torneo-clausura-2026/', nota: 'Clausura 2026: cada partido sale por ESPN Premium o TNT Sports (Premium): mirá cuál. DGO sin fuente.', porConfirmar: true },
+    'conmebol.libertadores': { fecha: '2026-11-10', url: 'https://www.vanguardia.com/deportes/futbol/2026/04/06/donde-ver-la-copa-libertadores-2026-en-colombia-horarios-y-la-primera-fecha/', nota: 'ESPN y Disney+ en casi toda Latinoamérica. Fox Sports, Telefe y beIN: sin fuente.', porConfirmar: true },
+    'uefa.champions': { fecha: '2026-11-10', url: 'https://es.digitaltrends.com/deportes/derechos-transmision-ligas-europeas-2026-27-america-latina/', nota: 'Temporada 2026-27. En México las fuentes no coinciden (FOX y HBO Max): confirmalo. Desde 2027-28 se reparte con Paramount+.', porConfirmar: true },
+    f1: { fecha: '2026-11-10', url: 'https://www.lacapital.com.ar/ovacion/donde-ver-franco-colapinto-la-formula-1-confirmo-un-nuevo-acuerdo-tv-n10246154.html', nota: 'ESPN y Disney+ Premium en Latinoamérica (sin México ni Brasil). En México las fuentes no coinciden (FOX o Sky).', porConfirmar: true },
     'rugby.test': { fecha: '2026-11-10', url: 'https://www.lacapitalmdp.com/los-pumas-ante-gales-por-el-nations-championship/', nota: 'Los Pumas ante Gales: ESPN 2 y Disney+ Premium. Noviembre en Europa: confirmar cada fecha.' },
     'rugby.super': { fecha: '2026-11-10', url: 'https://espndeportes.espn.com/rugby/nota/_/id/16032732', nota: 'ESPN y Disney+ Premium en Argentina. La temporada 2026 ya terminó; la de 2027 no está anunciada.' },
     'beisbol.caribe': { fecha: '2026-11-10', url: 'https://espndeportes.espn.com/beisbol/nota/_/id/16248384/serie-del-caribe-2026-cuando-donde-como-ver-espn', nota: 'Dato de la edición 2026. La de 2027 es en Hermosillo (1 al 7 de febrero) y todavía no tiene transmisión anunciada.' },

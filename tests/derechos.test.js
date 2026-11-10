@@ -47,10 +47,39 @@ test('otros deportes: vóley en Sudamérica, ciclismo en Latinoamérica, boxeo s
   assert.match(o.boxeo.sin, /confirmalo/);
 });
 
+test('Libertadores, Champions y F1 se actualizaron con fuente: ESPN y Disney+ (y lo dudoso queda marcado)', () => {
+  assert.deepEqual(D.DERECHOS['conmebol.libertadores'].CL, ['espn', 'disney']);
+  assert.ok(D.DERECHOS['uefa.champions'].AR.includes('espn'));
+  assert.deepEqual(D.DERECHOS['uefa.champions'].MX, ['fox', 'max']);
+  assert.ok(!D.DERECHOS.f1.AR.includes('foxar'), 'F1 en Argentina es ESPN y Disney+, no Fox Sports');
+  assert.ok(D.DERECHOS.f1.AR.includes('f1tv'));
+  for (const k of ['arg.1', 'conmebol.libertadores', 'uefa.champions', 'f1']) assert.equal(D.FUENTES[k].porConfirmar, true, k);
+});
+
+test('LaLiga, Premier, NBA y Liga MX: actualizados con fuente, con lo dudoso marcado', () => {
+  assert.deepEqual(D.DERECHOS['esp.1'].AR, ['espn', 'disney', 'dsports', 'dgo']);
+  assert.ok(D.DERECHOS['eng.1'].CL.includes('espn'));
+  assert.deepEqual(D.DERECHOS.nba.MX, ['espn', 'disney', 'prime', 'leaguepass']);
+  assert.deepEqual(D.DERECHOS.nba.AR, ['disney', 'leaguepass']); // sin dato nuevo para Argentina
+  assert.ok(D.DERECHOS['mex.1'].MX.includes('vix') && D.DERECHOS['mex.1'].MX.includes('fox'));
+  assert.equal(D.FUENTES.nba.porConfirmar, true);
+  assert.equal(D.FUENTES['esp.1'].porConfirmar, undefined); // LaLiga en Sudamérica tiene fuente clara
+});
+
+test('ligas locales y tenis: con fuente (Win, TNT Sports y Canal 13, L1 MAX, ESPN)', () => {
+  assert.deepEqual(D.DERECHOS['chi.1'].CL, ['tntcl', 'max', 'canal13']);
+  assert.deepEqual(D.DERECHOS['col.1'].CO, ['win']);
+  assert.deepEqual(D.DERECHOS['per.1'].PE, ['l1max']);
+  assert.ok(D.DERECHOS.tenis.AR.includes('espn') && D.DERECHOS.tenis.MX.join() === 'disney');
+  assert.equal(D.FUENTES.tenis.porConfirmar, true);
+  for (const k of ['col.1', 'chi.1', 'per.1']) assert.ok(D.FUENTES[k], k);
+});
+
 test('revisión: las fuentes viejas se detectan para volver a verificarlas cada temporada', () => {
   assert.deepEqual(D.vencidas('2026-11-10'), []);
   const tarde = D.vencidas('2027-09-01');
   assert.ok(tarde.includes('rugby.test') && tarde.includes('voley'), tarde.join(','));
-  assert.ok(D.sinFuente().includes('arg.1')); // lo de antes todavía no tiene fuente anotada
+  assert.deepEqual(D.sinFuente().sort(), ['conmebol.sudamericana', 'mlb', 'nhl', 'uru.1']); // lo único que sigue sin fuente anotada
+  void 0; // lo de antes (MLB, NHL, tenis y las ligas chicas) todavía no tiene fuente anotada
   assert.ok(!D.sinFuente().includes('rugby.test'));
 });
