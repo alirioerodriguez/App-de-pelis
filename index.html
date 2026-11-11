@@ -262,6 +262,10 @@
   .actions { grid-column: 1/-1; display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
   .btn { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; background: var(--accent); color: #08131f; font-weight: 700; padding: 10px 16px; border-radius: 12px; border: 0; }
   .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
+  /* Semáforo: ícono grande + texto + color (el color solo no alcanza). */
+  .verdict { border-left-width: 5px; }
+  .verdict .vi { font-size: 1.6rem; line-height: 1; flex: none; }
+  .verdict .vt { flex: 1; min-width: 0; }
   .jw-attr { grid-column: 1/-1; display: inline-flex; align-items: center; gap: 8px; justify-self: start; color: var(--muted); font-size: .78rem; text-decoration: none; margin-top: -4px; }
   .jw-attr img { height: 14px; width: auto; }
   .legal .tmdb-aviso { display: flex; align-items: center; gap: 10px; margin: 10px 0 6px; }
@@ -2302,12 +2306,12 @@
     // Semáforo: verde si está en tus plataformas, ámbar si está con una suscripción que no tenés, naranja si solo se
     // alquila, se compra o está en cines. Sin plataformas elegidas, la suscripción es lo mejor posible: queda en verde.
     const estadoSem = SemaforoVeo.semaforo(p, { miasIds: mine, enCines: !!cine?.now.has(id), proximamente: !!cine?.soon.has(id), esPelicula: type === 'movie' });
-    if (estadoSem === 'tengo') verdict = `<div class="verdict yes">✅ Incluida en tus plataformas: ${owned.map(s => esc(s.provider_name)).join(', ')}. ¡La tenés!</div>`;
-    else if (estadoSem === 'suscripcion') verdict = `<div class="verdict ${SemaforoVeo.clase(estadoSem, mine.size > 0)}">${mine.size ? '💳' : '✅'} Disponible en ${esc(CN())} con suscripción en: ${subs.map(s => esc(s.provider_name)).join(', ')}${mine.size ? ' (ninguna de las tuyas)' : ''}${subs.every(s => canalDe(s.provider_name)) ? `<br><small>Ojo: solo está en canales que se pagan aparte, además de ${esc(canalDe(subs[0].provider_name))}.</small>` : ''}</div>`;
-    else if (estadoSem === 'pago') verdict = `<div class="verdict pay">🎟️ No está incluida en ninguna suscripción en ${esc(CN())}, pero se puede alquilar o comprar.</div>`;
-    else if (estadoSem === 'cines') verdict = `<div class="verdict pay">🎬 Está en cines en ${esc(CN())}. Todavía no llegó a ninguna plataforma.</div>`;
-    else if (estadoSem === 'pronto') verdict = `<div class="verdict pay">📅 Se estrena en cines de ${esc(CN())} el ${fmtDay(cine.soon.get(id))}. Todavía no está en ninguna plataforma.</div>`;
-    else if (estadoSem === 'bloqueada') verdict = `<div class="verdict lockd">🔒 Bloqueada: no está en ninguna plataforma de ${esc(CN())} por ahora.</div>`;
+    if (estadoSem === 'tengo') verdict = `<div class="verdict yes"><span class="vi" aria-hidden="true">✅</span><span class="vt">Incluida en tus plataformas: ${owned.map(s => esc(s.provider_name)).join(', ')}. ¡La tenés!</span></div>`;
+    else if (estadoSem === 'suscripcion') verdict = `<div class="verdict ${SemaforoVeo.clase(estadoSem, mine.size > 0)}"><span class="vi" aria-hidden="true">${mine.size ? '💳' : '✅'}</span><span class="vt">Disponible en ${esc(CN())} con suscripción en: ${subs.map(s => esc(s.provider_name)).join(', ')}${mine.size ? ' (ninguna de las tuyas)' : ''}${subs.every(s => canalDe(s.provider_name)) ? `<br><small>Ojo: solo está en canales que se pagan aparte, además de ${esc(canalDe(subs[0].provider_name))}.</small>` : ''}</span></div>`;
+    else if (estadoSem === 'pago') verdict = `<div class="verdict pay"><span class="vi" aria-hidden="true">🎟️</span><span class="vt">No está incluida en ninguna suscripción en ${esc(CN())}, pero se puede alquilar o comprar.</span></div>`;
+    else if (estadoSem === 'cines') verdict = `<div class="verdict pay"><span class="vi" aria-hidden="true">🎬</span><span class="vt">Está en cines en ${esc(CN())}. Todavía no llegó a ninguna plataforma.</span></div>`;
+    else if (estadoSem === 'pronto') verdict = `<div class="verdict pay"><span class="vi" aria-hidden="true">📅</span><span class="vt">Se estrena en cines de ${esc(CN())} el ${fmtDay(cine.soon.get(id))}. Todavía no está en ninguna plataforma.</span></div>`;
+    else if (estadoSem === 'bloqueada') verdict = `<div class="verdict lockd"><span class="vi" aria-hidden="true">🔒</span><span class="vt">Bloqueada: no está en ninguna plataforma de ${esc(CN())} por ahora.</span></div>`;
     else verdict = '<div class="verdict no">No pude consultar la disponibilidad. Probá de nuevo en un rato.</div>';
 
     // El enlace de TMDB lleva a su página "Dónde ver", con un botón por plataforma

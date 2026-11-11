@@ -59,3 +59,27 @@ test('aviso de TMDB en «legal»: texto exacto y logo más chico que el propio',
   assert.match(html, /\.legal \.tmdb-aviso img \{ height: 12px/);
   assert.match(html, /themoviedb\.org\/assets\/2\/v4\/logos\/v2\/blue_short-[0-9a-f]+\.svg/);
 });
+
+// ---------- Semáforo: ícono + texto + contraste (pauta WCAG 1.4.1 y 1.4.3) ----------
+const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+const lum = (c) => { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]); };
+const mezcla = (fg, a, bg) => fg.map((v, i) => v * a + bg[i] * (1 - a));
+const contraste = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+
+test('contraste: el texto de cada nivel del semáforo llega a 4,5:1 sobre su cajita en el fondo oscuro', () => {
+  const vars = Object.fromEntries([...html.matchAll(/--([\w-]+):\s*(#[0-9a-f]{6});/gi)].map((m) => [m[1], m[2]]));
+  const fondo = hex(vars['bg-2']);
+  for (const clase of ['yes', 'sub', 'pay', 'lockd', 'no']) {
+    const css = new RegExp('\\.verdict\\.' + clase + ' \\{ background: rgba\\((\\d+),(\\d+),(\\d+),([.\\d]+)\\);[^}]*color: (#[0-9a-f]{6}|var\\(--[\\w-]+\\))', 'i').exec(html);
+    assert.ok(css, `falta el estilo de .verdict.${clase}`);
+    const color = css[5].startsWith('var(') ? vars[css[5].slice(6, -1)] : css[5];
+    const cajita = mezcla([+css[1], +css[2], +css[3]], +css[4], fondo);
+    assert.ok(contraste(hex(color), cajita) >= 4.5, `${clase}: ${contraste(hex(color), cajita).toFixed(2)}:1`);
+  }
+});
+
+test('cada veredicto con datos lleva ícono y texto, no solo color', () => {
+  const lineas = html.split('\n').filter((l) => l.includes('verdict = `<div class="verdict'));
+  assert.equal(lineas.length, 6); // tengo, suscripción, pago, cines, próximamente, bloqueada
+  for (const l of lineas) assert.match(l, /<span class="vi" aria-hidden="true">[^<]+<\/span><span class="vt">/, l.slice(0, 80));
+});
