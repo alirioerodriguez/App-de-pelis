@@ -262,6 +262,10 @@
   .actions { grid-column: 1/-1; display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
   .btn { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; background: var(--accent); color: #08131f; font-weight: 700; padding: 10px 16px; border-radius: 12px; border: 0; }
   .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
+  .jw-attr { grid-column: 1/-1; display: inline-flex; align-items: center; gap: 8px; justify-self: start; color: var(--muted); font-size: .78rem; text-decoration: none; margin-top: -4px; }
+  .jw-attr img { height: 14px; width: auto; }
+  .legal .tmdb-aviso { display: flex; align-items: center; gap: 10px; margin: 10px 0 6px; }
+  .legal .tmdb-aviso img { height: 12px; width: auto; flex: none; }
   .credit { grid-column: 1/-1; color: var(--muted); font-size: .78rem; margin-top: 8px; }
 
   /* ---------- Setup ---------- */
@@ -881,7 +885,8 @@
   <div class="legal">
     Datos de disponibilidad: <strong>JustWatch</strong> vía
     <a href="https://www.themoviedb.org" target="_blank" rel="noopener">TMDB</a>. Premios: <a href="https://www.wikidata.org" target="_blank" rel="noopener">Wikidata</a>.
-    Este producto usa la API de TMDB pero no está respaldado ni certificado por TMDB.
+    <div class="tmdb-aviso"><a href="https://www.themoviedb.org" target="_blank" rel="noopener" aria-label="TMDB"><img src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_short-8e7b30f73a4020692ccca9c88bafe5dcb6f8a62a4c6bc55cd9ba82bb2cd95f6c.svg" alt="TMDB" height="12" loading="lazy"></a>
+      <span>This product uses the TMDB API but is not endorsed or certified by TMDB.</span></div>
     <a href="privacidad.html">Política de privacidad</a>.
   </div>
 </footer>
@@ -922,6 +927,7 @@
 <script src="avisosWeb.js"></script>
 <script src="azar.js"></script>
 <script src="rotacion.js"></script>
+<script src="semaforo.js"></script>
 <script>
 (() => {
   // País: el que la persona eligió la última vez; si nunca eligió, el de su conexión (api/pais.js); si no, Argentina.
@@ -2160,6 +2166,9 @@
       </button>`;
   }
 
+  // JustWatch exige citarlo con su logo y un enlace. No tenemos el enlace exacto de cada título, así que va a su búsqueda en el país elegido.
+  const LOGO_JW = 'https://widget.justwatch.com/assets/JW_logo_color_10px.svg';
+  const jwUrl = (t) => `https://www.justwatch.com/${REGION.toLowerCase()}/${REGION === 'US' ? 'search' : 'buscar'}?q=${encodeURIComponent(t)}`;
   function subsOf(p) { return p ? [...(p.flatrate || []), ...(p.free || []), ...(p.ads || [])] : []; }
   // Canales que se contratan aparte dentro de otra app (p. ej. «MUBI Amazon Channel» = MUBI pagado dentro de Prime Video)
   function canalDe(name) {
@@ -2292,12 +2301,13 @@
     let verdict;
     // Semáforo: verde si está en tus plataformas, ámbar si está con una suscripción que no tenés, naranja si solo se
     // alquila, se compra o está en cines. Sin plataformas elegidas, la suscripción es lo mejor posible: queda en verde.
-    if (owned.length) verdict = `<div class="verdict yes">✅ Incluida en tus plataformas: ${owned.map(s => esc(s.provider_name)).join(', ')}. ¡La tenés!</div>`;
-    else if (subs.length) verdict = `<div class="verdict ${mine.size ? 'sub' : 'yes'}">${mine.size ? '💳' : '✅'} Disponible en ${esc(CN())} con suscripción en: ${subs.map(s => esc(s.provider_name)).join(', ')}${mine.size ? ' (ninguna de las tuyas)' : ''}${subs.every(s => canalDe(s.provider_name)) ? `<br><small>Ojo: solo está en canales que se pagan aparte, además de ${esc(canalDe(subs[0].provider_name))}.</small>` : ''}</div>`;
-    else if (p && (p.rent || p.buy)) verdict = `<div class="verdict pay">🎟️ No está incluida en ninguna suscripción en ${esc(CN())}, pero se puede alquilar o comprar.</div>`;
-    else if (p && cine?.now.has(id) && type === 'movie') verdict = `<div class="verdict pay">🎬 Está en cines en ${esc(CN())}. Todavía no llegó a ninguna plataforma.</div>`;
-    else if (p && cine?.soon.has(id) && type === 'movie') verdict = `<div class="verdict pay">📅 Se estrena en cines de ${esc(CN())} el ${fmtDay(cine.soon.get(id))}. Todavía no está en ninguna plataforma.</div>`;
-    else if (p) verdict = `<div class="verdict lockd">🔒 Bloqueada: no está en ninguna plataforma de ${esc(CN())} por ahora.</div>`;
+    const estadoSem = SemaforoVeo.semaforo(p, { miasIds: mine, enCines: !!cine?.now.has(id), proximamente: !!cine?.soon.has(id), esPelicula: type === 'movie' });
+    if (estadoSem === 'tengo') verdict = `<div class="verdict yes">✅ Incluida en tus plataformas: ${owned.map(s => esc(s.provider_name)).join(', ')}. ¡La tenés!</div>`;
+    else if (estadoSem === 'suscripcion') verdict = `<div class="verdict ${SemaforoVeo.clase(estadoSem, mine.size > 0)}">${mine.size ? '💳' : '✅'} Disponible en ${esc(CN())} con suscripción en: ${subs.map(s => esc(s.provider_name)).join(', ')}${mine.size ? ' (ninguna de las tuyas)' : ''}${subs.every(s => canalDe(s.provider_name)) ? `<br><small>Ojo: solo está en canales que se pagan aparte, además de ${esc(canalDe(subs[0].provider_name))}.</small>` : ''}</div>`;
+    else if (estadoSem === 'pago') verdict = `<div class="verdict pay">🎟️ No está incluida en ninguna suscripción en ${esc(CN())}, pero se puede alquilar o comprar.</div>`;
+    else if (estadoSem === 'cines') verdict = `<div class="verdict pay">🎬 Está en cines en ${esc(CN())}. Todavía no llegó a ninguna plataforma.</div>`;
+    else if (estadoSem === 'pronto') verdict = `<div class="verdict pay">📅 Se estrena en cines de ${esc(CN())} el ${fmtDay(cine.soon.get(id))}. Todavía no está en ninguna plataforma.</div>`;
+    else if (estadoSem === 'bloqueada') verdict = `<div class="verdict lockd">🔒 Bloqueada: no está en ninguna plataforma de ${esc(CN())} por ahora.</div>`;
     else verdict = '<div class="verdict no">No pude consultar la disponibilidad. Probá de nuevo en un rato.</div>';
 
     // El enlace de TMDB lleva a su página "Dónde ver", con un botón por plataforma
@@ -2330,6 +2340,7 @@
         </div>
         ${fromRandom ? `<div class="rand-banner"><span>🎲 Elegida al azar para vos en ${esc(CN())}</span><button type="button" class="btn ghost" data-random-again>🔄 Probar otra</button></div>` : ''}
         ${verdict}
+        <a class="jw-attr" href="${jwUrl(title)}" target="_blank" rel="noopener" aria-label="Disponibilidad de JustWatch: abrir JustWatch en ${esc(CN())}"><span>Disponibilidad:</span><img src="${LOGO_JW}" alt="JustWatch" height="14" loading="lazy"></a>
         <div class="awards hidden" id="awards"></div>
         ${openBtns ? `<div class="owned">${openBtns}</div>` : ''}
         <div class="where">
@@ -2345,7 +2356,7 @@
           <button class="btn ${inList(type, id) ? 'saved' : 'ghost'}" data-wl>${inList(type, id) ? '✓ En mi lista' : '🔖 Guardar en mi lista'}</button>
           <button class="btn ghost" data-share>↗ Compartir</button>
           <button class="btn ghost" data-story title="Imagen vertical para historias de Instagram o WhatsApp">🖼️ Historia</button>
-          <a class="btn ghost" href="https://www.justwatch.com/${REGION.toLowerCase()}/${REGION === 'US' ? 'search' : 'buscar'}?q=${encodeURIComponent(title)}" target="_blank" rel="noopener">JustWatch ↗</a>
+          <a class="btn ghost" href="${jwUrl(title)}" target="_blank" rel="noopener">JustWatch ↗</a>
         </div>
         ${sims.length ? `<div class="similar"><h4>Si te gustó, mirá también</h4><div class="sim-row"><div class="sim-track">${[0, 1].map(copia => sims.map(r => `
           <button class="sim" data-id="${r.id}" data-type="${r.media_type || type}"${copia ? ' aria-hidden="true" tabindex="-1"' : ''}>
