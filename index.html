@@ -262,6 +262,14 @@
   .actions { grid-column: 1/-1; display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
   .btn { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; background: var(--accent); color: #08131f; font-weight: 700; padding: 10px 16px; border-radius: 12px; border: 0; }
   .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
+  /* Semáforo: ícono grande + texto + color (el color solo no alcanza). */
+  .verdict { border-left-width: 5px; }
+  .verdict .vi { font-size: 1.6rem; line-height: 1; flex: none; }
+  .verdict .vt { flex: 1; min-width: 0; }
+  .jw-attr { grid-column: 1/-1; display: inline-flex; align-items: center; gap: 8px; justify-self: start; color: var(--muted); font-size: .78rem; text-decoration: none; margin-top: -4px; }
+  .jw-attr img { height: 14px; width: auto; }
+  .legal .tmdb-aviso { display: flex; align-items: center; gap: 10px; margin: 10px 0 6px; }
+  .legal .tmdb-aviso img { height: 12px; width: auto; flex: none; }
   .credit { grid-column: 1/-1; color: var(--muted); font-size: .78rem; margin-top: 8px; }
 
   /* ---------- Setup ---------- */
@@ -683,6 +691,8 @@
   .sp-cal { display: grid; gap: 6px; margin-top: 8px; }
   .sp-cal div { display: flex; justify-content: space-between; gap: 10px; font-size: .88rem; border-bottom: 1px solid var(--line); padding: 6px 0; }
   .sp-empty { color: var(--muted); padding: 24px 0; }
+  .sp-otros { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
+  .sp-otros-t { margin: 0; font-size: .95rem; }
   .sp-note { color: var(--muted); font-size: .78rem; margin-top: 26px; line-height: 1.5; }
   .locked-sec { margin: 8px 0 40px; border-top: 1px solid var(--line); padding-top: 18px; }
   .locked-sec summary { list-style: none; cursor: pointer; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; font-size: 1.1rem; font-weight: 700; letter-spacing: -.01em; color: var(--muted); }
@@ -831,6 +841,7 @@
       <div class="sp-days" id="spDays" role="group" aria-label="Día"></div>
       <div class="sp-leagues" id="spLeagues"></div>
       <div id="spList" aria-live="polite"></div>
+      <div id="spOtros" class="sp-otros"></div>
       <p class="sp-note">Horarios en tu hora local. Resultados y calendario: ESPN. Dónde se ve: armado con lo que publican medios y plataformas (octubre de 2026); los derechos cambian de un torneo a otro y algunos partidos van por un solo canal, así que confirmalo en la app antes de contratar.</p>
     </section>
   </section>
@@ -878,7 +889,8 @@
   <div class="legal">
     Datos de disponibilidad: <strong>JustWatch</strong> vía
     <a href="https://www.themoviedb.org" target="_blank" rel="noopener">TMDB</a>. Premios: <a href="https://www.wikidata.org" target="_blank" rel="noopener">Wikidata</a>.
-    Este producto usa la API de TMDB pero no está respaldado ni certificado por TMDB.
+    <div class="tmdb-aviso"><a href="https://www.themoviedb.org" target="_blank" rel="noopener" aria-label="TMDB"><img src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_short-8e7b30f73a4020692ccca9c88bafe5dcb6f8a62a4c6bc55cd9ba82bb2cd95f6c.svg" alt="TMDB" height="12" loading="lazy"></a>
+      <span>This product uses the TMDB API but is not endorsed or certified by TMDB.</span></div>
     <a href="privacidad.html">Política de privacidad</a>.
   </div>
 </footer>
@@ -914,6 +926,12 @@
 </script>
 <script src="corrector.js"></script>
 <script src="queVemosHoy.js"></script>
+<script src="tmdbDatos.js"></script>
+<script src="derechos.js"></script>
+<script src="avisosWeb.js"></script>
+<script src="azar.js"></script>
+<script src="rotacion.js"></script>
+<script src="semaforo.js"></script>
 <script>
 (() => {
   // País: el que la persona eligió la última vez; si nunca eligió, el de su conexión (api/pais.js); si no, Argentina.
@@ -1011,16 +1029,21 @@
   // dos nombres (España / Latinoamérica) + todo lo que la app va viendo en TMDB, que se recuerda en este dispositivo.
   const VOCAB_STORE = 'dlv_vocab_v1';
   let VOCAB = Corrector.VOCABULARIO_INICIAL;
+  let vocabGuardado = [];
   try {
-    const guardado = JSON.parse(localStorage.getItem(VOCAB_STORE) || '[]');
-    if (Array.isArray(guardado)) VOCAB = Corrector.aprender(VOCAB, guardado);
+    // Lo que se aprendió de TMDB se guarda con su fecha y vence a los 150 días (TMDB no permite más de 6 meses)
+    const { lista, cambio } = TmdbDatos.sellarYFiltrar(JSON.parse(localStorage.getItem(VOCAB_STORE) || '[]'), Date.now());
+    vocabGuardado = lista;
+    if (cambio) localStorage.setItem(VOCAB_STORE, JSON.stringify(lista));
+    VOCAB = Corrector.aprender(VOCAB, lista);
   } catch { /* sin almacenamiento: queda la lista inicial */ }
-  let vocabPendiente = [];
+  let vocabPendiente = vocabGuardado;
   function aprenderVocab(vistos) {
     const antes = VOCAB;
     VOCAB = Corrector.aprender(VOCAB, vistos);
     if (VOCAB === antes) return;
-    vocabPendiente.push(...vistos.filter(Boolean));
+    const ahora = Date.now();
+    vocabPendiente.push(...vistos.filter(Boolean).map(v => ({ ...v, en: ahora })));
     vocabPendiente = vocabPendiente.slice(-1500);
     try { localStorage.setItem(VOCAB_STORE, JSON.stringify(vocabPendiente)); } catch { /* lleno o bloqueado: no pasa nada */ }
   }
@@ -1203,7 +1226,7 @@
   function safeGet(k) { try { return localStorage.getItem(k); } catch { return null; } }
   function safeSet(k, v) {
     try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch {}
-    if (k === 'mi_lista' || k === 'mis_plataformas' || k === 'pais_elegido') contarleALaApp();
+    if (k === 'mi_lista' || k === 'mis_plataformas' || k === 'pais_elegido') { contarleALaApp(); if (typeof sincronizarPush === 'function') sincronizarPush(); }
   }
   // Dentro de la app del celular: le pasa «Mi lista», «Mis plataformas» y el país para que avise
   // con una notificación cuando algo guardado llegue a una plataforma, aunque la app esté cerrada.
@@ -1548,6 +1571,15 @@
       .then(d => ({ results: (d.results || []).map(r => ({ ...r, media_type: type })), total_pages: d.total_pages || 0 }))));
     return { results: res.flatMap(r => r.results).sort((a, b) => b.popularity - a.popularity), total_pages: Math.max(...res.map(r => r.total_pages)) };
   }
+  // Para rotar los estrenos hace falta más que la primera página: 3 por tipo (TMDB las guarda en su caché, son las mismas consultas
+  // que ya se piden al abrir «ver todos»). Si una página falla, se sigue con las que llegaron.
+  async function fetchNewPool() {
+    const types = state.type === 'all' ? ['movie', 'tv'] : [state.type];
+    const pedidos = types.flatMap(type => [1, 2, 3].map(page => api(`/discover/${type}`, newParams(type, page))
+      .then(d => (d.results || []).map(r => ({ ...r, media_type: type }))).catch(() => [])));
+    return (await Promise.all(pedidos)).flat();
+  }
+  const almacenEstrenos = { getItem: safeGet, setItem: (k, v) => safeSet(k, v) };
   let newSeq = 0;
   function slide(it, i, n) {
     const title = Corrector.tituloParaPais(nombresCache.get(it.media_type + it.id), REGION, it.title || it.name);
@@ -1573,12 +1605,14 @@
     $('#newSec').classList.toggle('hidden', state.mode !== 'trending');
     row.innerHTML = '<div class="slide ghost-slide"></div>';
     $('#bbDots').innerHTML = '';
-    let d;
-    try { d = await fetchNew(1); } catch { if (seq === newSeq) { row.innerHTML = ''; $('#newSec').classList.add('hidden'); } return; }
+    let pool;
+    try { pool = await fetchNewPool(); } catch { pool = []; }
     if (seq !== newSeq) return;
-    // con imagen de fondo se ve mejor: primero las que la tienen
-    const list = d.results.filter(r => r.backdrop_path).concat(d.results.filter(r => !r.backdrop_path)).slice(0, 8);
+    // Se eligen 8 con un sorteo que favorece lo popular pero rota entre visitas (rotacion.js): antes eran siempre los mismos.
+    const vistos = Rotacion.cargar(almacenEstrenos);
+    const list = Rotacion.elegirEstrenos({ candidatos: pool, vistos });
     if (!list.length) { row.innerHTML = ''; $('#newSec').classList.add('hidden'); return; }
+    Rotacion.guardar(almacenEstrenos, Rotacion.anotar(vistos, list));
     row.innerHTML = list.map((it, i) => slide(it, i, list.length)).join('');
     $('#bbDots').innerHTML = list.map((it, i) => `<button aria-label="Ir a ${i + 1}" data-i="${i}"></button>`).join('');
     row.scrollLeft = 0;
@@ -2136,6 +2170,9 @@
       </button>`;
   }
 
+  // JustWatch exige citarlo con su logo y un enlace. No tenemos el enlace exacto de cada título, así que va a su búsqueda en el país elegido.
+  const LOGO_JW = 'https://widget.justwatch.com/assets/JW_logo_color_10px.svg';
+  const jwUrl = (t) => `https://www.justwatch.com/${REGION.toLowerCase()}/${REGION === 'US' ? 'search' : 'buscar'}?q=${encodeURIComponent(t)}`;
   function subsOf(p) { return p ? [...(p.flatrate || []), ...(p.free || []), ...(p.ads || [])] : []; }
   // Canales que se contratan aparte dentro de otra app (p. ej. «MUBI Amazon Channel» = MUBI pagado dentro de Prime Video)
   function canalDe(name) {
@@ -2268,12 +2305,13 @@
     let verdict;
     // Semáforo: verde si está en tus plataformas, ámbar si está con una suscripción que no tenés, naranja si solo se
     // alquila, se compra o está en cines. Sin plataformas elegidas, la suscripción es lo mejor posible: queda en verde.
-    if (owned.length) verdict = `<div class="verdict yes">✅ Incluida en tus plataformas: ${owned.map(s => esc(s.provider_name)).join(', ')}. ¡La tenés!</div>`;
-    else if (subs.length) verdict = `<div class="verdict ${mine.size ? 'sub' : 'yes'}">${mine.size ? '💳' : '✅'} Disponible en ${esc(CN())} con suscripción en: ${subs.map(s => esc(s.provider_name)).join(', ')}${mine.size ? ' (ninguna de las tuyas)' : ''}${subs.every(s => canalDe(s.provider_name)) ? `<br><small>Ojo: solo está en canales que se pagan aparte, además de ${esc(canalDe(subs[0].provider_name))}.</small>` : ''}</div>`;
-    else if (p && (p.rent || p.buy)) verdict = `<div class="verdict pay">🎟️ No está incluida en ninguna suscripción en ${esc(CN())}, pero se puede alquilar o comprar.</div>`;
-    else if (p && cine?.now.has(id) && type === 'movie') verdict = `<div class="verdict pay">🎬 Está en cines en ${esc(CN())}. Todavía no llegó a ninguna plataforma.</div>`;
-    else if (p && cine?.soon.has(id) && type === 'movie') verdict = `<div class="verdict pay">📅 Se estrena en cines de ${esc(CN())} el ${fmtDay(cine.soon.get(id))}. Todavía no está en ninguna plataforma.</div>`;
-    else if (p) verdict = `<div class="verdict lockd">🔒 Bloqueada: no está en ninguna plataforma de ${esc(CN())} por ahora.</div>`;
+    const estadoSem = SemaforoVeo.semaforo(p, { miasIds: mine, enCines: !!cine?.now.has(id), proximamente: !!cine?.soon.has(id), esPelicula: type === 'movie' });
+    if (estadoSem === 'tengo') verdict = `<div class="verdict yes"><span class="vi" aria-hidden="true">✅</span><span class="vt">Incluida en tus plataformas: ${owned.map(s => esc(s.provider_name)).join(', ')}. ¡La tenés!</span></div>`;
+    else if (estadoSem === 'suscripcion') verdict = `<div class="verdict ${SemaforoVeo.clase(estadoSem, mine.size > 0)}"><span class="vi" aria-hidden="true">${mine.size ? '💳' : '✅'}</span><span class="vt">Disponible en ${esc(CN())} con suscripción en: ${subs.map(s => esc(s.provider_name)).join(', ')}${mine.size ? ' (ninguna de las tuyas)' : ''}${subs.every(s => canalDe(s.provider_name)) ? `<br><small>Ojo: solo está en canales que se pagan aparte, además de ${esc(canalDe(subs[0].provider_name))}.</small>` : ''}</span></div>`;
+    else if (estadoSem === 'pago') verdict = `<div class="verdict pay"><span class="vi" aria-hidden="true">🎟️</span><span class="vt">No está incluida en ninguna suscripción en ${esc(CN())}, pero se puede alquilar o comprar.</span></div>`;
+    else if (estadoSem === 'cines') verdict = `<div class="verdict pay"><span class="vi" aria-hidden="true">🎬</span><span class="vt">Está en cines en ${esc(CN())}. Todavía no llegó a ninguna plataforma.</span></div>`;
+    else if (estadoSem === 'pronto') verdict = `<div class="verdict pay"><span class="vi" aria-hidden="true">📅</span><span class="vt">Se estrena en cines de ${esc(CN())} el ${fmtDay(cine.soon.get(id))}. Todavía no está en ninguna plataforma.</span></div>`;
+    else if (estadoSem === 'bloqueada') verdict = `<div class="verdict lockd"><span class="vi" aria-hidden="true">🔒</span><span class="vt">Bloqueada: no está en ninguna plataforma de ${esc(CN())} por ahora.</span></div>`;
     else verdict = '<div class="verdict no">No pude consultar la disponibilidad. Probá de nuevo en un rato.</div>';
 
     // El enlace de TMDB lleva a su página "Dónde ver", con un botón por plataforma
@@ -2286,8 +2324,9 @@
       const url = openUrl(s.provider_name, title);
       const label = rentOnly ? `Alquilar o comprar en ${esc(s.provider_name)}` : `Abrir ${esc(s.provider_name)}`;
       return `<a class="btn ghost ${url ? '' : 'hidden'}" data-prov="${esc(provKey(s.provider_name) || '')}" data-name="${esc(s.provider_name)}" href="${url || '#'}" target="_blank" rel="noopener" data-copy="${esc(title)}">${label} ↗</a>`;
-    }).join('') + (p?.link && (subs.length || p.rent || p.buy)
-      ? `<a class="btn ghost" href="${p.link}" target="_blank" rel="noopener">Ver todas las opciones ↗</a>` : '')
+    }).join('') + (p && (subs.length || p.rent || p.buy) && (p.link || TmdbDatos.enlaceTmdbPorPais(type, id, REGION))
+      // El enlace de TMDB de ese país; si no vino, la página «Dónde ver» de TMDB para el país (/watch?locale=XX)
+      ? `<a class="btn ghost" href="${p.link || TmdbDatos.enlaceTmdbPorPais(type, id, REGION)}" target="_blank" rel="noopener">Ver todas las opciones ↗</a>` : '')
       + (type === 'movie' && cine?.now.has(id)
       ? `<a class="btn" href="https://www.google.com/search?q=${encodeURIComponent(`${title} cartelera cines ${CN()}`)}" target="_blank" rel="noopener">🎬 Ver horarios ↗</a>` : '');
 
@@ -2305,6 +2344,7 @@
         </div>
         ${fromRandom ? `<div class="rand-banner"><span>🎲 Elegida al azar para vos en ${esc(CN())}</span><button type="button" class="btn ghost" data-random-again>🔄 Probar otra</button></div>` : ''}
         ${verdict}
+        <a class="jw-attr" href="${jwUrl(title)}" target="_blank" rel="noopener" aria-label="Disponibilidad de JustWatch: abrir JustWatch en ${esc(CN())}"><span>Disponibilidad:</span><img src="${LOGO_JW}" alt="JustWatch" height="14" loading="lazy"></a>
         <div class="awards hidden" id="awards"></div>
         ${openBtns ? `<div class="owned">${openBtns}</div>` : ''}
         <div class="where">
@@ -2320,7 +2360,7 @@
           <button class="btn ${inList(type, id) ? 'saved' : 'ghost'}" data-wl>${inList(type, id) ? '✓ En mi lista' : '🔖 Guardar en mi lista'}</button>
           <button class="btn ghost" data-share>↗ Compartir</button>
           <button class="btn ghost" data-story title="Imagen vertical para historias de Instagram o WhatsApp">🖼️ Historia</button>
-          <a class="btn ghost" href="https://www.justwatch.com/${REGION.toLowerCase()}/${REGION === 'US' ? 'search' : 'buscar'}?q=${encodeURIComponent(title)}" target="_blank" rel="noopener">JustWatch ↗</a>
+          <a class="btn ghost" href="${jwUrl(title)}" target="_blank" rel="noopener">JustWatch ↗</a>
         </div>
         ${sims.length ? `<div class="similar"><h4>Si te gustó, mirá también</h4><div class="sim-row"><div class="sim-track">${[0, 1].map(copia => sims.map(r => `
           <button class="sim" data-id="${r.id}" data-type="${r.media_type || type}"${copia ? ' aria-hidden="true" tabindex="-1"' : ''}>
@@ -2685,6 +2725,7 @@
       finally { sb.disabled = false; sb.textContent = txt; }
       return;
     }
+    if (e.target.closest('[data-push]')) { activarPush(); return; }
     if (e.target.closest('[data-share-list]')) {
       const lista = watchlist.map(x => ({ id: x.id, media_type: x.media_type, title: x.title, poster_path: x.poster_path, release_date: x.release_date }));
       const b = btoa(unescape(encodeURIComponent(JSON.stringify({ lista })))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -2963,16 +3004,59 @@
     toast(`🎉 «${w.title || w.name}»${otros} de tu lista ya se puede ver en ${subs[0]?.provider_name || CN()}`, true);
   }
 
+  // ---------- Avisos con la web cerrada (Web Push) ----------
+  // Solo si el servidor tiene las claves (GET /api/push da la clave pública) y el navegador lo permite. En iPhone, la web
+  // tiene que estar instalada en la pantalla de inicio (iOS 16.4 o más) y el permiso se pide con un toque, como acá.
+  const PUSH_FLAG = 'veomas_push';
+  const b64aBytes = s => Uint8Array.from(atob((s + '='.repeat((4 - s.length % 4) % 4)).replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+  async function pushClave() {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) return null;
+    try { const r = await fetch('/api/push', { headers: { accept: 'application/json' } }); return r.ok ? (await r.json()).clave || null : null; } catch { return null; }
+  }
+  function cuerpoPush(sub) {
+    const j = sub.toJSON();
+    return { endpoint: j.endpoint, keys: j.keys, region: REGION, mine: [...mine],
+      lista: watchlist.filter(w => w.media_type === 'movie' || w.media_type === 'tv').slice(0, AvisosWeb.MAX_TITULOS).map(w => ({ id: w.id, media_type: w.media_type, title: w.title || w.name || '' })),
+      disp: Object.fromEntries(watchlist.filter(w => w._disp && typeof w._disp[REGION] === 'boolean').map(w => [AvisosWeb.clave(w), w._disp[REGION]])) };
+  }
+  async function activarPush() {
+    const msg = $('#pushMsg'); const dec = t => { if (msg) msg.textContent = t; };
+    try {
+      const clave = await pushClave();
+      if (!clave) return dec('Este navegador o este servidor todavía no pueden mandar avisos.');
+      const permiso = await Notification.requestPermission();
+      if (permiso !== 'granted') return dec('Sin permiso no podemos avisarte. Podés activarlo en los ajustes del navegador.');
+      const reg = await navigator.serviceWorker.ready;
+      const sub = (await reg.pushManager.getSubscription()) || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64aBytes(clave) });
+      const r = await fetch('/api/push', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(cuerpoPush(sub)) });
+      if (!r.ok) throw new Error('guardar');
+      try { localStorage.setItem(PUSH_FLAG, '1'); } catch {}
+      dec('Listo: te avisamos aunque la web esté cerrada cuando algo de tu lista llegue a una de tus plataformas.');
+    } catch { dec('No se pudo activar. Probá de nuevo más tarde.'); }
+  }
+  // Si ya está activo, cada cambio en la lista o en las plataformas actualiza lo que sabe el servidor (con un respiro de 3 s).
+  let pushTimer = 0;
+  function sincronizarPush() {
+    if (!safeGet(PUSH_FLAG) || pushTimer) return;
+    pushTimer = setTimeout(async () => {
+      pushTimer = 0;
+      try { const reg = await navigator.serviceWorker.ready; const sub = await reg.pushManager.getSubscription(); if (sub) await fetch('/api/push', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(cuerpoPush(sub)) }); } catch {}
+    }, 3000);
+  }
+  async function mostrarPush() { if (safeGet(PUSH_FLAG)) return; const caja = $('#pushBox'); if (caja && await pushClave()) caja.hidden = false; }
+
   let wlFilter = 'all';
   async function openList() {
     openModal();
     $('#listBtn .dot-alert')?.remove();
     wlFilter = 'all';
+    setTimeout(() => mostrarPush(), 0);
     els.sheet.innerHTML = `
       <button class="close" data-close aria-label="Cerrar">✕</button>
       <div class="mine-head">
         <h3>Mi lista</h3>
         <p>Lo que guardaste para ver. Te muestro dónde está hoy en ${esc(CN())}. Se guarda en este dispositivo.</p>
+        <div id="pushBox" class="push-box" hidden><button class="btn ghost" data-push type="button">🔔 Avisarme aunque la web esté cerrada</button><p class="hint" role="status" id="pushMsg" style="margin:6px 0 0;font-size:.8rem"></p></div>
         ${watchlist.length ? '<button class="btn ghost" data-share-list type="button">↗ Compartir mi lista</button><p class="hint" style="margin:6px 0 0;font-size:.8rem">Sirve para pasarla a otro celular o mandársela a alguien: al abrir el link, los títulos se suman a su lista.</p>' : ''}
         <details class="lbx"><summary>Traer pelis de Letterboxd</summary>
           <form data-lbx class="lbx-form">
@@ -3080,8 +3164,8 @@
   // ---------- Deportes ----------
   // Sección aparte: calendario y resultados de ESPN (api/deporte.js) y, por país, en qué plataforma se ve
   // cada competencia. La tabla es propia (ESPN no lo informa) y hay que revisarla cada temporada.
-  const SUD = ['AR', 'BO', 'CL', 'CO', 'EC', 'PE', 'PY', 'UY', 'VE'];
-  const LATAM = [...SUD, 'CR', 'CU', 'SV', 'GT', 'HN', 'NI', 'PA', 'PR', 'DO']; // sin México ni EE. UU.
+  // La tabla de derechos (con fuente y fecha de cada entrada nueva) vive en derechos.js.
+  const { SUD, LATAM, DERECHOS, FUENTES, OTROS, dondeOtro } = Derechos;
   // id = plataforma de TMDB (para el logo y para resaltar las que tenés)
   const PLAT = {
     disney: { n: 'Disney+ Premium', id: 337, url: () => 'https://www.disneyplus.com/', nota: 'con ESPN' },
@@ -3093,6 +3177,7 @@
     fox: { n: 'FOX', nota: 'FOX One' },
     foxar: { n: 'Fox Sports' },
     telefe: { n: 'Telefe', nota: '1 partido por semana, gratis' },
+    canal13: { n: 'Canal 13', nota: '1 partido por fecha, gratis' },
     tntcl: { n: 'TNT Sports Premium' },
     win: { n: 'Win+ Fútbol', nota: 'Win Play' },
     l1max: { n: 'L1 MAX' },
@@ -3102,27 +3187,11 @@
     f1tv: { n: 'F1 TV Pro', url: () => 'https://f1tv.formula1.com/' },
     leaguepass: { n: 'NBA League Pass', url: () => 'https://www.nba.com/watch/league-pass-stream' },
     mlbtv: { n: 'MLB.TV', url: () => 'https://www.mlb.com/tv' },
-  };
-  const en = (paises, plats) => Object.fromEntries(paises.map(cc => [cc, plats]));
-  const DERECHOS = {
-    'arg.1': { AR: ['packfutbol', 'dgo'] },
-    'mex.1': { MX: ['vix', 'prime', 'fox'] },
-    'col.1': { CO: ['win'] },
-    'chi.1': { CL: ['tntcl', 'max'] },
-    'per.1': { PE: ['l1max'] },
-    'uru.1': { UY: ['disney', 'antel'] },
-    'conmebol.libertadores': { ...en(SUD, ['disney']), AR: ['disney', 'foxar', 'telefe'], MX: ['bein'] },
-    'conmebol.sudamericana': { ...en(SUD, ['dgo', 'disney']) },
-    'uefa.champions': { ...en(LATAM, ['disney']), AR: ['disney', 'foxar'], MX: ['max'] },
-    'eng.1': { ...en(LATAM, ['disney']), MX: ['max', 'fox'] },
-    'esp.1': { ...en(SUD, ['disney', 'dgo']), MX: ['sky'] },
-    f1: { ...en(LATAM, ['disney', 'f1tv']), AR: ['disney', 'foxar', 'f1tv'], MX: ['sky', 'f1tv'] },
-    nba: { ...en([...LATAM, 'MX'], ['disney', 'leaguepass']) },
-    mlb: { ...en([...LATAM, 'MX'], ['disney', 'mlbtv']) },
-    nhl: { ...en([...LATAM, 'MX'], ['disney']) },
-    // rugby, Serie del Caribe, liga dominicana y Clásico Mundial: sin fuente confiable todavía
-    // tenis: los Grand Slams van por ESPN; el resto del circuito, según el torneo
-    tenis: { ...en([...LATAM, 'MX'], ['disney']) },
+    espn: { n: 'ESPN', nota: 'en tu cable' },
+    tvc: { n: 'TVC Deportes' },
+    dsports: { n: 'DSports', nota: 'también en DGO' },
+    vbtv: { n: 'Volleyball World TV' },
+    dazn: { n: 'DAZN', url: () => 'https://www.dazn.com/' },
   };
   const GRAND_SLAM = /australian open|roland|french open|wimbledon|us open/i;
   const DEPORTES = [
@@ -3173,7 +3242,22 @@
       return pl.url ? `<a class="sp-plat ${tengo ? 'mine' : ''}" href="${pl.url()}" target="_blank" rel="noopener">${inner} ↗</a>` : `<span class="sp-plat">${inner}</span>`;
     }).join('');
     const sinDato = (clave === 'atp' || clave === 'wta') ? 'según el torneo: buscalo en la guía de tu cable o en ESPN' : `no encontramos dónde se ve en ${esc(CN())}`;
-    return `<div class="sp-where">📺 En ${esc(CN())}: ${chips || `<span>${sinDato}</span>`}</div>`;
+    const f = FUENTES[clave];
+    // Con fuente: fecha y link. «Por confirmar»: se dice. Sin fuente anotada (lo de antes): también se dice, para no dar un dato por seguro.
+    const pie = !chips ? '' : f ? ` <small>· ${f.porConfirmar ? 'por confirmar, ' : ''}verificado el ${esc(f.fecha.split('-').reverse().join('/'))}: <a href="${esc(f.url)}" target="_blank" rel="noopener">fuente ↗</a>${f.nota ? ' · ' + esc(f.nota) : ''}</small>` : ' <small>· sin fuente anotada: confirmalo antes de verlo</small>';
+    return `<div class="sp-where">📺 En ${esc(CN())}: ${chips || `<span>${sinDato}</span>`}${pie}</div>`;
+  }
+
+  // Deportes sin calendario en la app (ESPN no trae sus datos): solo dónde suelen verse, con fuente y fecha.
+  function otrosDeportes() {
+    const todas = state.providers.all || state.providers.movie || state.providers.tv || [];
+    const chip = k => { const pl = PLAT[k]; if (!pl) return ''; const tengo = pl.id && mine.has(pl.id); const inner = `${esc(pl.n)}${tengo ? ' ⭐' : ''}${pl.nota ? ` <small>${esc(pl.nota)}</small>` : ''}`; return pl.url ? `<a class="sp-plat ${tengo ? 'mine' : ''}" href="${pl.url()}" target="_blank" rel="noopener">${inner} ↗</a>` : `<span class="sp-plat">${inner}</span>`; };
+    void todas;
+    return '<h3 class="sp-otros-t">Otros deportes: dónde suelen verse</h3>' + OTROS.map(o => {
+      const r = dondeOtro(o, REGION);
+      const cuerpo = r.plats.length ? r.plats.map(chip).join('') : `<span>${esc(o.sin || 'no encontramos dónde se ve en ' + CN())}</span>`;
+      return `<div class="sp-where">${o.ic} <b>${esc(o.n)}</b> · ${esc(o.torneo)}: ${cuerpo} <small>· verificado el ${esc(o.fuente.fecha.split('-').reverse().join('/'))}: <a href="${esc(o.fuente.url)}" target="_blank" rel="noopener">fuente ↗</a>${o.fuente.nota ? ' · ' + esc(o.fuente.nota) : ''}</small></div>`;
+    }).join('');
   }
 
   function pintarDeportes() {
@@ -3191,6 +3275,7 @@
     $('#spLeagues').classList.toggle('hidden', ligas.length < 2);
     if (ligas.length > 1) $('#spLeagues').innerHTML = `<button type="button" class="sp-lg ${!sp.liga ? 'on' : ''}" data-liga="">Todas</button>` +
       ligas.map(l => `<button type="button" class="sp-lg ${sp.liga === l[0] ? 'on' : ''}" data-liga="${l[0]}">${sp.logos[l[0]] ? `<img src="${esc(sp.logos[l[0]])}" alt="">` : ''}${esc(l[1])}</button>`).join('');
+    $('#spOtros').innerHTML = otrosDeportes();
     cargarDeportes();
   }
 
@@ -3291,29 +3376,33 @@
   $('#spLeagues').addEventListener('click', e => { const b = e.target.closest('[data-liga]'); if (!b) return; sp.liga = b.dataset.liga || null; $('#spLeagues').querySelectorAll('.sp-lg').forEach(x => x.classList.toggle('on', x === b)); cargarDeportes(); });
 
   // ---------- Elegí por mí ----------
-  // Elige al azar algo que se pueda ver en el país, respetando los filtros puestos. Si en pantalla hay
-  // pocas opciones, busca en TMDB títulos con buena nota disponibles por suscripción o gratis.
-  let ultimoAlAzar = null;
+  // Elige al azar algo que se pueda ver en el país, respetando los filtros puestos, y SIN repetir: azar.js se acuerda de los
+  // últimos 60 títulos que salieron (también al recargar) y pide a TMDB páginas distintas cada vez (de la 1 a la 15), así el
+  // universo es de cientos de títulos y no de unos 60. Si lo que hay en pantalla casi ya salió, completa con TMDB.
+  const almacenAzar = { getItem: safeGet, setItem: (k, v) => safeSet(k, v) };
+  const azarVeo = AzarVeo.crear({ estado: AzarVeo.cargar(almacenAzar) });
   async function pickRandom() {
     const btn = $('#randomBtn');
     btn.disabled = true;
     try {
-      const enPantalla = [...els.grid.querySelectorAll('.card[data-id]:not(.locked):not(.cinema)')]
-        .map(c => ({ id: +c.dataset.id, media_type: c.dataset.type })).filter(x => x.media_type + x.id !== ultimoAlAzar);
-      let pool = enPantalla;
-      if (pool.length < 3) {
+      const candidatos = [...els.grid.querySelectorAll('.card[data-id]:not(.locked):not(.cinema)')]
+        .map(c => ({ id: +c.dataset.id, media_type: c.dataset.type }));
+      const conocidos = new Set(candidatos.map(AzarVeo.clave));
+      for (let intento = 0; intento < 3 && azarVeo.libres(candidatos).length < 8; intento++) {
         const t = state.type === 'all' ? (Math.random() < 0.5 ? 'movie' : 'tv') : state.type;
         const base = state.mode === 'discover' ? await discoverParams(t) : null;
         const params = { ...(base || { sort_by: 'popularity.desc', include_adult: false }) };
-        Object.assign(params, { watch_region: REGION, with_watch_monetization_types: 'flatrate|free|ads', 'vote_average.gte': 6.5, 'vote_count.gte': 40, page: 1 + Math.floor(Math.random() * 3) });
+        Object.assign(params, { watch_region: REGION, with_watch_monetization_types: 'flatrate|free|ads', 'vote_average.gte': 6.5, 'vote_count.gte': 40 });
         if (!state.provider && state.onlyMine && mine.size) params.with_watch_providers = brandIds([...mine]);
+        delete params.page;
+        params.page = azarVeo.paginaNueva(JSON.stringify([t, params])); // página que todavía no se usó con estos filtros
         const d = await api(`/discover/${t}`, params);
-        pool = (d.results || []).map(r => ({ id: r.id, media_type: t })).filter(x => x.media_type + x.id !== ultimoAlAzar);
+        for (const r of d.results || []) { const x = { id: r.id, media_type: t }; if (!conocidos.has(AzarVeo.clave(x))) { conocidos.add(AzarVeo.clave(x)); candidatos.push(x); } }
       }
-      if (!pool.length) return toast(`No encontré nada disponible en ${CN()} con esos filtros.`);
-      const elegida = pool[Math.floor(Math.random() * pool.length)];
-      ultimoAlAzar = elegida.media_type + elegida.id;
-      await openDetail(elegida.id, elegida.media_type, true);
+      const r = azarVeo.elegir(candidatos);
+      if (!r) return toast(`No encontré nada disponible en ${CN()} con esos filtros.`);
+      AzarVeo.guardar(almacenAzar, azarVeo.estado());
+      await openDetail(r.elegida.id, r.elegida.media_type, true);
     } catch (e) { handleErr(e); }
     finally { btn.disabled = false; }
   }

@@ -1,0 +1,8 @@
+{
+  "name": "veomas-web",
+  "private": true,
+  "description": "VeoM\u00e1s (web). La web no tiene paso de compilaci\u00f3n; esta dependencia es solo para api/push-avisos.js (Web Push).",
+  "dependencies": {
+    "web-push": "3.6.7"
+  }
+}
