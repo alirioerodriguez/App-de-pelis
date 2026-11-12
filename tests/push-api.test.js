@@ -15,6 +15,8 @@ globalThis.fetch = async (url, init = {}) => {
     else if (c === 'DEL') { result = memoria.delete(a[0]) ? 1 : 0; }
     else if (c === 'SADD') { const s = memoria.get(a[0]) ?? new Set(); s.add(a[1]); memoria.set(a[0], s); result = 1; }
     else if (c === 'SREM') { memoria.get(a[0])?.delete(a[1]); result = 1; }
+    else if (c === 'INCR') { const n = (Number(memoria.get(a[0])) || 0) + 1; memoria.set(a[0], n); result = n; }
+    else if (c === 'EXPIRE') result = 1;
     else if (c === 'SMEMBERS') result = [...(memoria.get(a[0]) ?? [])];
     return { ok: true, json: async () => ({ result }) };
   }
@@ -54,7 +56,7 @@ const cron = require('../api/push-avisos.js');
 
 const res = () => { const r = { code: 0, body: null, headers: {}, status(c) { r.code = c; return r; }, json(b) { r.body = b; return r; }, setHeader(k, v) { r.headers[k] = v; } }; return r; };
 const pedir = async (handler, { method = 'POST', body, headers = {} } = {}) => { const r = res(); await handler({ method, body, headers: { host: 'app.test', ...headers } }, r); return r; };
-const buena = (extra = {}) => ({ endpoint: 'https://push.example/abc', keys: { p256dh: 'p', auth: 'a' }, region: 'AR', mine: [], lista: [{ id: 1, media_type: 'movie', title: 'Matrix' }], disp: { movie1: false }, ...extra });
+const buena = (extra = {}) => ({ endpoint: 'https://fcm.googleapis.com/fcm/send/abc', keys: { p256dh: 'p', auth: 'a' }, region: 'AR', mine: [], lista: [{ id: 1, media_type: 'movie', title: 'Matrix' }], disp: { movie1: false }, ...extra });
 
 beforeEach(() => { memoria = new Map(); tmdbRespuestas = {}; enviadas = []; errorEnvio = 0; });
 
@@ -94,7 +96,7 @@ test('cron: solo con el secreto', async () => {
 
 test('cron: avisa lo que llegó, consulta cada título una vez y guarda lo visto', async () => {
   await pedir(push, { body: buena() });
-  await pedir(push, { body: buena({ endpoint: 'https://push.example/def' }) }); // otra persona, el mismo título
+  await pedir(push, { body: buena({ endpoint: 'https://fcm.googleapis.com/fcm/send/def' }) }); // otra persona, el mismo título
   tmdbRespuestas.movie1 = { results: { AR: { flatrate: [{ provider_id: 8, provider_name: 'Netflix' }] } } };
   const r = await pedir(cron, { method: 'GET', headers: { authorization: 'Bearer secreto' } });
   assert.deepEqual(r.body, { suscripciones: 2, titulos: 1, enviados: 2, borrados: 0, fallidos: 0 });
@@ -120,4 +122,19 @@ test('cron: las suscripciones vencidas (410) se borran y un título que no respo
   assert.equal(r2.body.enviados, 0);
   const guardada = JSON.parse(memoria.get(`push:s:${[...memoria.get('push:ids')][0]}`));
   assert.equal(guardada.disp.movie1, false); // sin cambios
+});
+
+test('seguridad: solo acepta servicios push reales y frena el abuso', async () => {
+  const A = require('../avisosWeb.js');
+  for (const malo of ['https://evil.example/x', 'https://fcm.googleapis.com.evil.com/x', 'https://169.254.169.254/latest', 'https://user:pw@fcm.googleapis.com/x', 'https://fcm.googleapis.com:8443/x'])
+    assert.equal(A.limpiarSuscripcion({ ...buena(), endpoint: malo }), null, malo);
+  assert.ok(A.limpiarSuscripcion({ ...buena(), endpoint: 'https://updates.push.services.mozilla.com/wpush/v2/abc' }));
+  assert.ok(A.limpiarSuscripcion({ ...buena(), endpoint: 'https://wns2-par02p.notify.windows.com/w/?token=abc' }));
+});
+
+test('seguridad: más de 20 cambios por hora desde la misma IP dan 429', async () => {
+  let ultimo;
+  for (let i = 0; i < 22; i++) ultimo = await pedir(push, { body: buena(), headers: { 'x-forwarded-for': '203.0.113.7' } });
+  assert.equal(ultimo.code, 429);
+  assert.equal((await pedir(push, { body: buena(), headers: { 'x-forwarded-for': '203.0.113.8' } })).code, 200);
 });

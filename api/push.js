@@ -21,6 +21,15 @@ module.exports = async function handler(req, res) {
     if (req.method === 'GET') return res.status(200).json({ clave: process.env.VAPID_PUBLIC_KEY });
     if (req.method !== 'POST' && req.method !== 'DELETE') return res.status(405).json({ error: 'Método no permitido' });
 
+    // Límite por IP: 20 cambios por hora. Frena a quien quiera llenar la lista de suscripciones.
+    if (req.method !== 'GET') {
+      const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim().slice(0, 64) || 'sin-ip';
+      const clave = 'push:rl:' + crypto.createHash('sha256').update(ip).digest('hex').slice(0, 16);
+      const n = await cmd('INCR', clave);
+      if (n === 1) await cmd('EXPIRE', clave, 3600);
+      if (n > 20) return res.status(429).json({ error: 'Demasiados cambios seguidos. Probá en un rato.' });
+    }
+
     const crudo = typeof req.body === 'string' ? req.body : JSON.stringify(req.body ?? {});
     if (crudo.length > MAX_BYTES) return res.status(413).json({ error: 'Demasiado grande' });
     const cuerpo = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;

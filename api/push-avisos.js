@@ -18,7 +18,10 @@ async function enTandas(items, n, fn) {
 
 module.exports = async function handler(req, res) {
   const secreto = process.env.CRON_SECRET;
-  if (!secreto || req.headers.authorization !== `Bearer ${secreto}`) return res.status(401).json({ error: 'No autorizado' });
+  const crypto = require('node:crypto');
+  const esperado = Buffer.from(`Bearer ${secreto || ''}`), recibido = Buffer.from(String(req.headers.authorization || ''));
+  // timingSafeEqual exige el mismo largo: si difiere, ya no coincide.
+  if (!secreto || esperado.length !== recibido.length || !crypto.timingSafeEqual(esperado, recibido)) return res.status(401).json({ error: 'No autorizado' });
   if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY || !configurado()) return res.status(503).json({ error: 'Avisos sin configurar' });
 
   let webpush;

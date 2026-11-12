@@ -56,11 +56,19 @@
   }
 
   /** Lo que se acepta de una suscripción que llega del navegador (viene de afuera): se valida todo y se recorta. */
+  // Solo los servicios de notificaciones de los navegadores: si no, alguien podría registrar la URL de un sitio cualquiera
+  // y usar nuestro aviso semanal para mandarle pedidos.
+  const HOSTS_PUSH = ['fcm.googleapis.com', 'updates.push.services.mozilla.com', 'push.services.mozilla.com', 'notify.windows.com', 'web.push.apple.com', 'push.apple.com'];
+  function hostPushPermitido(host) {
+    const h = String(host).toLowerCase().replace(/\.$/, '');
+    return HOSTS_PUSH.some((d) => h === d || h.endsWith('.' + d));
+  }
+
   function limpiarSuscripcion(x) {
     if (!x || typeof x !== 'object') return null;
     const ep = x.endpoint;
     if (typeof ep !== 'string' || ep.length > 600) return null;
-    try { if (new URL(ep).protocol !== 'https:') return null; } catch { return null; }
+    try { const u = new URL(ep); if (u.protocol !== 'https:' || u.username || u.password || u.port || !hostPushPermitido(u.hostname)) return null; } catch { return null; }
     const k = x.keys;
     if (!k || typeof k.p256dh !== 'string' || typeof k.auth !== 'string' || k.p256dh.length > 200 || k.auth.length > 100) return null;
     const region = typeof x.region === 'string' && /^[A-Z]{2}$/.test(x.region) ? x.region : null;
@@ -75,5 +83,5 @@
     return { endpoint: ep, keys: { p256dh: k.p256dh, auth: k.auth }, region, mine, lista, disp };
   }
 
-  return { plataformasDe, revisar, mensaje, limpiarSuscripcion, MAX_TITULOS, clave };
+  return { plataformasDe, revisar, mensaje, limpiarSuscripcion, hostPushPermitido, MAX_TITULOS, clave };
 });

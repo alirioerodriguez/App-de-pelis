@@ -34,7 +34,7 @@ module.exports = async function handler(req, res) {
     : alquiler.length ? `En ${nombrePais} no está en ninguna suscripción, pero se puede alquilar o comprar.`
       : `Por ahora no está en ninguna plataforma de ${nombrePais}.`;
   const descripcion = `${veredicto} ${d.overview ? d.overview.slice(0, 180) + (d.overview.length > 180 ? '…' : '') : ''}`.trim();
-  const canonica = `https://${req.headers.host}/t/${tipo}/${id}-${slug(titulo)}${pais !== 'AR' ? '?pais=' + pais : ''}`;
+  const canonica = `https://donde-la-veo-app.vercel.app/t/${tipo}/${id}-${slug(titulo)}${pais !== 'AR' ? '?pais=' + pais : ''}`;
   const app = `/#${tipo}-${id}`;
   const poster = d.poster_path ? IMG + 'w500' + d.poster_path : '';
   const fondo = d.backdrop_path ? IMG + 'w1280' + d.backdrop_path : poster;
