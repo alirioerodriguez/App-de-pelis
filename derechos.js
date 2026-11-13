@@ -3,8 +3,8 @@
 //
 // Reglas:
 //  - Una competencia o país SIN dato no se inventa: la página dice «no encontramos dónde se ve».
-//  - Lo que se carga desde el 10/11/2026 lleva FUENTES (link y fecha en que se verificó). Lo anterior (fútbol, F1, NBA, MLB, NHL
-//    y tenis) todavía no tiene fuente anotada: figura en `sinFuente()` para ir completándolo.
+//  - Todo lleva FUENTES (link y fecha en que se verificó); desde el 14/11/2026 no queda nada sin fuente. Lo que se sume sin fuente
+//    aparece en `sinFuente()`, y la revisión semanal avisa lo que tenga más de 9 meses (`vencidas()`).
 //  - Las claves de plataforma (disney, dgo, espn…) son las de `PLAT` en index.html.
 //
 // Sirve en el navegador (queda como `Derechos`) y en Node (`require('./derechos.js')`, para las pruebas).
@@ -27,7 +27,7 @@
     'chi.1': { CL: ['tntcl', 'max', 'canal13'] },
     // Liga 1 2026: L1 MAX (de 1190 Sports) en Movistar y otros operadores; un partido por fecha en abierta (Nativa, fuente menor).
     'per.1': { PE: ['l1max'] },
-    'uru.1': { UY: ['disney', 'antel'] },
+    'uru.1': { UY: ['dgo'] },
     // Libertadores 2026: ESPN y Disney+ en Sudamérica. En Argentina, «foxar» y «telefe»; en México, «bein»: sin fuente.
     'conmebol.libertadores': { ...en(SUD, ['espn', 'disney']), AR: ['espn', 'disney', 'foxar', 'telefe'], MX: ['bein'] },
     'conmebol.sudamericana': { ...en(SUD, ['dgo', 'disney']) },
@@ -61,6 +61,10 @@
 
   /** Fuente y fecha de verificación de cada entrada nueva: { fecha: 'AAAA-MM-DD', url, nota? }. */
   const FUENTES = {
+    'uru.1': { fecha: '2026-11-14', url: 'https://dplnews.com/directv-inicia-2026-con-todo-el-futbol-tendra-la-supercopa-el-campeonato-el-mundial-y-la-sudamericana/', nota: 'DirecTV compró los derechos del campeonato 2026: va por DSports Premium (canales 301 y 302). Que también salga por la app DGO está por confirmar; Antel TV y Disney+ no aparecen en las fuentes de 2026.', porConfirmar: true },
+    'conmebol.sudamericana': { fecha: '2026-11-14', url: 'https://www.lanacion.com.ar/deportes/futbol/ver-directv-online-river-vs-blooming-en-vivo-por-la-copa-sudamericana-2026-nid08042026/', nota: 'En Argentina hay partidos solo por DSports y DGO (DirecTV); otros salen por ESPN y Disney+, según el partido. Desde 2027 y hasta 2030, ESPN y Disney+ en Sudamérica (ESPN, 12/12/2025).', porConfirmar: true },
+    mlb: { fecha: '2026-11-14', url: 'https://unanimodeportes.com/?p=541614', nota: 'Sudamérica: ESPN y Disney+ (además Televen en Venezuela y Win Sports en Colombia). México: ESPN, Disney+, Fox e Imagen TV. Desde 2026 MLB.TV es de ESPN.' },
+    nhl: { fecha: '2026-11-14', url: 'https://www.nhl.com/es/news/asi-se-veran-las-transmisiones-de-la-nhl-en-espanol-en-2026-27', nota: 'Temporada 2026-27: ESPN y Disney+ en Latinoamérica y el Caribe, según cada país. México no aparece por separado.' },
     'col.1': { fecha: '2026-11-10', url: 'https://www.publimetro.co/deportes/2026/07/24/regresa-el-fpc-partidos-horarios-y-donde-ver-la-fecha-1-de-la-liga-betplay/', nota: 'Win Sports+ en TV y Win Play en internet; la mayoría requiere suscripción. Cada partido puede cambiar de señal.' },
     'chi.1': { fecha: '2026-11-10', url: 'https://www.eldinamo.cl/deportes/2026/01/22/el-futbol-chileno-ira-por-tv-abierta-los-detalles-del-acuerdo-entre-canal-13-y-tnt-sports-por-la-temporada-2026/', nota: 'TNT Sports tiene la cobertura completa; Canal 13 pasa un partido por fecha, gratis.' },
     'per.1': { fecha: '2026-11-10', url: 'https://libero.pe/futbol-peruano/liga-1/2026/01/10/l1-max-cinco-operadores-transmitiran-todos-partidos-de-liga-1-2026-630360', nota: 'L1 MAX en Movistar, DirecTV, Claro, Win y otros operadores. La TV abierta (Nativa) viene de una fuente menor.' },

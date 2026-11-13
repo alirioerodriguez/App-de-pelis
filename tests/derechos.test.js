@@ -79,7 +79,12 @@ test('revisión: las fuentes viejas se detectan para volver a verificarlas cada 
   assert.deepEqual(D.vencidas('2026-11-10'), []);
   const tarde = D.vencidas('2027-09-01');
   assert.ok(tarde.includes('rugby.test') && tarde.includes('voley'), tarde.join(','));
-  assert.deepEqual(D.sinFuente().sort(), ['conmebol.sudamericana', 'mlb', 'nhl', 'uru.1']); // lo único que sigue sin fuente anotada
-  void 0; // lo de antes (MLB, NHL, tenis y las ligas chicas) todavía no tiene fuente anotada
+  assert.deepEqual(D.sinFuente(), []); // desde el 14/11/2026 todo tiene fuente anotada
   assert.ok(!D.sinFuente().includes('rugby.test'));
+});
+
+test('liga uruguaya, Sudamericana, MLB y NHL: con fuente de 2026 y sin canales que las fuentes no nombran', () => {
+  for (const k of ['uru.1', 'conmebol.sudamericana', 'mlb', 'nhl']) assert.match(D.FUENTES[k].url, /^https:\/\//, k);
+  assert.deepEqual(D.DERECHOS['uru.1'].UY, ['dgo']); // Antel TV y Disney+ no aparecen en las fuentes de 2026
+  assert.equal(D.FUENTES['uru.1'].porConfirmar, true);
 });
