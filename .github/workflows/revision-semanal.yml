@@ -16,3 +16,6 @@ jobs:
           node-version: 22
       - name: Consultar 30 títulos en 4 países
         run: node scripts/revision-semanal.mjs
+      - name: Fuentes de la tabla de derechos deportivos (más de 9 meses)
+        if: always()
+        run: node scripts/derechos-vencidas.mjs
