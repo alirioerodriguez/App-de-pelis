@@ -161,6 +161,8 @@
   .switch.sm:checked::before { transform: translateX(16px); }
   /* Plataformas ocultas: también se esconde «Solo mis plataformas» */
   body.plat-oculto #chips, body.plat-oculto #chipsMore, body.plat-oculto #onlyMineWrap, body.plat-oculto .plat-hint { display: none !important; }
+  /* En celular la ayuda quedaba apretada en 3 renglones al lado del título: los logos ya se entienden tocables */
+  @media (max-width: 520px) { .plat-hint { display: none; } }
   .chips {
     display: flex; gap: 10px; overflow-x: auto; padding: 4px 2px 10px; scroll-snap-type: x proximity;
     scrollbar-width: thin;
