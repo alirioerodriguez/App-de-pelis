@@ -1,18 +1,19 @@
 # VeoMás · app para Android y iPhone
 
-App nativa hecha con Expo 58 (la misma base que Savia). Muestra la web publicada en
-`https://donde-la-veo-app.vercel.app/`, así cada cambio que se publica en la web
-llega solo a la app, sin volver a compilarla.
+App nativa hecha con Expo 58 y Expo Router (la misma base que Savia). Desde el 15/11/2026 las pantallas son
+nativas (antes mostraba la web dentro de un WebView, y Apple rechaza eso por la regla 4.2). Los datos salen de la
+misma función de la web (`/api/tmdb` en Vercel), así la clave de TMDB nunca está en el teléfono.
 
-Lo que agrega la app sobre la web:
-- **"▶ Ver en Netflix" (y Disney+, Prime Video, Max, Apple TV…)** se abre en la app de la plataforma si está instalada.
-- **Botón atrás de Android**: cierra la ficha abierta en vez de salir de la app.
-- **Compartir** usa el menú nativo del teléfono (WhatsApp, Instagram, etc.).
-- **Avisos de "Mi lista"**: con la app cerrada, el teléfono revisa cada tanto (mínimo cada 6 h; el sistema elige
-  el momento) si algo guardado llegó a una plataforma del país elegido y manda una notificación. Al tocarla se abre
-  esa ficha. La web le pasa la lista a la app con el mensaje `{ type: 'lista' }` (ver `miLista.ts`).
-  En Expo Go la revisión en segundo plano no corre: los avisos solo se prueban en una app compilada.
-- Pantalla de carga, ícono propio y aviso de "Sin conexión" con Reintentar.
+Pantallas (`src/app/`):
+- **Inicio** `(tabs)/(inicio)`: lo que está en tus plataformas, lo más visto, en cines, próximos estrenos y series populares.
+- **Buscar** `(tabs)/buscar`: barra de búsqueda del sistema; busca en castellano de España y de Latinoamérica a la vez.
+- **Mi lista** `(tabs)/lista`: lo guardado, con avisos cuando llega a una plataforma.
+- **Plataformas** `(tabs)/ajustes`: país, «Mis plataformas» y créditos de TMDB y JustWatch.
+- **Ficha** `titulo/[tipo]/[id]`: semáforo (la tenés / suscripción / alquiler / no está), plataformas que abren su app,
+  guardar, tráiler, compartir y recomendadas.
+
+Lógica en `src/lib/`: `api.ts` (consultas), `plataformas.ts` (países, enlaces y semáforo), `estado.ts` (lo guardado en el
+teléfono) y `avisos.ts` (revisión de «Mi lista» en segundo plano, mínimo cada 6 h; en Expo Go no corre).
 
 Identificador: `com.alirio.dondelaveo` (Android e iPhone).
 
@@ -43,7 +44,18 @@ probar en Firebase Test Lab (Robo test).
 Para publicarla en Google Play: cuenta de desarrollador (25 dólares, una sola vez) y
 `eas build --platform android --profile production` (genera el `.aab` que pide la tienda).
 
-### iPhone
+### iPhone con Xcode (en la Mac)
+
+```bash
+npm ci
+npx expo prebuild -p ios
+open ios/VeoMas.xcworkspace
+```
+
+En Xcode: Signing & Capabilities → tu equipo de la cuenta paga (la app usa avisos, y eso no se puede firmar con la
+cuenta gratis) → ▶ con el iPhone conectado. Para la tienda: Any iOS Device → Product → Archive → Distribute App.
+
+### iPhone con EAS
 
 Requiere la cuenta de Apple Developer (99 dólares por año): sin ella, Apple no deja instalar apps
 fuera de la App Store.
