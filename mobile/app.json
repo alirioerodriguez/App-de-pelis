@@ -46,6 +46,12 @@
           "backgroundColor": "#0a0a0c"
         }
       ]
-    ]
+    ],
+    "owner": "alirior",
+    "extra": {
+      "eas": {
+        "projectId": "a4fb16f9-1519-4b1b-967c-fd9098576cb9"
+      }
+    }
   }
 }
