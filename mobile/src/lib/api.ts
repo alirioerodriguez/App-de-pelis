@@ -41,6 +41,8 @@ export function tmdb<T = any>(p: string, params: Record<string, string | number 
     .then(r => { if (!r.ok) throw new Error(`TMDB ${r.status}`); return r.json(); })
     .finally(() => clearTimeout(corte));
   pedido.catch(() => cache.delete(url)); // si falló, que la próxima vez se vuelva a pedir
+  // Tope: cada búsqueda escrita es una consulta distinta; se olvidan las más viejas
+  if (cache.size >= 300) cache.delete(cache.keys().next().value as string);
   cache.set(url, pedido);
   return pedido;
 }

@@ -33,6 +33,7 @@ export default function Ficha() {
   const [intento, setIntento] = useState(0);
 
   useEffect(() => {
+    if (!Number.isInteger(id) || id <= 0) return;
     let vivo = true;
     setError(false);
     tmdb<Detalle>(`/${tipo}/${id}`, { language: IDIOMA, append_to_response: 'videos,recommendations,credits', include_video_language: 'es,en' })
@@ -42,6 +43,12 @@ export default function Ficha() {
     return () => { vivo = false; };
   }, [tipo, id, intento]);
 
+  if (!Number.isInteger(id) || id <= 0) return (
+    <View style={s.centro}>
+      <Text style={s.titulo}>No encontramos ese título</Text>
+      <Text style={s.suave}>El enlace no es válido. Probá buscándolo por su nombre.</Text>
+    </View>
+  );
   if (error) return (
     <View style={s.centro}>
       <Text style={s.titulo}>Sin conexión</Text>
