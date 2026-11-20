@@ -15,7 +15,7 @@ Pantallas (`src/app/`):
 Lógica en `src/lib/`: `api.ts` (consultas), `plataformas.ts` (países, enlaces y semáforo), `estado.ts` (lo guardado en el
 teléfono) y `avisos.ts` (revisión de «Mi lista» en segundo plano, mínimo cada 6 h; en Expo Go no corre).
 
-Identificador: `com.alirio.dondelaveo` (Android e iPhone).
+Identificador: `ar.alirio.dondelaveo` (Android e iPhone), el mismo de la versión web empaquetada (TWA, firmada y con `assetlinks.json`). En Google Play el paquete no se puede cambiar después de subirlo: así la app nativa reemplaza a la TWA como una actualización, sin perder la ficha ni las reseñas.
 
 ## Compilar (desde tu compu)
 
